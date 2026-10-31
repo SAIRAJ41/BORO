@@ -292,17 +292,10 @@ exports.getFormOptions = async () => ({});
 exports.create = async (ownerId, data) => {
   const owner = await prisma.user.findUnique({
     where: { id: ownerId },
-    include: {
-      verifications: true
-    }
   });
 
   if (!owner || owner.role !== 'owner') {
     throw new Error('Owner not found.');
-  }
-
-  if (!owner.verifications.some(item => item.isVerified)) {
-    throw new Error('Owner verification is required.');
   }
 
   const id = `SP-${crypto.randomUUID()}`;

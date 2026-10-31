@@ -15,6 +15,10 @@ const DEMO_USERS = {
   admin: 'USR-099'
 };
 
+function makeId(prefix) {
+  return `${prefix}-${crypto.randomBytes(16).toString('hex')}`;
+}
+
 function getUserInitials(name) {
   return (name || 'User')
     .trim()
@@ -51,7 +55,8 @@ function formatUser(user) {
     tier: getTier(user.score),
     initials: user.initials || getUserInitials(user.name),
     status: user.status,
-    joined_at: user.joinedAt
+    joined_at: user.joinedAt,
+    created_at: user.createdAt
   };
 }
 
@@ -119,7 +124,7 @@ exports.create = async ({
         id: userId,
         name: name.trim(),
         email: normalizedEmail,
-        phone: phone || null,
+        phone: (phone || '').trim(),
         passwordHash,
         role: normalizedRole,
         initials: getUserInitials(name),
@@ -130,8 +135,10 @@ exports.create = async ({
     if (normalizedRole === 'owner') {
       await tx.ownerVerification.create({
         data: {
+          id: makeId('VER'),
           userId: newUser.id,
           organisation: organisation || null,
+          documentType: 'Pending submission',
           isVerified: false,
           appliedAt: new Date()
         }
@@ -185,16 +192,36 @@ exports.getProfile = async (userId) => {
         orderBy: { appliedAt: 'desc' },
         take: 1
       },
-      payoutMethod: true
+      payoutMethod: true,
+      bookings: {
+        select: { status: true }
+      },
+      scoreEvents: {
+        orderBy: { createdAt: 'desc' }
+      }
     }
   });
 
   if (!user) return null;
 
   const verification = user.verifications[0] || null;
+  const activeStatuses = ['requested', 'approved', 'checked_in', 'overdue'];
 
   return {
-    user: formatUser(user),
+    user: {
+      ...formatUser(user),
+      verified: Boolean(verification && verification.isVerified),
+      active_bookings_count: user.bookings.filter(booking =>
+        activeStatuses.includes(booking.status)
+      ).length
+    },
+    scoreEvents: user.scoreEvents.map(event => ({
+      id: event.id,
+      delta: event.delta,
+      reason: event.reason,
+      created_at: event.createdAt
+    })),
+    totalBookingsCount: user.bookings.length,
 
     verificationStatus: verification
       ? {
@@ -216,6 +243,35 @@ exports.getProfile = async (userId) => {
         }
       : null
   };
+};
+
+/**
+ * Update editable fields on the authenticated user's own profile.
+ */
+exports.updateProfile = async (userId, { name, phone }) => {
+  const data = {};
+
+  if (name !== undefined) {
+    const normalizedName = String(name).trim();
+    if (!normalizedName) throw new Error('Name is required.');
+    data.name = normalizedName;
+    data.initials = getUserInitials(normalizedName);
+  }
+
+  if (phone !== undefined) {
+    data.phone = String(phone).trim();
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new Error('No profile changes provided.');
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data
+  });
+
+  return formatSessionUser(user);
 };
 
 /**

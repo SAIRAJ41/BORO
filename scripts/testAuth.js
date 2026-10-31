@@ -87,14 +87,92 @@ async function runAuthTests() {
       'Suspended account redirects back to /login'
     );
 
-    // 6. Verify /owner/requests returns 403 Forbidden for User account
+    // 6. Verify owner registration creates an active account that can log in
+    const ownerRegistrationRes = await fetch(`${baseUrl}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        name: 'New Owner',
+        email: 'new-owner@demo.com',
+        phone: '+91 90000 00002',
+        password: 'ownerpass',
+        confirm_password: 'ownerpass',
+        role: 'owner',
+        organisation: 'Test Organisation'
+      }).toString(),
+      redirect: 'manual'
+    });
+    assert(
+      ownerRegistrationRes.status === 302 && ownerRegistrationRes.headers.get('location') === '/login',
+      'Owner registration redirects to /login'
+    );
+
+    const newOwnerLoginRes = await fetch(`${baseUrl}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        email: 'new-owner@demo.com',
+        password: 'ownerpass'
+      }).toString(),
+      redirect: 'manual'
+    });
+    const newOwnerCookie = newOwnerLoginRes.headers.get('set-cookie') || '';
+    assert(
+      newOwnerLoginRes.status === 302 && newOwnerLoginRes.headers.get('location') === '/owner/requests',
+      'Newly registered owner can log in immediately'
+    );
+    const newOwnerDashboardRes = await fetch(`${baseUrl}/owner/spaces/add`, {
+      headers: { cookie: newOwnerCookie },
+      redirect: 'manual'
+    });
+    assert(
+      newOwnerDashboardRes.status === 200,
+      'Newly registered owner can access listing dashboard without verification'
+    );
+
+    // 7. Verify registration validation rejects mismatched passwords
+    const invalidSignupRes = await fetch(`${baseUrl}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        name: 'Test User',
+        email: 'test@demo.com',
+        password: 'one',
+        confirm_password: 'two'
+      }).toString(),
+      redirect: 'manual'
+    });
+    assert(
+      invalidSignupRes.status === 302 && invalidSignupRes.headers.get('location') === '/signup',
+      'Registration rejects mismatched passwords'
+    );
+
+    // 8. Verify an authenticated user can update their own profile
+    const profileUpdateRes = await fetch(`${baseUrl}/profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        cookie: userCookie
+      },
+      body: new URLSearchParams({
+        name: 'Priya Updated',
+        phone: '+91 90000 00001'
+      }).toString(),
+      redirect: 'manual'
+    });
+    assert(
+      profileUpdateRes.status === 302 && profileUpdateRes.headers.get('location') === '/profile',
+      'Authenticated user profile update redirects to /profile'
+    );
+
+    // 9. Verify /owner/requests returns 403 Forbidden for User account
     const forbiddenRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: userCookie },
       redirect: 'manual'
     });
     assert(forbiddenRes.status === 403, '/owner/requests returns 403 Forbidden for User account');
 
-    // 7. Verify /owner/requests redirects to /login when signed out
+    // 10. Verify /owner/requests redirects to /login when signed out
     const unauthenticatedRes = await fetch(`${baseUrl}/owner/requests`, {
       redirect: 'manual'
     });
@@ -103,19 +181,19 @@ async function runAuthTests() {
       '/owner/requests redirects to /login when signed out'
     );
 
-    // 8. Verify Owner can access /owner/requests (200 OK)
+    // 11. Verify Owner can access /owner/requests (200 OK)
     const ownerAccessRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: ownerCookie }
     });
     assert(ownerAccessRes.status === 200, 'Owner can access /owner/requests (200 OK)');
 
-    // 9. Verify Admin can access /admin/overview (200 OK)
+    // 12. Verify Admin can access /admin/overview (200 OK)
     const adminAccessRes = await fetch(`${baseUrl}/admin/overview`, {
       headers: { cookie: adminCookie }
     });
     assert(adminAccessRes.status === 200, 'Admin can access /admin/overview (200 OK)');
 
-    // 10. Verify logout destroys the authenticated session
+    // 13. Verify logout destroys the authenticated session
     const logoutRes = await fetch(`${baseUrl}/logout`, {
       method: 'POST',
       headers: { cookie: userCookie },

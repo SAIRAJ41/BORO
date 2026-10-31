@@ -12,6 +12,7 @@ const users = [
     id: 'USR-001',
     name: 'Priya Mehta',
     email: 'priya@demo.com',
+    password: 'demo123',
     role: 'user',
     initials: 'PM',
     status: 'active'
@@ -20,6 +21,7 @@ const users = [
     id: 'USR-003',
     name: 'Rajesh Kumar',
     email: 'rajesh@demo.com',
+    password: 'demo123',
     role: 'owner',
     initials: 'RK',
     status: 'active'
@@ -28,6 +30,7 @@ const users = [
     id: 'USR-099',
     name: 'Amit Verma',
     email: 'admin@demo.com',
+    password: 'demo123',
     role: 'admin',
     initials: 'AV',
     status: 'active'
@@ -36,6 +39,7 @@ const users = [
     id: 'USR-098',
     name: 'Suspended Demo',
     email: 'suspended@demo.com',
+    password: 'demo123',
     role: 'user',
     initials: 'SD',
     status: 'suspended'
@@ -54,11 +58,12 @@ const userServiceMock = {
       candidate => candidate.email === (email || '').trim().toLowerCase()
     );
 
-    if (!user || password !== 'demo123' || user.status !== 'active') {
+    if (!user || password !== user.password || user.status !== 'active') {
       return null;
     }
 
-    return { ...user };
+    const { password: ignoredPassword, ...sessionUser } = user;
+    return { ...sessionUser };
   },
 
   async getDemoUser(role) {
@@ -66,8 +71,50 @@ const userServiceMock = {
     return { ...user };
   },
 
-  async create() {
-    return { id: 'USR-TEST-CREATED' };
+  async getProfile(userId) {
+    const user = users.find(candidate => candidate.id === userId);
+    if (!user) return null;
+
+    return {
+      user: {
+        ...user,
+        score: 100,
+        phone: '+91 90000 00000',
+        verified: user.role !== 'owner',
+        active_bookings_count: 0,
+        created_at: new Date('2025-01-01T00:00:00.000Z')
+      },
+      scoreEvents: [],
+      totalBookingsCount: 0,
+      verificationStatus: null,
+      payoutMethod: null
+    };
+  },
+
+  async updateProfile(userId, data) {
+    const user = users.find(candidate => candidate.id === userId);
+    if (!user) throw new Error('User not found.');
+    return {
+      ...user,
+      name: data.name || user.name,
+      initials: data.name ? data.name.split(/\s+/).map(part => part[0]).join('').toUpperCase() : user.initials,
+      phone: data.phone || '+91 90000 00000'
+    };
+  },
+
+  async create({ name, email, phone, password, role }) {
+    const user = {
+      id: `USR-TEST-${users.length + 1}`,
+      name,
+      email: email.trim().toLowerCase(),
+      phone: phone || '',
+      password,
+      role: role === 'owner' ? 'owner' : 'user',
+      initials: name.split(/\s+/).map(part => part[0]).join('').toUpperCase(),
+      status: 'active'
+    };
+    users.push(user);
+    return { id: user.id, status: user.status };
   }
 };
 
@@ -88,4 +135,3 @@ Module._load = function load(request, parent, isMain) {
 
   return originalLoad.apply(this, arguments);
 };
-

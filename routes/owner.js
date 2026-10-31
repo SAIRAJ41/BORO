@@ -94,12 +94,6 @@ router.get('/my-spaces', (req, res) => {
 router.get('/spaces/add', (req, res) => {
   const owner = getOwnerUser(req);
 
-  // Check if owner is pending verification
-  if (owner.status === 'pending' || (owner.verificationStatus && !owner.verificationStatus.is_verified)) {
-    req.flash('error', 'Your owner account is pending verification. You cannot list spaces yet.');
-    return res.redirect('/owner/my-spaces');
-  }
-
   res.render('pages/owner/space-form', {
     title: 'List a New Space - BORO Owner',
     owner,
@@ -113,12 +107,6 @@ router.get('/spaces/add', (req, res) => {
 // POST /owner/spaces - Create new space
 router.post('/spaces', (req, res) => {
   const owner = getOwnerUser(req);
-
-  // Check if owner is pending verification
-  if (owner.status === 'pending' || (owner.verificationStatus && !owner.verificationStatus.is_verified)) {
-    req.flash('error', 'Your owner account is pending verification. You cannot list spaces yet.');
-    return res.redirect('/owner/my-spaces');
-  }
 
   // BACKEND TODO: implement action, write audit log entry with reason
   req.flash('info', 'Not connected yet');

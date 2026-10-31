@@ -19,7 +19,6 @@ router.get('/login', (req, res) => {
 
 // POST /login - Process authentication
 // BACKEND: add rate limiting here (e.g. express-rate-limit 5 attempts / 15 minutes)
-// BACKEND: replace userService.authenticate with database query and bcrypt.compare
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -31,8 +30,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // 2. Call userService.authenticate
-    // BACKEND: replace mock lookup with database query and bcrypt.compare
+    // 2. Authenticate against the database-backed user service.
     const user = await userService.authenticate(email, password);
 
     // If credentials are invalid
@@ -178,23 +176,45 @@ router.get('/demo/:role', async (req, res) => {
 });
 
 // GET /profile - User Profile & Verification
-router.get('/profile', isAuthenticated, (req, res) => {
+router.get('/profile', isAuthenticated, async (req, res, next) => {
   const currentUser = req.session.user;
-  
-  // BACKEND: replace mockData.getUserById() with userService.getUserById(currentUser.id)
-  const user = mockData.getUserById(currentUser.id) || currentUser;
-  const userScoreEvents = mockData.scoreEvents.filter(e => e.user_id === user.id);
-  const userBookings = mockData.bookings.filter(b => b.user_id === user.id);
 
-  res.render('pages/user/profile', {
-    title: 'My Profile & Verification - BORO',
-    user,
-    scoreEvents: userScoreEvents,
-    activeBookingsCount: user.active_bookings_count || 1,
-    totalBookingsCount: userBookings.length,
-    helpers,
-    activeNav: 'profile'
-  });
+  try {
+    const profile = await userService.getProfile(currentUser.id);
+    if (!profile) {
+      return res.status(404).render('pages/errors/404', {
+        title: 'Profile Not Found'
+      });
+    }
+
+    res.render('pages/user/profile', {
+      title: 'My Profile & Verification - BORO',
+      user: profile.user,
+      scoreEvents: profile.scoreEvents,
+      activeBookingsCount: profile.user.active_bookings_count,
+      totalBookingsCount: profile.totalBookingsCount,
+      helpers,
+      activeNav: 'profile'
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /profile - Update editable fields on the authenticated user's own profile.
+router.post('/profile', isAuthenticated, async (req, res, next) => {
+  try {
+    const user = await userService.updateProfile(req.session.user.id, {
+      name: req.body.name,
+      phone: req.body.phone
+    });
+    req.session.user = user;
+    req.flash('success', 'Profile updated.');
+    res.redirect('/profile');
+  } catch (err) {
+    req.flash('error', err.message || 'Unable to update profile.');
+    res.redirect('/profile');
+  }
 });
 
 // POST /profile/verify - Submit verification documents
