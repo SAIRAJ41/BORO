@@ -329,6 +329,7 @@ model Setting {
   pointsMin                Int      @default(0) @map("points_min")
   pointsMax                Int      @default(120) @map("points_max")
   updatedAt                DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  weeklySpaceBookingLimitPerUser Int @default(3) @map("weekly_space_booking_limit_per_user")
 
   @@map("settings")
 }
