@@ -80,3 +80,34 @@ diff checks should also be run before review.
   compatibility but is not used for new uploads or returned by normalized
   listing responses.
 - The new migration must be reviewed and applied before live uploads can work.
+
+## Admin listing review workflow
+
+Admin users review listings at `GET /admin/listings`, with optional
+`status=pending`, `status=approved`, or `status=rejected` filtering. Individual
+reviews are available at `GET /admin/listings/:id`. Both pages require the
+existing authenticated-admin route guard.
+
+Admins can approve or reject pending listings through:
+
+- `POST /admin/listings/:id/approve`
+- `POST /admin/listings/:id/reject`
+
+Approval sets the listing to `approved`, activates it, records `reviewedAt`
+and the authenticated admin ID, and clears any rejection reason. Rejection
+requires a meaningful server-validated reason, sets the listing to `rejected`
+and inactive, and records the reviewer, timestamp, and reason. State checks
+are repeated in the service transaction, so approved or rejected listings
+cannot be reviewed again.
+
+Admins can request a five-minute signed document URL through
+`GET /admin/listings/:id/document`. Owners can request documents only for
+their own listings. Signed URLs, storage paths, and private metadata are not
+included in public listing responses.
+
+Owners see each listing's pending, approved, or rejected state in
+`/owner/my-spaces`. Rejection reasons are shown only on the owner's own
+listing. Corrected listing information and a replacement document resubmit a
+rejected listing as pending and clear the previous review metadata; approval
+never occurs automatically. Listing decisions are written to the existing
+audit log with the authenticated admin actor and listing metadata.

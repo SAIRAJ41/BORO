@@ -202,6 +202,24 @@ async function runAuthTests() {
       'Standard users cannot retrieve admin listing documents'
     );
 
+    const unauthorizedQueueRes = await fetch(`${baseUrl}/admin/listings`, {
+      headers: { cookie: userCookie },
+      redirect: 'manual'
+    });
+    assert(
+      unauthorizedQueueRes.status === 403,
+      'Standard users cannot access the listing review queue'
+    );
+
+    const unauthorizedOwnerQueueRes = await fetch(`${baseUrl}/admin/listings`, {
+      headers: { cookie: ownerCookie },
+      redirect: 'manual'
+    });
+    assert(
+      unauthorizedOwnerQueueRes.status === 403,
+      'Owners cannot access the listing review queue'
+    );
+
     // 11. Verify Owner can access /owner/requests (200 OK)
     const ownerAccessRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: ownerCookie }

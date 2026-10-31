@@ -73,6 +73,19 @@ const spaceServiceMock = {
     return [];
   },
 
+  async getListings() {
+    return [];
+  },
+
+  async getListingById(id) {
+    const space = mockData.getSpaceById(id);
+    if (!space) return null;
+    return {
+      ...toSpace(space),
+      owner: mockData.getUserById(space.owner_id) || { name: 'Community Caretaker' }
+    };
+  },
+
   async approveListing() {},
 
   async rejectListing() {},

@@ -51,6 +51,7 @@ const routesToTest = [
   // Admin Views
   { path: '/admin/overview', role: 'admin', expectedStatus: 200 },
   { path: '/admin/listings', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings/SP-001', role: 'admin', expectedStatus: 200 },
   { path: '/admin/listings/SP-001/document', role: 'admin', expectedStatus: 200 },
   { path: '/admin/verify-owners', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users', role: 'admin', expectedStatus: 200 },

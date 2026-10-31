@@ -15,8 +15,37 @@ function getAdminUser(req) {
 // GET /admin/listings - Listing approval queue
 router.get('/listings', async (req, res, next) => {
   try {
-    const listings = await spaceService.getPendingListings();
-    res.json({ listings });
+    const status = ['pending', 'approved', 'rejected'].includes(req.query.status)
+      ? req.query.status
+      : 'pending';
+    const listings = await spaceService.getListings(status);
+    res.render('pages/admin/listings', {
+      title: 'Listing Review Queue - BORO Admin',
+      admin: getAdminUser(req),
+      listings,
+      status,
+      helpers,
+      activeNav: 'admin-listings'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /admin/listings/:id - Listing review detail
+router.get('/listings/:id', async (req, res, next) => {
+  try {
+    const listing = await spaceService.getListingById(req.params.id);
+    if (!listing) {
+      return res.status(404).render('pages/errors/404', { title: 'Listing Not Found' });
+    }
+    res.render('pages/admin/listing-review', {
+      title: `Review ${listing.name} - BORO Admin`,
+      admin: getAdminUser(req),
+      listing,
+      helpers,
+      activeNav: 'admin-listings'
+    });
   } catch (error) {
     next(error);
   }

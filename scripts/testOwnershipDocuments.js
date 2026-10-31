@@ -217,7 +217,11 @@ async function run() {
   state.transactionError = null;
 
   await spaceService.update('SP-1', 'OWNER-1', { documentFile: validPdf });
-  if (state.lastUpdate.listingStatus !== 'pending' || !state.lastUpdate.ownershipDocumentPath) {
+  if (state.lastUpdate.listingStatus !== 'pending' ||
+      !state.lastUpdate.ownershipDocumentPath ||
+      state.lastUpdate.reviewedAt !== null ||
+      state.lastUpdate.reviewedBy !== null ||
+      state.lastUpdate.rejectionReason !== null) {
     throw new Error('Rejected resubmission did not return listing to pending');
   }
   console.log('✓ Rejected listing resubmission replaces document and returns to pending');

@@ -39,10 +39,20 @@
             <div>
               <div class="flex justify-between items-start">
                 <h2 class="text-base font-bold text-ink"><%= space.name %></h2>
-                <span class="badge badge-success text-xs">Active</span>
+                <% const statusClass = space.listing_status === 'approved' ? 'badge-success' : (space.listing_status === 'rejected' ? 'badge-danger' : 'badge-warning'); %>
+                <span class="badge <%= statusClass %> text-xs capitalize"><%= space.listing_status || 'pending' %></span>
               </div>
               <p class="text-xs text-ink-muted mt-0.5"><%= space.locality %>, <%= space.city %></p>
             </div>
+
+            <% if (space.listing_status === 'rejected') { %>
+              <div class="rounded-xl bg-status-danger/10 border border-status-danger/30 p-3 text-xs">
+                <div class="font-bold text-status-danger">Changes required before resubmission</div>
+                <p class="text-ink-muted mt-1"><%= space.rejection_reason || 'The administrator requested changes to this listing.' %></p>
+              </div>
+            <% } else if (space.listing_status === 'pending') { %>
+              <p class="text-xs text-status-warning">Submitted for administrator review. It is not publicly bookable yet.</p>
+            <% } %>
 
             <!-- Specs Grid -->
             <div class="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-tint border border-line text-center text-xs">

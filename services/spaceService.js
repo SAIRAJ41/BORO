@@ -519,15 +519,20 @@ exports.getDocumentAccess = async (spaceId, requester) => {
 };
 
 // GET /admin/listings
-exports.getPendingListings = async () => {
+exports.getListings = async (status) => {
+  const allowedStatuses = ['pending', 'approved', 'rejected'];
+  const where = status && allowedStatuses.includes(status)
+    ? { listingStatus: status }
+    : {};
   const records = await prisma.space.findMany({
-    where: { listingStatus: 'pending' },
+    where,
     include: {
       owner: {
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          phone: true
         }
       }
     },
@@ -540,19 +545,60 @@ exports.getPendingListings = async () => {
   }));
 };
 
-// POST /admin/listings/:id/approve
-exports.approveListing = async (spaceId, adminId) => {
-  const existing = await prisma.space.findUnique({
+exports.getPendingListings = async () => exports.getListings('pending');
+
+exports.getListingById = async (spaceId) => {
+  const record = await prisma.space.findUnique({
     where: { id: spaceId },
-    select: { id: true, listingStatus: true }
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      }
+    }
   });
 
-  if (!existing) throw new Error('Listing not found.');
-  if (existing.listingStatus !== 'pending') {
-    throw new Error('Only pending listings can be approved.');
+  if (!record) return null;
+
+  return {
+    ...normalizeSpace(record),
+    owner: record.owner
+  };
+};
+
+// POST /admin/listings/:id/approve
+exports.approveListing = async (spaceId, adminId) => {
+  const reviewer = await prisma.user.findUnique({
+    where: { id: adminId },
+    select: { role: true }
+  });
+  if (!reviewer || reviewer.role !== 'admin') {
+    throw new Error('Only an admin can review listings.');
   }
 
   await prisma.$transaction(async tx => {
+    const existing = await tx.space.findUnique({
+      where: { id: spaceId },
+      select: {
+        id: true,
+        listingStatus: true,
+        name: true,
+        ownershipDocumentPath: true
+      }
+    });
+
+    if (!existing) throw new Error('Listing not found.');
+    if (existing.listingStatus !== 'pending') {
+      throw new Error('Only pending listings can be approved.');
+    }
+    if (!existing.ownershipDocumentPath) {
+      throw new Error('An ownership document is required before approval.');
+    }
+
     await tx.space.update({
       where: { id: spaceId },
       data: {
@@ -564,26 +610,39 @@ exports.approveListing = async (spaceId, adminId) => {
       }
     });
 
-    await writeAudit(tx, adminId, 'approve_listing', spaceId);
+    await writeAudit(tx, adminId, 'approve_listing', spaceId, {
+      listingName: existing.name,
+      listingStatus: 'approved'
+    });
   });
 };
 
 // POST /admin/listings/:id/reject
 exports.rejectListing = async (spaceId, adminId, reason) => {
-  const normalizedReason = String(reason || '').trim();
-  if (!normalizedReason) throw new Error('Rejection reason is required.');
-
-  const existing = await prisma.space.findUnique({
-    where: { id: spaceId },
-    select: { id: true, listingStatus: true }
+  const reviewer = await prisma.user.findUnique({
+    where: { id: adminId },
+    select: { role: true }
   });
+  if (!reviewer || reviewer.role !== 'admin') {
+    throw new Error('Only an admin can review listings.');
+  }
 
-  if (!existing) throw new Error('Listing not found.');
-  if (existing.listingStatus !== 'pending') {
-    throw new Error('Only pending listings can be rejected.');
+  const normalizedReason = String(reason || '').trim();
+  if (normalizedReason.length < 10) {
+    throw new Error('A meaningful rejection reason is required.');
   }
 
   await prisma.$transaction(async tx => {
+    const existing = await tx.space.findUnique({
+      where: { id: spaceId },
+      select: { id: true, listingStatus: true, name: true }
+    });
+
+    if (!existing) throw new Error('Listing not found.');
+    if (existing.listingStatus !== 'pending') {
+      throw new Error('Only pending listings can be rejected.');
+    }
+
     await tx.space.update({
       where: { id: spaceId },
       data: {
@@ -596,7 +655,9 @@ exports.rejectListing = async (spaceId, adminId, reason) => {
     });
 
     await writeAudit(tx, adminId, 'reject_listing', spaceId, {
-      reason: normalizedReason
+      reason: normalizedReason,
+      listingName: existing.name,
+      listingStatus: 'rejected'
     });
   });
 };
