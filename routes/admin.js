@@ -22,6 +22,19 @@ router.get('/listings', async (req, res, next) => {
   }
 });
 
+// GET /admin/listings/:id/document - Short-lived private document access
+router.get('/listings/:id/document', async (req, res, next) => {
+  try {
+    const url = await spaceService.getDocumentAccess(req.params.id, req.session.user);
+    res.json({ url, expiresIn: 300 });
+  } catch (error) {
+    if (error.message.includes('not authorized')) {
+      return res.status(403).render('pages/errors/403');
+    }
+    next(error);
+  }
+});
+
 router.post('/listings/:id/approve', async (req, res) => {
   try {
     await spaceService.approveListing(req.params.id, req.session.user.id);

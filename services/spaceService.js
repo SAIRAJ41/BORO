@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const crypto = require('crypto');
+const ownershipDocumentService = require('./ownershipDocumentService');
 
 // Convert Prisma space fields to the field names used by the frontend.
 function normalizeSpace(space) {
@@ -11,8 +12,12 @@ function normalizeSpace(space) {
     0
   );
 
+  const normalized = { ...space };
+  delete normalized.ownershipDocumentPath;
+  delete normalized.ownershipDocumentUrl;
+
   return {
-    ...space,
+    ...normalized,
     owner_id: space.ownerId,
     space_type: space.spaceType,
     indoor_outdoor: space.indoorOutdoor,
@@ -27,7 +32,10 @@ function normalizeSpace(space) {
     reviewed_by: space.reviewedBy,
     rejection_reason: space.rejectionReason,
     ownership_document_type: space.ownershipDocumentType,
-    ownership_document_url: space.ownershipDocumentUrl,
+    ownership_document_name: space.ownershipDocumentName,
+    ownership_document_size: space.ownershipDocumentSize,
+    ownership_document_mime_type: space.ownershipDocumentMimeType,
+    ownership_document_present: Boolean(space.ownershipDocumentPath),
     rating: ratings.length
       ? Number((ratingTotal / ratings.length).toFixed(1))
       : 0,
@@ -314,7 +322,10 @@ exports.getOwnerSpaces = async (ownerId) => {
     reviewed_at: record.reviewedAt,
     rejection_reason: record.rejectionReason,
     ownership_document_type: record.ownershipDocumentType,
-    ownership_document_url: record.ownershipDocumentUrl
+    ownership_document_name: record.ownershipDocumentName,
+    ownership_document_size: record.ownershipDocumentSize,
+    ownership_document_mime_type: record.ownershipDocumentMimeType,
+    ownership_document_present: Boolean(record.ownershipDocumentPath)
   }));
 };
 
@@ -351,7 +362,7 @@ exports.getConditionHistory = async (spaceId) => {
 exports.getFormOptions = async () => ({});
 
 // POST /owner/spaces
-exports.create = async (ownerId, data) => {
+exports.create = async (ownerId, data, documentFile) => {
   const owner = await prisma.user.findUnique({
     where: { id: ownerId },
   });
@@ -362,29 +373,42 @@ exports.create = async (ownerId, data) => {
 
   const id = `SP-${crypto.randomUUID()}`;
   const spaceData = normalizeSpaceInput(data);
+  const document = await ownershipDocumentService.uploadForListing(id, documentFile);
 
-  await prisma.$transaction(async tx => {
-    await tx.space.create({
-      data: {
-        id,
+  try {
+    await prisma.$transaction(async tx => {
+      await tx.space.create({
+        data: {
+          id,
+          ownerId,
+          active: false,
+          listingStatus: 'pending',
+          submittedAt: new Date(),
+          ownershipDocumentType: data.ownership_document_type || document.mimeType,
+          ownershipDocumentPath: document.path,
+          ownershipDocumentName: document.name,
+          ownershipDocumentSize: document.size,
+          ownershipDocumentMimeType: document.mimeType,
+          ...spaceData
+        }
+      });
+
+      await writeAudit(
+        tx,
         ownerId,
-        active: false,
-        listingStatus: 'pending',
-        submittedAt: new Date(),
-        ownershipDocumentType: data.ownership_document_type || null,
-        ownershipDocumentUrl: data.ownership_document_url || null,
-        ...spaceData
-      }
+        'create_space',
+        id,
+        { name: spaceData.name }
+      );
     });
-
-    await writeAudit(
-      tx,
-      ownerId,
-      'create_space',
-      id,
-      { name: spaceData.name }
-    );
-  });
+  } catch (error) {
+    try {
+      await ownershipDocumentService.remove(document.path);
+    } catch (cleanupError) {
+      console.error('BORO Storage cleanup failed after listing creation error:', cleanupError.message);
+    }
+    throw error;
+  }
 
   return { id };
 };
@@ -396,7 +420,8 @@ exports.update = async (spaceId, ownerId, data) => {
     select: {
       id: true,
       ownerId: true,
-      listingStatus: true
+      listingStatus: true,
+      ownershipDocumentPath: true
     }
   });
 
@@ -410,33 +435,87 @@ exports.update = async (spaceId, ownerId, data) => {
 
   const spaceData = normalizeSpaceInput(data);
   const resubmitting = existing.listingStatus === 'rejected';
+  if (resubmitting && !data.documentFile) {
+    throw new Error('A replacement ownership document is required before resubmission.');
+  }
 
-  await prisma.$transaction(async tx => {
-    await tx.space.update({
-      where: { id: spaceId },
-      data: {
-        ...spaceData,
-        ...(resubmitting
-          ? {
-              active: false,
-              listingStatus: 'pending',
-              submittedAt: new Date(),
-              reviewedAt: null,
-              reviewedBy: null,
-              rejectionReason: null
-            }
-          : {})
-      }
+  const document = data.documentFile
+    ? await ownershipDocumentService.replaceForListing(
+        spaceId,
+        data.documentFile,
+        existing.ownershipDocumentPath
+      )
+    : null;
+
+  try {
+    await prisma.$transaction(async tx => {
+      await tx.space.update({
+        where: { id: spaceId },
+        data: {
+          ...spaceData,
+          ...(document
+            ? {
+                ownershipDocumentType: data.ownership_document_type || document.mimeType,
+                ownershipDocumentPath: document.path,
+                ownershipDocumentName: document.name,
+                ownershipDocumentSize: document.size,
+                ownershipDocumentMimeType: document.mimeType
+              }
+            : {}),
+          ...(resubmitting
+            ? {
+                active: false,
+                listingStatus: 'pending',
+                submittedAt: new Date(),
+                reviewedAt: null,
+                reviewedBy: null,
+                rejectionReason: null
+              }
+            : {})
+        }
+      });
+
+      await writeAudit(
+        tx,
+        ownerId,
+        'update_space',
+        spaceId,
+        { updatedFields: Object.keys(data).filter(key => key !== 'documentFile') }
+      );
     });
+    if (document && document.previousPath) {
+      try {
+        await ownershipDocumentService.remove(document.previousPath);
+      } catch (cleanupError) {
+        console.error('BORO Storage cleanup failed after listing replacement:', cleanupError.message);
+      }
+    }
+  } catch (error) {
+    if (document) {
+      try {
+        await ownershipDocumentService.remove(document.path);
+      } catch (cleanupError) {
+        console.error('BORO Storage cleanup failed after listing update error:', cleanupError.message);
+      }
+    }
+    throw error;
+  }
+};
 
-    await writeAudit(
-      tx,
-      ownerId,
-      'update_space',
-      spaceId,
-      { updatedFields: Object.keys(data) }
-    );
+exports.getDocumentAccess = async (spaceId, requester) => {
+  const space = await prisma.space.findUnique({
+    where: { id: spaceId },
+    select: {
+      ownerId: true,
+      ownershipDocumentPath: true
+    }
   });
+
+  if (!space || !ownershipDocumentService.isAuthorized(requester, space.ownerId)) {
+    throw new Error('You are not authorized to access this document.');
+  }
+
+  return ownershipDocumentService.getSignedUrl(space.ownershipDocumentPath);
 };
 
 // GET /admin/listings

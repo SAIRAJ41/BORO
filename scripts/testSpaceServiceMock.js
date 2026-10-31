@@ -75,7 +75,14 @@ const spaceServiceMock = {
 
   async approveListing() {},
 
-  async rejectListing() {}
+  async rejectListing() {},
+  async getDocumentAccess(id, requester) {
+    const space = mockData.getSpaceById(id);
+    if (!space || (requester.role !== 'admin' && requester.id !== space.owner_id)) {
+      throw new Error('You are not authorized to access this document.');
+    }
+    return `https://signed.test/${id}`;
+  }
 };
 
 const servicePath = require.resolve('../services/spaceService');

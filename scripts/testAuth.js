@@ -183,6 +183,25 @@ async function runAuthTests() {
       '/owner/requests redirects to /login when signed out'
     );
 
+    const unauthenticatedUploadRes = await fetch(`${baseUrl}/owner/spaces`, {
+      method: 'POST',
+      redirect: 'manual'
+    });
+    assert(
+      unauthenticatedUploadRes.status === 302 &&
+      unauthenticatedUploadRes.headers.get('location') === '/login',
+      'Unauthenticated listing upload redirects to /login'
+    );
+
+    const unauthorizedDocumentRes = await fetch(`${baseUrl}/admin/listings/SP-001/document`, {
+      headers: { cookie: userCookie },
+      redirect: 'manual'
+    });
+    assert(
+      unauthorizedDocumentRes.status === 403,
+      'Standard users cannot retrieve admin listing documents'
+    );
+
     // 11. Verify Owner can access /owner/requests (200 OK)
     const ownerAccessRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: ownerCookie }

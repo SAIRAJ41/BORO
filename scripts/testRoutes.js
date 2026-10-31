@@ -41,6 +41,7 @@ const routesToTest = [
   { path: '/owner/my-spaces', role: 'owner', expectedStatus: 200 },
   { path: '/owner/spaces/add', role: 'owner', expectedStatus: 200 },
   { path: '/owner/spaces/SP-001/edit', role: 'owner', expectedStatus: 200 },
+  { path: '/owner/spaces/SP-001/document', role: 'owner', expectedStatus: 200 },
   { path: '/owner/calendar', role: 'owner', expectedStatus: 200 },
   { path: '/owner/today', role: 'owner', expectedStatus: 200 },
   { path: '/owner/incidents', role: 'owner', expectedStatus: 200 },
@@ -50,6 +51,7 @@ const routesToTest = [
   // Admin Views
   { path: '/admin/overview', role: 'admin', expectedStatus: 200 },
   { path: '/admin/listings', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings/SP-001/document', role: 'admin', expectedStatus: 200 },
   { path: '/admin/verify-owners', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users?q=Priya', role: 'admin', expectedStatus: 200 },

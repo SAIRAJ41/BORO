@@ -3,6 +3,7 @@ const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
 const spaceService = require('../services/spaceService');
+const ownershipDocumentService = require('../services/ownershipDocumentService');
 
 // Helper to get active session user or Rajesh Kumar (owner)
 function getOwnerUser(req) {
@@ -108,11 +109,21 @@ router.get('/spaces/add', (req, res) => {
 });
 
 // POST /owner/spaces - Create new space
-router.post('/spaces', async (req, res) => {
+function handleDocumentUpload(req, res, next) {
+  ownershipDocumentService.uploadMiddleware(req, res, error => {
+    if (error) {
+      req.flash('error', error.message || 'Invalid ownership document.');
+      return res.redirect('/owner/my-spaces');
+    }
+    next();
+  });
+}
+
+router.post('/spaces', handleDocumentUpload, async (req, res) => {
   const owner = getOwnerUser(req);
 
   try {
-    await spaceService.create(owner.id, req.body);
+    await spaceService.create(owner.id, req.body, req.file);
     req.flash('success', 'Space submitted for admin review.');
   } catch (error) {
     req.flash('error', error.message || 'Unable to submit space.');
@@ -150,15 +161,31 @@ router.get('/spaces/:id/edit', async (req, res, next) => {
 });
 
 // POST /owner/spaces/:id - Update space
-router.post('/spaces/:id', async (req, res) => {
+router.post('/spaces/:id', handleDocumentUpload, async (req, res) => {
   const owner = getOwnerUser(req);
   try {
-    await spaceService.update(req.params.id, owner.id, req.body);
+    await spaceService.update(req.params.id, owner.id, {
+      ...req.body,
+      documentFile: req.file
+    });
     req.flash('success', 'Space updated.');
   } catch (error) {
     req.flash('error', error.message || 'Unable to update space.');
   }
   res.redirect('/owner/my-spaces');
+});
+
+// GET /owner/spaces/:id/document - Short-lived private document access
+router.get('/spaces/:id/document', async (req, res, next) => {
+  try {
+    const url = await spaceService.getDocumentAccess(req.params.id, req.session.user);
+    res.json({ url, expiresIn: 300 });
+  } catch (error) {
+    if (error.message.includes('not authorized')) {
+      return res.status(403).render('pages/errors/403');
+    }
+    next(error);
+  }
 });
 
 // GET /owner/calendar - Weekly slot schedule & conflicts
