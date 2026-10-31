@@ -1,0 +1,254 @@
+<div class="space-y-6">
+  <!-- Breadcrumb & Back Link -->
+  <div class="flex items-center justify-between">
+    <a href="/search" class="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink">
+      <span>&larr;</span> Back to Spaces
+    </a>
+    <span class="text-xs text-ink-muted font-mono">ID: <%= space.id %></span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Details, Photos, Condition History -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Main Photo & Gallery -->
+      <div class="rounded-2xl overflow-hidden border border-line bg-surface">
+        <div class="h-72 w-full bg-surface-tint overflow-hidden relative">
+          <img src="<%= space.photos && space.photos.length > 0 ? space.photos[0] : '/images/spaces/community-hall-1.jpg' %>" 
+               alt="<%= space.name %>" 
+               class="w-full h-full object-cover">
+          <div class="absolute top-4 left-4 flex gap-2">
+            <span class="badge badge-info text-xs"><%= helpers.formatSpaceType(space.space_type) %></span>
+            <span class="badge badge-secondary text-xs capitalize"><%= space.indoor_outdoor %></span>
+          </div>
+          <% if (space.indoor_outdoor === 'outdoor') { %>
+            <div class="absolute bottom-4 left-4 bg-primary/90 text-surface text-xs px-3 py-1.5 rounded-xl backdrop-blur-sm">
+              🌦️ Weather dependent &bull; Free reschedule if rain
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Title & Locality -->
+      <div>
+        <h1 class="text-2xl font-bold text-ink"><%= space.name %></h1>
+        <p class="text-sm text-ink-muted mt-1"><%= space.locality %>, <%= space.city %></p>
+      </div>
+
+      <!-- Specs Bar -->
+      <div class="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-surface border border-line text-center">
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Capacity</div>
+          <div class="text-lg font-bold text-ink mt-0.5"><%= space.capacity %> people</div>
+        </div>
+        <div class="border-x border-line">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Hourly Rate</div>
+          <div class="text-lg font-bold text-ink mt-0.5"><%= helpers.formatCurrency(space.price_per_hour) %>/hr</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Security Deposit</div>
+          <div class="text-lg font-bold text-ink mt-0.5"><%= helpers.formatCurrency(space.deposit_amount) %></div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="card p-6 bg-surface border border-line">
+        <h2 class="text-base font-semibold text-ink mb-2">About this Space</h2>
+        <p class="text-sm text-ink-muted leading-relaxed"><%= space.description %></p>
+      </div>
+
+      <!-- Facilities & Allowed Purposes -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card p-6 bg-surface border border-line">
+          <h2 class="text-base font-semibold text-ink mb-3">Included Facilities</h2>
+          <div class="flex flex-wrap gap-2">
+            <% (space.facilities || []).forEach(facility => { %>
+              <span class="px-3 py-1.5 rounded-xl bg-surface-tint border border-line text-xs font-medium text-ink">
+                &check; <%= facility %>
+              </span>
+            <% }); %>
+          </div>
+        </div>
+
+        <div class="card p-6 bg-surface border border-line">
+          <h2 class="text-base font-semibold text-ink mb-3">Permitted Purposes</h2>
+          <div class="flex flex-wrap gap-2">
+            <% (space.allowed_purposes || []).forEach(purpose => { %>
+              <span class="px-3 py-1.5 rounded-xl bg-surface-tint border border-line text-xs font-medium text-ink capitalize">
+                &bull; <%= purpose %>
+              </span>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Space Rules -->
+      <div class="card p-6 bg-surface border border-line">
+        <h2 class="text-base font-semibold text-ink mb-3">House & Usage Rules</h2>
+        <ul class="space-y-2 text-xs text-ink-muted">
+          <% (space.rules || []).forEach(rule => { %>
+            <li class="flex items-start gap-2">
+              <span class="text-primary font-bold">&bull;</span>
+              <span><%= rule %></span>
+            </li>
+          <% }); %>
+        </ul>
+      </div>
+
+      <!-- Recent Custodial Condition Log -->
+      <div class="card p-6 bg-surface border border-line">
+        <h2 class="text-base font-semibold text-ink mb-2">Space Cleanliness & Condition History</h2>
+        <p class="text-xs text-ink-muted mb-4">Inspected after every booking to safeguard security deposits.</p>
+
+        <% if (conditionReports && conditionReports.length > 0) { %>
+          <div class="space-y-3">
+            <% conditionReports.forEach(report => { %>
+              <div class="p-3 rounded-xl bg-surface-tint border border-line text-xs space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="font-semibold text-ink capitalize"><%= report.stage %> Inspection (<%= report.cleanliness %>)</span>
+                  <span class="text-ink-muted"><%= helpers.formatDate(report.created_at) %></span>
+                </div>
+                <p class="text-ink-muted"><%= report.notes %></p>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="text-xs text-ink-muted">Space is freshly prepped and maintained in pristine condition.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Right Column: Booking & Demo Payment Panel -->
+    <div class="space-y-6">
+      <!-- Owner Info Card -->
+      <div class="card p-4 bg-surface border border-line flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+          <%= helpers.getUserInitials(owner.name) %>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-ink"><%= owner.name %></span>
+            <%- include('../../partials/VerifiedBadge', { verified: owner.verified, label: 'Verified Owner' }) %>
+          </div>
+          <span class="text-xs text-ink-muted">Caretaker of this space</span>
+        </div>
+      </div>
+
+      <!-- Eligibility Notice -->
+      <% if (!eligibility.canBook) { %>
+        <div class="card p-4 bg-status-danger/10 border border-status-danger/30 text-xs space-y-1">
+          <div class="font-bold text-status-danger">Active Booking Limit Reached</div>
+          <p class="text-ink-muted">
+            You currently have <%= eligibility.activeBookings %> active bookings (limit is <%= eligibility.maxActiveBookings %>). Please complete or cancel an existing booking before requesting another.
+          </p>
+        </div>
+      <% } %>
+
+      <!-- Booking Card & Fee Breakdown -->
+      <div class="card p-6 bg-surface border border-line shadow-sm space-y-5">
+        <div>
+          <h2 class="text-base font-bold text-ink">Request a Time Slot</h2>
+          <p class="text-xs text-ink-muted">Subject to owner review and acceptance</p>
+        </div>
+
+        <form action="/bookings" method="POST" class="space-y-4">
+          <input type="hidden" name="space_id" value="<%= space.id %>">
+
+          <!-- Date & Slot Picker -->
+          <div>
+            <label for="booking_date" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Date</label>
+            <input type="date" id="booking_date" name="date" class="input w-full text-xs" required>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="start_time" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Start Time</label>
+              <input type="time" id="start_time" name="start_time" value="10:00" class="input w-full text-xs" required>
+            </div>
+            <div>
+              <label for="end_time" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">End Time</label>
+              <input type="time" id="end_time" name="end_time" value="13:00" class="input w-full text-xs" required>
+            </div>
+          </div>
+
+          <!-- Purpose Selection -->
+          <div>
+            <label for="purpose" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Usage Purpose</label>
+            <select id="purpose" name="purpose" class="input w-full text-xs" required>
+              <% (space.allowed_purposes || []).forEach(p => { %>
+                <option value="<%= p %>" class="capitalize"><%= p %></option>
+              <% }); %>
+            </select>
+            <span class="text-[11px] text-ink-muted mt-1 block">Must match permitted purposes for this space.</span>
+          </div>
+
+          <!-- Demo Payment Method Selector -->
+          <div class="pt-2 border-t border-line">
+            <label class="block text-xs font-semibold text-ink uppercase tracking-wider mb-2">Demo Payment Method</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+                <input type="radio" name="payment_method" value="upi" checked class="text-primary focus:ring-primary">
+                <span class="font-medium text-ink">UPI (Demo Instant)</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+                <input type="radio" name="payment_method" value="card" class="text-primary focus:ring-primary">
+                <span class="font-medium text-ink">Credit / Debit Card</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+                <input type="radio" name="payment_method" value="net_banking" class="text-primary focus:ring-primary">
+                <span class="font-medium text-ink">Net Banking</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+                <input type="radio" name="payment_method" value="pay_at_venue" class="text-primary focus:ring-primary">
+                <span class="font-medium text-ink">Pay at Venue (Owner marks received)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Fee Calculation Breakdown -->
+          <div class="p-3.5 rounded-xl bg-surface-tint border border-line space-y-2 text-xs">
+            <div class="flex justify-between text-ink-muted">
+              <span>Hourly Fee (3 hrs &times; <%= helpers.formatCurrency(space.price_per_hour) %>):</span>
+              <span class="font-mono text-ink"><%= helpers.formatCurrency(space.price_per_hour * 3) %></span>
+            </div>
+            <div class="flex justify-between text-ink-muted">
+              <span>Refundable Deposit:</span>
+              <span class="font-mono text-ink"><%= helpers.formatCurrency(space.deposit_amount) %></span>
+            </div>
+            <div class="pt-2 border-t border-line flex justify-between font-bold text-sm text-ink">
+              <span>Total Payable (Demo):</span>
+              <span class="font-mono text-primary"><%= helpers.formatCurrency((space.price_per_hour * 3) + space.deposit_amount) %></span>
+            </div>
+            <p class="text-[11px] text-ink-muted pt-1">
+              Deposit refunded in full within 2 hours of checkout upon clean, undamaged return.
+            </p>
+          </div>
+
+          <!-- Reliability Advisory Note -->
+          <div class="text-[11px] text-ink-muted flex items-center gap-2 p-2 bg-surface-tint rounded-lg">
+            <span>ℹ️</span>
+            <span>Your score (<%= eligibility.score %> pts) is visible to the owner. Decision is made manually.</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" 
+                  <%= !eligibility.canBook ? 'disabled' : '' %>
+                  class="btn btn-primary w-full py-2.5 font-bold shadow-sm">
+            Pay Now &amp; Request (Demo)
+          </button>
+        </form>
+
+        <!-- Waitlist CTA -->
+        <div class="pt-3 border-t border-line text-center">
+          <form action="/waitlist/<%= space.id %>/SLOT-DEMO" method="POST">
+            <button type="submit" class="btn btn-ghost text-xs w-full py-2">
+              Slot full? Join Waitlist
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,191 @@
+/* BORO — Fidelity Modern Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #333434;
+  --color-primary-hover: #1e1f1f;
+  --color-primary-container: #4a4a4a;
+  --color-secondary: #5d5e5f;
+  --color-surface: #f7f9ff;
+  --color-surface-card: #ffffff;
+  --color-surface-tint: #edf4ff;
+  --color-surface-container: #e3efff;
+  --color-surface-high: #d8eaff;
+  --color-inverse: #1e3244;
+  --color-inverse-ink: #e8f2ff;
+  --color-ink: #071d2e;
+  --color-ink-secondary: #444748;
+  --color-ink-muted: #52585c;
+  --color-line: #c4c7c7;
+  --color-line-subtle: #e8ecf2;
+  
+  --color-status-success: #3a6b35;
+  --color-status-success-tint: #e6f0e5;
+  --color-status-info: #3b6b93;
+  --color-status-info-tint: #e3efff;
+  --color-status-warning: #8a6d2a;
+  --color-status-warning-tint: #f5f0dc;
+  --color-status-danger: #a13225;
+  --color-status-danger-tint: #fde8e5;
+  --color-error: #ba1a1a;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Accessibility Focus States */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.focus-light:focus-visible {
+  outline: 2px solid var(--color-surface-tint);
+  outline-offset: 2px;
+}
+
+/* Token Classes for Utility Styling */
+.bg-surface { background-color: var(--color-surface); }
+.bg-surface-card { background-color: var(--color-surface-card); }
+.bg-surface-tint { background-color: var(--color-surface-tint); }
+.bg-surface-container { background-color: var(--color-surface-container); }
+.bg-surface-high { background-color: var(--color-surface-high); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-primary-hover:hover { background-color: var(--color-primary-hover); }
+.bg-primary-container { background-color: var(--color-primary-container); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-inverse { background-color: var(--color-inverse); }
+.bg-error { background-color: var(--color-error); }
+
+.text-ink { color: var(--color-ink); }
+.text-ink-secondary { color: var(--color-ink-secondary); }
+.text-ink-muted { color: var(--color-ink-muted); }
+.text-inverse-ink { color: var(--color-inverse-ink); }
+.text-primary { color: var(--color-primary); }
+.text-error { color: var(--color-error); }
+
+.border-line { border-color: var(--color-line); }
+.border-line-subtle { border-color: var(--color-line-subtle); }
+
+/* Status Tokens */
+.text-status-success { color: var(--color-status-success); }
+.bg-status-success-tint { background-color: var(--color-status-success-tint); }
+.text-status-info { color: var(--color-status-info); }
+.bg-status-info-tint { background-color: var(--color-status-info-tint); }
+.text-status-warning { color: var(--color-status-warning); }
+.bg-status-warning-tint { background-color: var(--color-status-warning-tint); }
+.text-status-danger { color: var(--color-status-danger); }
+.bg-status-danger-tint { background-color: var(--color-status-danger-tint); }
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-surface-container);
+  color: var(--color-ink);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background-color: var(--color-surface-high);
+}
+
+.btn-inverted {
+  background-color: var(--color-inverse);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-outlined {
+  background-color: transparent;
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-line);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-outlined:hover {
+  background-color: var(--color-surface-tint);
+  color: var(--color-ink);
+}
+
+.btn-destructive {
+  background-color: var(--color-error);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.btn-destructive:hover {
+  background-color: #961515;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-ink-secondary);
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.btn-ghost:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+/* Modals */
+.modal-backdrop {
+  background-color: rgba(7, 29, 46, 0.4);
+  backdrop-filter: blur(2px);
+}

@@ -1,0 +1,127 @@
+<div class="max-w-3xl mx-auto space-y-6 py-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between pb-4 border-b border-line">
+    <div>
+      <h1 class="text-2xl font-bold text-ink"><%= isEdit ? 'Edit Space Listing' : 'List a New Community Space' %></h1>
+      <p class="text-sm text-ink-muted">Fill in accurate specifications to help residents find and respect your space</p>
+    </div>
+    <a href="/owner/my-spaces" class="btn btn-secondary text-xs">
+      Cancel
+    </a>
+  </div>
+
+  <!-- Form -->
+  <form action="<%= isEdit ? ('/owner/spaces/' + space.id) : '/owner/spaces' %>" method="POST" class="space-y-6">
+    <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
+      <h2 class="text-base font-bold text-ink">Basic Space Information</h2>
+
+      <div>
+        <label for="name" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Space Name</label>
+        <input type="text" id="name" name="name" value="<%= isEdit && space ? space.name : '' %>" required placeholder="e.g. Shanti Niketan Community Hall" class="input w-full text-sm">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="space_type" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Space Type</label>
+          <select id="space_type" name="space_type" class="input w-full text-sm" required>
+            <option value="community_hall" <%= isEdit && space && space.space_type === 'community_hall' ? 'selected' : '' %>>Community Hall</option>
+            <option value="community_ground" <%= isEdit && space && space.space_type === 'community_ground' ? 'selected' : '' %>>Community Ground</option>
+            <option value="school_playground" <%= isEdit && space && space.space_type === 'school_playground' ? 'selected' : '' %>>School Playground</option>
+            <option value="small_room" <%= isEdit && space && space.space_type === 'small_room' ? 'selected' : '' %>>Small Room</option>
+            <option value="storeroom" <%= isEdit && space && space.space_type === 'storeroom' ? 'selected' : '' %>>Storeroom</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="indoor_outdoor" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Environment</label>
+          <select id="indoor_outdoor" name="indoor_outdoor" class="input w-full text-sm" required>
+            <option value="indoor" <%= isEdit && space && space.indoor_outdoor === 'indoor' ? 'selected' : '' %>>Indoor</option>
+            <option value="outdoor" <%= isEdit && space && space.indoor_outdoor === 'outdoor' ? 'selected' : '' %>>Outdoor (Weather dependent)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="locality" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Locality / Neighborhood</label>
+          <input type="text" id="locality" name="locality" value="<%= isEdit && space ? space.locality : '' %>" required placeholder="e.g. Ward 12, Malviya Nagar" class="input w-full text-sm">
+        </div>
+
+        <div>
+          <label for="city" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">City</label>
+          <input type="text" id="city" name="city" value="<%= isEdit && space ? space.city : 'New Delhi' %>" required class="input w-full text-sm">
+        </div>
+      </div>
+
+      <div>
+        <label for="description" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Space Description</label>
+        <textarea id="description" name="description" rows="3" class="input w-full text-sm" placeholder="Describe the layout, natural lighting, and any important access instructions..."><%= isEdit && space ? space.description : '' %></textarea>
+      </div>
+    </div>
+
+    <!-- Capacity & Pricing -->
+    <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
+      <h2 class="text-base font-bold text-ink">Capacity &amp; Fair Pricing</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label for="capacity" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Max Capacity (Persons)</label>
+          <input type="number" id="capacity" name="capacity" value="<%= isEdit && space ? space.capacity : 50 %>" required min="1" class="input w-full text-sm">
+        </div>
+
+        <div>
+          <label for="price_per_hour" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Hourly Rate (₹)</label>
+          <input type="number" id="price_per_hour" name="price_per_hour" value="<%= isEdit && space ? space.price_per_hour : 300 %>" required min="0" step="50" class="input w-full text-sm">
+        </div>
+
+        <div>
+          <label for="deposit_amount" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Security Deposit (₹)</label>
+          <input type="number" id="deposit_amount" name="deposit_amount" value="<%= isEdit && space ? space.deposit_amount : 1500 %>" required min="0" step="100" class="input w-full text-sm">
+        </div>
+      </div>
+      <p class="text-[11px] text-ink-muted">Deposits are held safely and refunded upon clean, undamaged return.</p>
+    </div>
+
+    <!-- Permitted Purposes & Facilities -->
+    <div class="card p-6 bg-surface border border-line shadow-sm space-y-5">
+      <div>
+        <label class="block text-xs font-bold text-ink uppercase tracking-wider mb-2">Permitted Usage Purposes</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <% ['meeting', 'event', 'sports', 'study', 'storage'].forEach(purpose => { %>
+            <% const checked = isEdit && space && space.allowed_purposes && space.allowed_purposes.includes(purpose); %>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+              <input type="checkbox" name="allowed_purposes" value="<%= purpose %>" <%= checked ? 'checked' : '' %> class="text-primary focus:ring-primary rounded">
+              <span class="capitalize font-medium text-ink"><%= purpose %></span>
+            </label>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-line">
+        <label class="block text-xs font-bold text-ink uppercase tracking-wider mb-2">Available Facilities</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <% ['Chairs & Tables', 'Restrooms', 'Drinking Water', 'Projector & Screen', 'Sound System', 'Whiteboard', 'Floodlights', 'Storage Shelves', 'Power Backup'].forEach(facility => { %>
+            <% const fChecked = isEdit && space && space.facilities && space.facilities.includes(facility); %>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-line bg-surface-tint text-xs cursor-pointer">
+              <input type="checkbox" name="facilities" value="<%= facility %>" <%= fChecked ? 'checked' : '' %> class="text-primary focus:ring-primary rounded">
+              <span class="font-medium text-ink"><%= facility %></span>
+            </label>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-line">
+        <label for="rules" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">House Rules (One per line)</label>
+        <textarea id="rules" name="rules" rows="3" class="input w-full text-sm" placeholder="No loud music past 10 PM&#10;Leave premises broom-clean&#10;Turn off floodlights before locking"><%= isEdit && space && space.rules ? space.rules.join('\n') : '' %></textarea>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end gap-3">
+      <a href="/owner/my-spaces" class="btn btn-secondary text-sm">Cancel</a>
+      <button type="submit" class="btn btn-primary text-sm font-bold px-6">
+        <%= isEdit ? 'Save Changes (Demo)' : 'Publish Space (Demo)' %>
+      </button>
+    </div>
+  </form>
+</div>

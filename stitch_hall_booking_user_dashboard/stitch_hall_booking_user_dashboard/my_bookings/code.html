@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-on-surface":"#e8f2ff","outline-variant":"#c4c7c7","secondary":"#5d5e5f","on-primary":"#ffffff","primary":"#333434","error":"#ba1a1a","surface-container-highest":"#d0e5fc","on-error-container":"#93000a","on-surface-variant":"#444748","on-secondary-container":"#626363","on-surface":"#071d2e","inverse-surface":"#1e3244","surface-tint":"#5e5e5e","outline":"#747878","secondary-container":"#e0dfdf","tertiary-fixed":"#e4e4c9","on-secondary":"#ffffff","on-primary-container":"#bbb9b9","secondary-fixed":"#e3e2e2","surface-variant":"#d0e5fc","background":"#f7f9ff","surface-bright":"#f7f9ff","on-background":"#071d2e","on-secondary-fixed-variant":"#464747","tertiary":"#343523","surface":"#f7f9ff","error-container":"#ffdad6","inverse-primary":"#c8c6c6","tertiary-container":"#4a4c38","on-tertiary-container":"#bbbca3","surface-container-low":"#edf4ff","on-primary-fixed":"#1b1c1c","on-error":"#ffffff","surface-container-high":"#d8eaff","tertiary-fixed-dim":"#c8c8ae","on-tertiary-fixed-variant":"#474834","on-primary-fixed-variant":"#474747","surface-dim":"#c7dcf4","secondary-fixed-dim":"#c6c6c6","primary-container":"#4a4a4a","surface-container":"#e3efff","on-tertiary-fixed":"#1b1d0c","surface-container-lowest":"#ffffff","primary-fixed":"#e4e2e2","on-secondary-fixed":"#1a1c1c","primary-fixed-dim":"#c8c6c6","on-tertiary":"#ffffff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{gutter:"1rem","space-md":"1rem",margin:"1.5rem","space-sm":"0.5rem","space-xl":"2rem","space-xs":"0.25rem","space-lg":"1.5rem"},fontFamily:{"body-md":["Inter"],"label-sm":["Inter"],"headline-lg":["Inter"],headline:["Inter"],display:["Inter"],body:["Inter"],label:["Inter"]},fontSize:{"body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],"label-sm":["12px",{lineHeight:"16px",fontWeight:"500"}],"headline-lg":["32px",{lineHeight:"40px",fontWeight:"600"}]}}}}</script></head><body class="bg-background font-body text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest/80 backdrop-blur-2xl z-50 flex flex-col justify-between p-6 border-r border-outline-variant/30 shadow-sm"><div class="flex flex-col gap-6"><div class="flex items-center gap-3 px-2"><img alt="CivicHall Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WO9RwFUWNQXcba0ybgz24aJTc5UnwgYKVlO8p-c70gGRs5BDEZtPWbvvqIRWdctUMznYr0YsT85tQaeP4wYsf_aUUytaXhixZPa4cVnlMlmG38pzYluY9Plat_M8xEf7vaQshp2ZOyXQnhV3thT_ZGXZ9U0JInvRsryq-fMvuvP-_QksYDI5-Ax_JeGiQexnb1Ac-inPN2DwsQvkT1p50fLMKiFe_c2tPYAoWG8Vqmlw"/><div class="flex flex-col"><span class="text-lg font-headline font-bold tracking-tight text-on-surface">CivicHall</span><span class="text-xs text-on-surface-variant font-medium">Community Spaces</span></div></div><div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between"><div class="flex items-center gap-2.5"><div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div><div class="flex flex-col"><span class="text-xs text-on-surface-variant font-medium">Reliability Status</span><span class="text-sm font-semibold text-on-surface">Tier 1 Resident</span></div></div><span class="text-xs font-bold text-on-primary bg-primary px-2.5 py-1 rounded-full">95</span></div><nav class="flex flex-col gap-1.5" data-active-classes="bg-primary text-on-primary font-semibold shadow-sm"><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="search" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">search</span><span class="text-sm font-medium">Search</span></div></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="hall-details" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">apartment</span><span class="text-sm font-medium">Hall Details</span></div></a><a aria-current="page" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all bg-primary text-on-primary font-semibold shadow-sm" data-path="my-bookings" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">calendar_month</span><span class="text-sm font-medium">My Bookings</span></div><span class="text-xs font-bold text-primary bg-surface-container-lowest px-2 py-0.5 rounded-full">3</span></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="my-score" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="text-sm font-medium">My Score</span></div><span class="text-xs font-semibold text-primary bg-surface-container px-2 py-0.5 rounded-full">95</span></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="history" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">history</span><span class="text-sm font-medium">History</span></div></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="notifications" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="text-sm font-medium">Notifications</span></div><span class="text-xs font-bold text-on-primary bg-secondary px-2 py-0.5 rounded-full">2</span></a></nav></div><div class="pt-4 border-t border-outline-variant/30 flex items-center justify-between px-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[20px]">help_outline</span><span class="text-xs text-on-surface-variant hover:text-on-surface cursor-pointer">Support &amp; FAQ</span></div><span class="text-[10px] text-on-surface-variant/60 tracking-wider uppercase font-mono">v2.4.0</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/80 backdrop-blur-2xl z-40 px-8 flex items-center justify-between border-b border-outline-variant/30"><div class="flex items-center gap-4 flex-1 max-w-md"><div class="relative w-full"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary backdrop-blur-md transition-all" placeholder="Quick search halls, dates, regulations..." type="text"/></div></div><div class="flex items-center gap-5"><button class="relative p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary"></span></button><div class="flex items-center gap-3 pl-3 border-l border-outline-variant/40"><div class="flex flex-col text-right"><span class="text-sm font-semibold text-on-surface leading-tight">Elena Vance</span><span class="text-xs text-secondary font-medium">Verified Resident</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwjSeN8uB1px42PyEJhG8u26zGVy1HbpwioBDaVnIB0078iRFBtBpTEzh3P6_hM3ZkkRTYHABGhb5ENIiTWsHoUGFkN6LFWOVZy62wigiDwI-Cb2s6Hzo0CW0LEQ1eLND4lgk_D4brMi4ZUWxYq92Ces66AKCU0-fnH9YowZVFWXGXc5Ir5LIbLEMuBjJJPy9iAia2hNudRfkSATORWHiHfyyDHgODTbshEaq1ExE5"/></div></div></header><main class="relative pt-16 w-full min-h-screen bg-background"><div class="flex flex-col w-full">
+<div class="p-8 lg:p-10 flex flex-col gap-8 max-w-7xl mx-auto w-full">
+<!-- Top Summary & Ambient Metric Bar -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-wider text-on-surface-variant font-medium">Active Reservations</span>
+<span class="text-2xl font-bold text-on-surface mt-1">3 <span class="text-xs text-secondary font-normal">/ 4 max cap</span></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">event_available</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-wider text-on-surface-variant font-medium">Deposit Escrow</span>
+<span class="text-2xl font-bold text-on-surface mt-1">$150.00</span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-surface-container text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-wider text-on-surface-variant font-medium">Next Check-In</span>
+<span class="text-2xl font-bold text-primary mt-1">21h 14m</span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">alarm</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-wider text-on-surface-variant font-medium">Reliability Shield</span>
+<span class="text-2xl font-bold text-on-surface mt-1">95 / 100</span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-surface-container text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+</div>
+<!-- Tier Policy Warning Banner -->
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest border border-outline-variant/30 p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="p-2.5 rounded-xl bg-error-container text-on-error-container shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[24px]">gavel</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-sm font-semibold text-on-surface">Community Protection &amp; Cancellation Safeguards</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-medium">Civic Code §14</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed max-w-3xl">
+            Free cancellations are permitted up to 24 hours prior. Notice: Canceling under 2 hours prior to start triggers an automatic 50% deposit penalty and a <span class="text-error font-semibold">-10 reliability score reduction</span>, restricting priority bookings.
+          </p>
+</div>
+</div>
+<button class="shrink-0 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5" onclick="document.getElementById('policy-modal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-[16px]">info</span> View Matrix
+      </button>
+</div>
+<!-- Main Navigation Filter Tabs -->
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center p-1.5 rounded-2xl bg-surface-container border border-outline-variant/30 shadow-sm gap-1">
+<button class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-on-primary shadow-sm transition-all flex items-center gap-2" id="tab-all" onclick="switchTab('all')">
+<span>All Bookings</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-lowest text-primary">3</span>
+</button>
+<button class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all flex items-center gap-2" id="tab-upcoming" onclick="switchTab('upcoming')">
+<span>Upcoming</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-low text-on-surface-variant">2</span>
+</button>
+<button class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all flex items-center gap-2" id="tab-waitlist" onclick="switchTab('waitlist')">
+<span>Waitlisted</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-low text-on-surface-variant">1</span>
+</button>
+<button class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all flex items-center gap-2" id="tab-past" onclick="switchTab('past')">
+<span>Past Completed</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-low text-on-surface-variant">8</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-2 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/30 text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-2" id="empty-state-toggle" onclick="toggleEmptyPreview()">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span id="preview-toggle-text">Preview Zero State</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/40"></div>
+<button class="p-2 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/30 text-on-surface-variant transition-colors" title="Export Calendar (.ics)">
+<span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+</button>
+</div>
+</div>
+<!-- Bookings Cards Container -->
+<div class="flex flex-col gap-6" id="bookings-list">
+<!-- Card 1: Kensington Heritage (Confirmed & Approved) -->
+<article class="booking-card group relative rounded-3xl bg-surface-container-lowest border border-outline-variant/30 p-6 lg:p-7 shadow-sm transition-all duration-300 hover:shadow-md" data-category="upcoming">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Thumbnail & Room Status -->
+<div class="relative w-full lg:w-72 h-52 shrink-0 rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A grand interior of Kensington Heritage community hall showcasing polished dark timber floors, restored neoclassical arched windows, warm pendant chandeliers, and acoustics-treated walls under soft daytime architectural lighting in deep cyan and amber tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO030Ig9cA3UPzht3xfaY6o7mq7B3R_l2FMOx6dx8G1z32IDIh6cvR3NyExl70cflFLGE21UCByH73FVnTBvcnGDawGqWDebfMCP7-62lFug8ajaBsmUkefGjYVRtH20vIdyQTdAxQxEb1SjnKe1qo3uJcdyrKerpr2cBPt6omg23izZWiVhL1fUlQHwx8m-FRsuo2JFgEkSpid8DYMH6C-FQTD21WYdrqrbkD_YpC"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="absolute top-3 left-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-surface-container-lowest/90 text-primary shadow-sm backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                Confirmed &amp; Approved
+              </span>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-on-primary">
+<span class="font-mono bg-primary/70 backdrop-blur-md px-2 py-0.5 rounded-md text-[11px] text-surface-container-low">PIN: •••• 9214</span>
+<span class="text-xs text-surface-container-lowest font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock_clock</span> -15m unlock
+              </span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex-1 flex flex-col justify-between gap-5">
+<div>
+<div class="flex flex-wrap items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[11px] uppercase tracking-wider font-semibold text-secondary font-mono">Ref #CH-88204</span>
+<span class="text-outline-variant">•</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">groups</span> 35 registered attendees
+                    </span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface tracking-tight">Kensington Heritage Community Hall</h3>
+</div>
+<div class="text-right">
+<span class="text-xs font-semibold text-primary block">Tomorrow, Oct 25, 2025</span>
+<span class="text-xs text-on-surface-variant font-mono">09:00 AM – 01:00 PM (4 hrs)</span>
+</div>
+</div>
+<!-- Booking Details Pills -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5">music_note</span>
+<div class="flex flex-col">
+<span class="text-[11px] uppercase tracking-wide text-on-surface-variant font-medium">Session Purpose</span>
+<span class="text-xs font-semibold text-on-surface">Neighborhood Chamber Music Rehearsal</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">security</span>
+<div class="flex flex-col">
+<span class="text-[11px] uppercase tracking-wide text-on-surface-variant font-medium">Deposit Escrow</span>
+<span class="text-xs font-semibold text-on-surface">$150.00 Held <span class="text-secondary font-normal">(Auto-refunds post check-out)</span></span>
+</div>
+</div>
+</div>
+<!-- Host Note Box -->
+<div class="mt-4 p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
+<div class="flex-1 text-xs">
+<span class="font-semibold text-on-surface">Trust Decision: </span>
+<span class="text-on-surface-variant">Approved automatically by Civic Trust. Keypad entrance pin code activates 15 minutes prior to start. Acoustic baffles are mounted on the east partition.</span>
+</div>
+</div>
+</div>
+<!-- Card Actions & Deadlines -->
+<div class="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">schedule</span>
+<span class="text-[11px] text-on-surface-variant">
+                  Free cancellation window closes: <strong class="text-on-surface font-semibold">Today at 11:59 PM</strong>
+</span>
+</div>
+<div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+<button class="px-4 py-2 rounded-xl bg-surface-container-low hover:bg-error-container hover:text-on-error-container text-on-surface-variant text-xs font-medium border border-outline-variant/30 transition-all flex items-center gap-1.5" onclick="openCancelModal('Kensington Heritage Community Hall', 'Tomorrow at 09:00 AM', '$150.00', '0')">
+<span class="material-symbols-outlined text-[16px]">close</span> Cancel Booking
+                </button>
+<button class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium border border-outline-variant/30 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">tune</span> Modify Equipment
+                </button>
+<button class="px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-container text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5" onclick="openPassModal('Kensington Heritage Community Hall', 'Oct 25, 2025 • 09:00 AM', 'CH-88204', '9214')">
+<span class="material-symbols-outlined text-[16px]">qr_code_2</span> Access Pass
+                </button>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2: Harborview Waterfront Pavilion (Pending Review) -->
+<article class="booking-card group relative rounded-3xl bg-surface-container-lowest border border-outline-variant/30 p-6 lg:p-7 shadow-sm transition-all duration-300 hover:shadow-md" data-category="upcoming">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Thumbnail & Status -->
+<div class="relative w-full lg:w-72 h-52 shrink-0 rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Panoramic modern civic waterfront pavilion with floor-to-ceiling glass looking over misty evening waters, ambient cool blue and lavender lighting, polished slate flooring with minimalist community seating arranged for a summit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU5yxCzpSFUY8-4Yx5PNnhA0b0btF5p8UOFLVDLMALi_puLngCCiZz7dn1lPVAo5Y6Kmlr_2tQTRc-wh5v7MEAU3tzXBO3xOPnnoB46Vbhbn6myugtezAlkyz5D150iFQtFreGuducdnzhbSOGYoI9W-gkDLyhYlhC8ANybOvaPhQpcGupqEuj3fOX4OQX64TZDxj-YRC4DZExpwj5bpzmBXKRwiCQd7u_R0gjVqje"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="absolute top-3 left-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-surface-container-lowest/90 text-on-surface shadow-sm backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
+                Pending Owner Review
+              </span>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-on-primary">
+<span class="font-mono bg-primary/70 backdrop-blur-md px-2 py-0.5 rounded-md text-[11px] text-surface-container-low">Est. SLA: 4 hrs</span>
+<span class="text-xs text-surface-container-lowest font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span> In Queue
+              </span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex-1 flex flex-col justify-between gap-5">
+<div>
+<div class="flex flex-wrap items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[11px] uppercase tracking-wider font-semibold text-secondary font-mono">Ref #CH-90411</span>
+<span class="text-outline-variant">•</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">groups</span> 70 guests planned
+                    </span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface tracking-tight">Harborview Waterfront Pavilion</h3>
+</div>
+<div class="text-right">
+<span class="text-xs font-semibold text-on-surface block">Saturday, Nov 08, 2025</span>
+<span class="text-xs text-on-surface-variant font-mono">05:00 PM – 10:00 PM (5 hrs)</span>
+</div>
+</div>
+<!-- Booking Details Pills -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">campaign</span>
+<div class="flex flex-col">
+<span class="text-[11px] uppercase tracking-wide text-on-surface-variant font-medium">Session Purpose</span>
+<span class="text-xs font-semibold text-on-surface">Community Coastal Conservation Workshop</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">receipt_long</span>
+<div class="flex flex-col">
+<span class="text-[11px] uppercase tracking-wide text-on-surface-variant font-medium">Rate Estimate</span>
+<span class="text-xs font-semibold text-on-surface">Civic Subsidized ($0.00) <span class="text-secondary font-normal">(501c3 status)</span></span>
+</div>
+</div>
+</div>
+<!-- Owner Review Status Box -->
+<div class="mt-4 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">pending_actions</span>
+<div class="flex-1 text-xs">
+<span class="font-semibold text-on-surface">Custodian Review Note: </span>
+<span class="text-on-surface-variant">Reviewing sound engineering requirements and non-profit certification validity. Venue manager Sarah Lin will finalize before Oct 26.</span>
+</div>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">info</span>
+<span class="text-[11px] text-on-surface-variant">No charge applied until custodian approval is confirmed.</span>
+</div>
+<div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+<button class="px-4 py-2 rounded-xl bg-surface-container-low hover:bg-error-container hover:text-on-error-container text-on-surface-variant text-xs font-medium border border-outline-variant/30 transition-all flex items-center gap-1.5" onclick="openCancelModal('Harborview Waterfront Pavilion', 'Nov 08, 2025 at 05:00 PM', '$0.00', '0')">
+<span class="material-symbols-outlined text-[16px]">close</span> Cancel Request
+                </button>
+<button class="px-4 py-2 rounded-xl bg-secondary-container text-on-secondary-container hover:bg-secondary-fixed text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">edit_note</span> Edit Request Details
+                </button>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3: Northside Youth & Arts Studio (Waitlisted #1) -->
+<article class="booking-card group relative rounded-3xl bg-surface-container-lowest border border-outline-variant/30 p-6 lg:p-7 shadow-sm transition-all duration-300 hover:shadow-md" data-category="waitlist">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Thumbnail & Status -->
+<div class="relative w-full lg:w-72 h-52 shrink-0 rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Atmospheric modern creative arts studio with tall exposed ceiling rafters, contemporary track spotlights shining on creative workshop tables, deep blue walls with acoustic wood slats in a clean minimalist architectural composition" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjsgR_Qp5Sv0vOJiUU7tcx8jI-j4NaHVngNlawxJNlVUFEtcrVleGA0p2FcvaN24kB722NUXVnrcutHyPtwr1puiFcjsEZjUNaaTKtIGB_eZ2JT2SjINMbGsbASmgNEOgc1owfIYLfrOCJrBT2LdjQ00LCKI-234Dcv2ElxGBhymBQzxlIcVGROmO_7XFSRsM7BN3H6uHnwBzZWTRdx5YCBkbv0cWFAYLXIOAyrU93"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="absolute top-3 left-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-surface-container-lowest/90 text-primary shadow-sm backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                Waitlist Position #1
+              </span>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-on-primary">
+<span class="font-mono bg-primary/70 backdrop-blur-md px-2 py-0.5 rounded-md text-[11px] text-surface-container-low">Priority 1/4</span>
+<span class="text-xs text-surface-container-lowest flex items-center gap-1 font-mono">
+                Auto-Hold 60m
+              </span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex-1 flex flex-col justify-between gap-5">
+<div>
+<div class="flex flex-wrap items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[11px] uppercase tracking-wider font-semibold text-secondary font-mono">Ref #WL-44120</span>
+<span class="text-outline-variant">•</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer</span> Queued 2 days ago
+                    </span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface tracking-tight">Northside Youth &amp; Arts Studio Hall</h3>
+</div>
+<div class="text-right">
+<span class="text-xs font-semibold text-on-surface block">Sunday, Nov 02, 2025</span>
+<span class="text-xs text-on-surface-variant font-mono">02:00 PM – 06:00 PM (4 hrs)</span>
+</div>
+</div>
+<!-- Waitlist Progress Indicator -->
+<div class="mt-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-xs">
+<span class="font-medium text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px]">priority_high</span> You are next in line!
+                  </span>
+<span class="text-secondary font-mono text-[11px]">88% Cancellation Likelihood for primary holder</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-500" style="width: 85%;"></div>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                  If the primary holder relinquishes this slot, you will receive an instantaneous push notification and SMS. You will have a guaranteed <span class="text-primary font-semibold">60 minutes</span> to claim the slot.
+                </p>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">notifications_active</span>
+<span class="text-[11px] text-secondary">SMS alerts armed to (+1) •••• ••842</span>
+</div>
+<div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+<button class="px-4 py-2 rounded-xl bg-surface-container-low hover:bg-error-container hover:text-on-error-container text-on-surface-variant text-xs font-medium border border-outline-variant/30 transition-all flex items-center gap-1.5" onclick="leaveWaitlistPrompt('Northside Youth &amp; Arts Studio Hall')">
+<span class="material-symbols-outlined text-[16px]">remove_done</span> Leave Waitlist
+                </button>
+<button class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1.5" onclick="toggleAlertToast()">
+<span class="material-symbols-outlined text-[16px]">tune</span> Alert Settings
+                </button>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+<!-- Empty State Component (Toggled or via filters) -->
+<div class="hidden flex-col items-center justify-center p-12 lg:p-16 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm text-center" id="empty-state-view">
+<div class="relative w-20 h-20 rounded-2xl bg-surface-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary text-[40px]">calendar_view_week</span>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[14px]">search</span>
+</div>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface">No bookings in this view</h3>
+<p class="text-sm text-on-surface-variant max-w-md mt-2 mb-6">
+        You don't have any bookings matching this selection. Discover pristine halls, neighborhood multipurpose studios, and meeting spaces ready for reservation.
+      </p>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-xs font-semibold text-on-surface transition-all" onclick="switchTab('all')">
+          Show All Bookings
+        </button>
+<a class="px-5 py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container text-xs font-semibold shadow-sm transition-all flex items-center gap-2" data-path="search" href="#">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span> Browse Available Halls
+        </a>
+</div>
+</div>
+<!-- Past Completed Tab Panel (Hidden until Past selected) -->
+<div class="hidden flex-col gap-4" id="past-bookings-list">
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div>
+<span class="text-sm font-semibold text-on-surface">Civic Auditorium B - Youth Debate Finals</span>
+<span class="block text-xs text-on-surface-variant font-mono">Completed Sep 14, 2025 • Fully refunded $100 deposit • +2 Reliability bonus</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-1.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs text-on-surface font-medium hover:bg-surface-container-high transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">receipt</span> Invoice
+          </button>
+<button class="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">replay</span> Book Again
+          </button>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div>
+<span class="text-sm font-semibold text-on-surface">Highland Park Glass Pavilion - HOA Annual Assembly</span>
+<span class="block text-xs text-on-surface-variant font-mono">Completed Aug 22, 2025 • Fully refunded $200 deposit • Pristine clean inspect</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-1.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs text-on-surface font-medium hover:bg-surface-container-high transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">receipt</span> Invoice
+          </button>
+<button class="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">replay</span> Book Again
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Cancellation Modal Dialog -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm hidden" id="cancel-modal">
+<div class="relative w-full max-w-lg rounded-3xl bg-surface-container-lowest p-7 shadow-2xl border border-outline-variant/40 flex flex-col gap-5">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="p-3 rounded-2xl bg-error-container text-on-error-container">
+<span class="material-symbols-outlined text-[26px]">warning</span>
+</div>
+<div>
+<h4 class="text-lg font-headline font-bold text-on-surface">Cancel Reservation?</h4>
+<span class="text-xs text-on-surface-variant" id="modal-hall-name">Kensington Heritage Community Hall</span>
+</div>
+</div>
+<button class="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" onclick="closeCancelModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Penalty Breakdown Area -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-3">
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">Scheduled Slot</span>
+<span class="text-on-surface font-semibold" id="modal-slot-time">Tomorrow at 09:00 AM</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">Time Until Commencing</span>
+<span class="text-primary font-mono font-semibold">21 hours, 14 mins</span>
+</div>
+<div class="h-px bg-outline-variant/30 my-1"></div>
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">Security Deposit Return</span>
+<span class="text-on-surface font-semibold text-primary">100% Refund ($150.00)</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">Reliability Score Impact</span>
+<span class="text-on-surface font-semibold text-secondary">0 points (Complies with &gt;2h rule)</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-error-container text-on-error-container text-xs flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5">info</span>
+<span>Once released, this slot will be offered instantly to waitlisted residents. This action cannot be reverted.</span>
+</div>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs font-semibold text-on-surface hover:bg-surface-container-high transition-all" onclick="closeCancelModal()">
+          Keep Reservation
+        </button>
+<button class="px-5 py-2.5 rounded-xl bg-error text-on-error hover:bg-error/90 text-xs font-semibold transition-all" onclick="executeCancel()">
+          Confirm Cancellation
+        </button>
+</div>
+</div>
+</div>
+<!-- QR Access Pass Modal -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm hidden" id="pass-modal">
+<div class="relative w-full max-w-sm rounded-3xl bg-surface-container-lowest p-7 shadow-2xl border border-outline-variant/40 flex flex-col items-center text-center gap-5">
+<div class="w-full flex items-center justify-between">
+<span class="text-xs font-mono uppercase tracking-wider text-secondary">Civic Pass #88204</span>
+<button class="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container" onclick="closePassModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- QR Code Art Glass Tile -->
+<div class="p-4 rounded-2xl bg-surface-container border border-outline-variant/30 shadow-inner flex flex-col items-center">
+<!-- Crisp SVG QR Graphic -->
+<svg class="w-48 h-48 text-primary" fill="currentColor" viewbox="0 0 200 200">
+<!-- Outer Marker Top Left -->
+<rect fill="none" height="50" rx="8" stroke="currentColor" stroke-width="10" width="50" x="15" y="15"></rect>
+<rect fill="currentColor" height="20" rx="4" width="20" x="30" y="30"></rect>
+<!-- Outer Marker Top Right -->
+<rect fill="none" height="50" rx="8" stroke="currentColor" stroke-width="10" width="50" x="135" y="15"></rect>
+<rect fill="currentColor" height="20" rx="4" width="20" x="150" y="30"></rect>
+<!-- Outer Marker Bottom Left -->
+<rect fill="none" height="50" rx="8" stroke="currentColor" stroke-width="10" width="50" x="15" y="135"></rect>
+<rect fill="currentColor" height="20" rx="4" width="20" x="30" y="150"></rect>
+<!-- Data points -->
+<rect fill="currentColor" height="25" rx="2" width="10" x="75" y="20"></rect>
+<rect fill="currentColor" height="15" rx="2" width="10" x="95" y="15"></rect>
+<rect fill="currentColor" height="20" rx="2" width="10" x="115" y="25"></rect>
+<rect fill="currentColor" height="10" rx="2" width="20" x="75" y="60"></rect>
+<rect fill="currentColor" height="15" rx="2" width="15" x="105" y="55"></rect>
+<rect fill="currentColor" height="10" rx="2" width="15" x="25" y="75"></rect>
+<rect fill="currentColor" height="20" rx="2" width="10" x="50" y="80"></rect>
+<rect fill="currentColor" height="15" rx="2" width="25" x="75" y="85"></rect>
+<rect fill="currentColor" height="25" rx="2" width="15" x="110" y="85"></rect>
+<rect fill="currentColor" height="15" rx="2" width="20" x="135" y="75"></rect>
+<rect fill="currentColor" height="15" rx="2" width="15" x="165" y="80"></rect>
+<rect fill="currentColor" height="20" rx="2" width="15" x="75" y="115"></rect>
+<rect fill="currentColor" height="10" rx="2" width="20" x="100" y="120"></rect>
+<rect fill="currentColor" height="30" rx="2" width="10" x="130" y="110"></rect>
+<rect fill="currentColor" height="15" rx="2" width="25" x="155" y="115"></rect>
+<rect fill="currentColor" height="15" rx="2" width="25" x="75" y="150"></rect>
+<rect fill="currentColor" height="25" rx="2" width="15" x="110" y="155"></rect>
+<rect fill="currentColor" height="15" rx="2" width="15" x="140" y="150"></rect>
+<rect fill="currentColor" height="20" rx="2" width="15" x="165" y="155"></rect>
+</svg>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="text-xs uppercase tracking-widest text-on-surface-variant font-mono">Keypad Door Code</span>
+<span class="text-2xl font-mono font-bold tracking-widest text-on-surface bg-surface-container px-4 py-1.5 rounded-xl border border-outline-variant/30">9 2 1 4 #</span>
+<span class="text-[10px] text-on-surface-variant mt-1">Valid 08:45 AM – 01:15 PM tomorrow</span>
+</div>
+<button class="w-full py-2.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs font-semibold text-on-surface hover:bg-surface-container-high transition-all" onclick="closePassModal()">
+        Close Pass
+      </button>
+</div>
+</div>
+<!-- Policy Matrix Modal -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm hidden" id="policy-modal">
+<div class="relative w-full max-w-lg rounded-3xl bg-surface-container-lowest p-7 shadow-2xl border border-outline-variant/40 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-[24px]">verified_user</span>
+<h4 class="text-lg font-headline font-bold text-on-surface">Civic Cancellation Matrix</h4>
+</div>
+<button class="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container" onclick="document.getElementById('policy-modal').classList.add('hidden')">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="space-y-3 text-xs">
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div>
+<span class="font-semibold text-on-surface block">&gt; 24 Hours Notice</span>
+<span class="text-on-surface-variant">Full release without questions</span>
+</div>
+<span class="text-on-surface font-bold">100% Refund • 0 Score Impact</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div>
+<span class="font-semibold text-on-surface block">2 to 24 Hours Notice</span>
+<span class="text-on-surface-variant">Allows waitlist slot fulfillment</span>
+</div>
+<span class="text-secondary font-bold">100% Refund • 0 Score Impact</span>
+</div>
+<div class="p-3.5 rounded-xl bg-error-container text-on-error-container flex items-center justify-between">
+<div>
+<span class="font-semibold text-error block">&lt; 2 Hours Notice</span>
+<span class="text-on-error-container">Short-notice facility lock</span>
+</div>
+<span class="text-error font-bold">50% Forfeit • -10 Score</span>
+</div>
+<div class="p-3.5 rounded-xl bg-error-container text-on-error-container flex items-center justify-between">
+<div>
+<span class="font-semibold text-error block">No Show / Zero Notice</span>
+<span class="text-on-error-container">Unoccupied idle municipal space</span>
+</div>
+<span class="text-error font-bold">100% Forfeit • -20 Score</span>
+</div>
+</div>
+<button class="w-full py-2.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs font-semibold text-on-surface hover:bg-surface-container-high transition-all" onclick="document.getElementById('policy-modal').classList.add('hidden')">
+        Understood
+      </button>
+</div>
+</div>
+<!-- Notification Toast Container -->
+<div class="fixed bottom-6 right-6 z-50 max-w-sm p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none" id="toast-alert">
+<div class="p-2 rounded-xl bg-surface-container text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]" id="toast-icon">check_circle</span>
+</div>
+<div class="flex flex-col text-xs">
+<span class="font-semibold text-on-surface" id="toast-title">Settings Updated</span>
+<span class="text-on-surface-variant" id="toast-desc">SMS &amp; Push notifications have been armed.</span>
+</div>
+</div>
+</div>
+<script>
+  let isZeroPreviewActive = false;
+
+  function switchTab(tab) {
+    const tabs = ['all', 'upcoming', 'waitlist', 'past'];
+    tabs.forEach(t => {
+      const btn = document.getElementById('tab-' + t);
+      if (btn) {
+        if (t === tab) {
+          btn.className = "tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-on-primary shadow-sm transition-all flex items-center gap-2";
+        } else {
+          btn.className = "tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all flex items-center gap-2";
+        }
+      }
+    });
+
+    const bookingsList = document.getElementById('bookings-list');
+    const pastList = document.getElementById('past-bookings-list');
+    const emptyState = document.getElementById('empty-state-view');
+    const cards = document.querySelectorAll('.booking-card');
+
+    if (isZeroPreviewActive) {
+      toggleEmptyPreview();
+    }
+
+    if (tab === 'past') {
+      bookingsList.classList.add('hidden');
+      emptyState.classList.add('hidden');
+      pastList.classList.remove('hidden');
+      return;
+    }
+
+    pastList.classList.add('hidden');
+    bookingsList.classList.remove('hidden');
+
+    let visibleCount = 0;
+    cards.forEach(card => {
+      const cat = card.getAttribute('data-category');
+      if (tab === 'all') {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else if (cat === tab) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (visibleCount === 0) {
+      bookingsList.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+  }
+
+  function toggleEmptyPreview() {
+    isZeroPreviewActive = !isZeroPreviewActive;
+    const bookingsList = document.getElementById('bookings-list');
+    const pastList = document.getElementById('past-bookings-list');
+    const emptyState = document.getElementById('empty-state-view');
+    const toggleBtnText = document.getElementById('preview-toggle-text');
+
+    if (isZeroPreviewActive) {
+      bookingsList.classList.add('hidden');
+      pastList.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      toggleBtnText.innerText = "Restore Bookings";
+    } else {
+      emptyState.classList.add('hidden');
+      bookingsList.classList.remove('hidden');
+      toggleBtnText.innerText = "Preview Zero State";
+      switchTab('all');
+    }
+  }
+
+  function openCancelModal(name, time, deposit, penalty) {
+    document.getElementById('modal-hall-name').innerText = name;
+    document.getElementById('modal-slot-time').innerText = time;
+    document.getElementById('cancel-modal').classList.remove('hidden');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancel-modal').classList.add('hidden');
+  }
+
+  function executeCancel() {
+    closeCancelModal();
+    showToast("Booking Canceled", "Security deposit $150 escrow release initialized. Your reliability score is protected.", "check_circle");
+  }
+
+  function openPassModal(name, time, ref, pin) {
+    document.getElementById('pass-modal').classList.remove('hidden');
+  }
+
+  function closePassModal() {
+    document.getElementById('pass-modal').classList.add('hidden');
+  }
+
+  function leaveWaitlistPrompt(hall) {
+    if (confirm("Remove yourself from waitlist queue for " + hall + "? You will lose spot #1.")) {
+      showToast("Waitlist Forfeited", "You have been unlisted. Next resident notified.", "info");
+    }
+  }
+
+  function toggleAlertToast() {
+    showToast("Notifications Armed", "High-priority SMS dispatch is set to instant delivery.", "notifications_active");
+  }
+
+  function showToast(title, desc, icon) {
+    const toast = document.getElementById('toast-alert');
+    document.getElementById('toast-title').innerText = title;
+    document.getElementById('toast-desc').innerText = desc;
+    document.getElementById('toast-icon').innerText = icon || 'check_circle';
+    
+    toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 4000);
+  }
+</script></main></div></body></html>

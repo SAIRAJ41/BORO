@@ -1,0 +1,67 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">My Bookings</h1>
+      <p class="text-sm text-ink-muted">Manage your active reservations, PIN codes, and slot waitlists</p>
+    </div>
+    <a href="/search" class="btn btn-primary text-xs">
+      + Book Another Space
+    </a>
+  </div>
+
+  <!-- Tabs -->
+  <%- include('../../partials/Tabs', { tabs: tabs, activeTab: activeTab }) %>
+
+  <!-- Tab Content -->
+  <% if (activeTab === 'waitlisted') { %>
+    <!-- Waitlist View -->
+    <% if (waitlist && waitlist.length > 0) { %>
+      <div class="space-y-4">
+        <% waitlist.forEach(item => { %>
+          <div class="card p-5 bg-surface border border-line flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="badge badge-warning text-xs">Waitlist Position #<%= item.position %></span>
+                <span class="text-xs text-ink-muted">Requested <%= helpers.formatDateTime(item.requested_at) %></span>
+              </div>
+              <h2 class="text-base font-bold text-ink"><%= item.space_name %></h2>
+              <p class="text-xs text-ink-muted mt-0.5">
+                Preferred Slot: <%= helpers.formatDateTime(item.slot_start) %> &ndash; <%= helpers.formatTime(item.slot_end) %>
+              </p>
+            </div>
+            <form action="/waitlist/<%= item.id %>/leave" method="POST">
+              <button type="submit" class="btn btn-secondary text-xs">
+                Leave Waitlist
+              </button>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/EmptyState', {
+        title: 'No active waitlist slots',
+        description: 'When a popular community space is fully booked, you can join the queue to be notified of cancellations.',
+        actionText: 'Browse Spaces',
+        actionUrl: '/search'
+      }) %>
+    <% } %>
+
+  <% } else { %>
+    <!-- Bookings View (Upcoming / Completed / All) -->
+    <% if (bookings && bookings.length > 0) { %>
+      <div class="space-y-4">
+        <% bookings.forEach(booking => { %>
+          <%- include('../../partials/BookingCard', { booking: booking, helpers: helpers }) %>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/EmptyState', {
+        title: 'No bookings in this category',
+        description: 'Ready to reserve a community hall, sports ground, or study room? Check out available spaces now.',
+        actionText: 'Find Spaces',
+        actionUrl: '/search'
+      }) %>
+    <% } %>
+  <% } %>
+</div>

@@ -1,0 +1,118 @@
+<%
+  const bk = locals.booking || {};
+  const isOwner = locals.isOwnerView || false;
+
+  // Check if slot starts within 1 hour to reveal PIN
+  let pinUnlocked = false;
+  if (bk.pin_code && bk.slot_date) {
+    const slotTime = new Date(bk.slot_date).getTime();
+    const nowTime = new Date().getTime();
+    const diffHours = (slotTime - nowTime) / (1000 * 60 * 60);
+    if (diffHours <= 1) {
+      pinUnlocked = true;
+    }
+  }
+%>
+<div class="bg-surface-card border border-line rounded-xl overflow-hidden hover:border-line-subtle transition-all">
+  <div class="p-5 flex flex-col md:flex-row gap-5 justify-between">
+    
+    <!-- Left: Space details & timing -->
+    <div class="flex-1 space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <%- include('partials/StatusBadge', { status: bk.status }) %>
+        <span class="text-xs font-mono text-ink-muted"><%= bk.ref %></span>
+        <span class="text-xs text-ink-muted">•</span>
+        <span class="text-xs text-ink-secondary"><%= bk.group_size || 20 %> attendees planned</span>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-bold text-ink">
+          <a href="/spaces/<%= bk.space_id %>" class="hover:underline"><%= bk.space_name %></a>
+        </h3>
+        <div class="text-xs text-ink-muted mt-0.5 flex items-center space-x-2">
+          <span>📅 <%= formatDate(bk.slot_date) %></span>
+          <span>•</span>
+          <span>⏰ <%= bk.start_time %> – <%= bk.end_time %> (<%= bk.duration_hours %> hrs)</span>
+        </div>
+      </div>
+
+      <!-- Purpose & Financial Details Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div class="bg-surface-tint border border-line rounded-lg p-2.5">
+          <div class="text-[10px] uppercase font-bold text-ink-muted">Session Purpose</div>
+          <div class="text-xs font-semibold text-ink mt-0.5"><%= bk.purpose %></div>
+        </div>
+
+        <div class="bg-surface-tint border border-line rounded-lg p-2.5">
+          <div class="text-[10px] uppercase font-bold text-ink-muted">Payment &amp; Deposit</div>
+          <div class="text-xs font-semibold text-ink mt-0.5 flex items-center justify-between">
+            <span class="capitalize"><%= bk.payment_method %> (<%= bk.payment_status %>)</span>
+            <span class="text-ink-muted">Deposit: <%= formatCurrency(bk.deposit_amount) %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decision Reason or Condition Notes if any -->
+      <% if (bk.decision_reason) { %>
+        <div class="bg-surface-container rounded-lg p-2.5 text-xs text-ink-secondary flex items-start space-x-2">
+          <span class="font-bold text-ink shrink-0">Owner Note:</span>
+          <span><%= bk.decision_reason %></span>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Right: Access Pin Box & Actions -->
+    <div class="w-full md:w-64 flex flex-col justify-between items-start md:items-end border-t md:border-t-0 md:border-l border-line pt-4 md:pt-0 md:pl-5 space-y-4">
+      
+      <!-- Keypad Pin Card -->
+      <div class="w-full bg-surface-tint border border-line rounded-lg p-3 text-center">
+        <div class="text-[10px] uppercase font-semibold text-ink-muted tracking-wider">Access PIN Code</div>
+        <% if (bk.status === 'approved' || bk.status === 'checked_in') { %>
+          <% if (pinUnlocked && bk.pin_code) { %>
+            <div class="text-xl font-mono font-bold tracking-widest text-primary my-1">
+              <%= bk.pin_code %>
+            </div>
+            <div class="text-[10px] text-status-success font-medium">● Keypad access active</div>
+          <% } else { %>
+            <div class="text-sm font-medium text-ink-muted my-1">
+              ••••
+            </div>
+            <div class="text-[10px] text-ink-muted">Unlocks 1 hour before session</div>
+          <% } %>
+        <% } else if (bk.status === 'requested') { %>
+          <div class="text-xs text-ink-muted my-1">Awaiting Owner Approval</div>
+        <% } else if (bk.status === 'overdue') { %>
+          <div class="text-xs font-bold text-status-danger my-1">Session Expired</div>
+        <% } else { %>
+          <div class="text-xs text-ink-muted my-1">Completed</div>
+        <% } %>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="w-full flex flex-col space-y-2">
+        <a href="/bookings/<%= bk.id %>/receipt" class="btn-outlined text-xs py-1.5 w-full text-center">
+          View Receipt (Demo)
+        </a>
+
+        <% if (bk.status === 'approved' && bk.can_cancel) { %>
+          <button type="button" onclick="openReasonDialog('cancel-dialog-<%= bk.id %>')" class="text-xs text-ink-secondary hover:text-ink underline text-center py-1">
+            Cancel Booking
+          </button>
+        <% } else if (bk.status === 'approved' && !bk.can_cancel) { %>
+          <div class="text-[10px] text-status-warning text-center">
+            ⚠️ <%= bk.cancel_warning || 'Cancellation penalty applies (< 2 hrs)' %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Reason Dialog -->
+  <%- include('partials/ReasonDialog', {
+    dialogId: 'cancel-dialog-' + bk.id,
+    actionTitle: 'Cancel Booking #' + bk.ref,
+    actionLabel: 'Confirm Cancellation',
+    postUrl: '/bookings/' + bk.id + '/cancel',
+    isDestructive: true
+  }) %>
+</div>

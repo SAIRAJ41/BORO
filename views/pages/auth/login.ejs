@@ -1,0 +1,193 @@
+<div class="space-y-6">
+  <!-- Brand Header -->
+  <div class="text-center">
+    <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-white font-bold text-xl mb-3 shadow-sm focus:outline-none">
+      B
+    </div>
+    <h1 class="text-2xl font-bold text-ink tracking-tight">Sign in</h1>
+    <p class="text-sm text-ink-muted mt-1">Community spaces shared fairly and transparently</p>
+  </div>
+
+  <!-- Sign In Card -->
+  <div class="card p-6 sm:p-7 bg-surface-card border border-line shadow-sm rounded-2xl">
+    <!-- Inline Error Message Display -->
+    <% if (locals.flash && locals.flash.error && locals.flash.error.length > 0) { %>
+      <div id="login-error-message" role="alert" class="p-3 mb-4 rounded-xl bg-status-danger/10 border border-status-danger/30 text-xs text-status-danger flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span><%= locals.flash.error[0] %></span>
+      </div>
+    <% } %>
+
+    <form action="/login" method="POST" class="space-y-4" novalidate>
+      <!-- BACKEND: wire a real CSRF check -->
+      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+
+      <!-- Email Field -->
+      <div>
+        <label for="email" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
+          Email address
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          autocomplete="email"
+          required
+          aria-required="true"
+          <% if (locals.flash && locals.flash.error && locals.flash.error.length > 0) { %>aria-describedby="login-error-message"<% } %>
+          placeholder="e.g. resident@demo.com"
+          class="w-full px-3.5 py-2.5 text-sm bg-surface-tint border border-line rounded-xl text-ink placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+        />
+      </div>
+
+      <!-- Password Field with Show/Hide Toggle -->
+      <div>
+        <div class="flex justify-between items-center mb-1.5">
+          <label for="password" class="block text-xs font-semibold text-ink uppercase tracking-wider">
+            Password
+          </label>
+        </div>
+        <div class="relative">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            placeholder="••••••••"
+            class="w-full pl-3.5 pr-11 py-2.5 text-sm bg-surface-tint border border-line rounded-xl text-ink placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+          />
+          <button
+            type="button"
+            id="togglePasswordBtn"
+            aria-label="Toggle password visibility"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink focus:outline-none"
+            onclick="
+              const pwd = document.getElementById('password');
+              const isText = pwd.type === 'text';
+              pwd.type = isText ? 'password' : 'text';
+              this.setAttribute('aria-label', isText ? 'Show password' : 'Hide password');
+              this.querySelector('.eye-show').classList.toggle('hidden', !isText);
+              this.querySelector('.eye-hide').classList.toggle('hidden', isText);
+            "
+          >
+            <!-- Show Eye Icon -->
+            <svg class="eye-show w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            <!-- Hide Eye Icon -->
+            <svg class="eye-hide w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="w-full py-2.5 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-xl shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+      >
+        Sign in
+      </button>
+    </form>
+
+    <div class="mt-5 pt-4 border-t border-line text-center text-xs text-ink-muted">
+      Don't have an account?
+      <a href="/signup" class="text-primary font-semibold hover:underline ml-1">Create account</a>
+    </div>
+  </div>
+
+  <!-- Try a Demo Account Panel (Controlled by USE_MOCK) -->
+  <% if (locals.useMock) { %>
+    <div class="space-y-3 pt-2">
+      <div class="flex items-center justify-between px-1">
+        <span class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Try a demo account</span>
+        <span class="text-[11px] font-medium text-status-info bg-status-info/10 px-2.5 py-0.5 rounded-full border border-status-info/20">
+          Demo mode, fictional accounts only
+        </span>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- 1. Resident Card -->
+        <div class="p-3.5 rounded-2xl bg-surface-card border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0 mt-0.5 sm:mt-0">
+              PM
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-ink">Priya Mehta</span>
+                <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-surface-tint border border-line text-ink">User</span>
+              </div>
+              <p class="text-xs text-ink-muted mt-0.5">Browse spaces, request slots, and track bookings</p>
+              <div class="text-[11px] font-mono text-ink-secondary mt-1">
+                priya@demo.com &bull; demo123
+              </div>
+            </div>
+          </div>
+          <a
+            href="/demo/user"
+            class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
+          >
+            Continue as User
+          </a>
+        </div>
+
+        <!-- 2. Owner Card -->
+        <div class="p-3.5 rounded-2xl bg-surface-card border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-status-info/10 text-status-info font-bold flex items-center justify-center text-xs shrink-0 mt-0.5 sm:mt-0">
+              RK
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-ink">Rajesh Kumar</span>
+                <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-status-info-tint text-status-info">Owner</span>
+              </div>
+              <p class="text-xs text-ink-muted mt-0.5">List community halls and grounds, manage requests</p>
+              <div class="text-[11px] font-mono text-ink-secondary mt-1">
+                rajesh@demo.com &bull; demo123
+              </div>
+            </div>
+          </div>
+          <a
+            href="/demo/owner"
+            class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
+          >
+            Continue as Owner
+          </a>
+        </div>
+
+        <!-- 3. Admin Card -->
+        <div class="p-3.5 rounded-2xl bg-surface-card border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-status-warning/10 text-status-warning font-bold flex items-center justify-center text-xs shrink-0 mt-0.5 sm:mt-0">
+              AV
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-ink">Amit Verma</span>
+                <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-status-warning-tint text-status-warning">Admin</span>
+              </div>
+              <p class="text-xs text-ink-muted mt-0.5">Verify owner documents, audit logs, resolve disputes</p>
+              <div class="text-[11px] font-mono text-ink-secondary mt-1">
+                admin@demo.com &bull; demo123
+              </div>
+            </div>
+          </div>
+          <a
+            href="/demo/admin"
+            class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
+          >
+            Continue as Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>

@@ -1,0 +1,147 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Platform Governance Overview</h1>
+      <p class="text-sm text-ink-muted">System metrics, transparency counters, and administrative queues</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="badge badge-success text-xs">System Healthy</span>
+    </div>
+  </div>
+
+  <!-- Key Governance Counters Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <%- include('../../partials/StatCard', {
+      title: 'Active Community Spaces',
+      value: stats.total_spaces,
+      subtext: 'Halls, grounds & rooms'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Active Bookings',
+      value: stats.active_bookings,
+      subtext: 'Within 2 per user limit'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Pending Owner Verifications',
+      value: stats.pending_verifications,
+      subtext: 'Require ID inspection',
+      variant: stats.pending_verifications > 0 ? 'warning' : 'default'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Open Score Disputes',
+      value: stats.open_disputes,
+      subtext: 'Resident mediation queue',
+      variant: stats.open_disputes > 0 ? 'danger' : 'default'
+    }) %>
+  </div>
+
+  <!-- Second Row Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <%- include('../../partials/StatCard', {
+      title: 'Registered Users',
+      value: stats.total_users,
+      subtext: 'Residents & caretakers'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Gross Rental Volume',
+      value: helpers.formatCurrency(stats.total_volume),
+      subtext: 'Total demo payments processed'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Total Incidents Recorded',
+      value: stats.total_incidents,
+      subtext: 'Closed and under review'
+    }) %>
+  </div>
+
+  <!-- Quick Administrative Action Queues -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Pending Verifications Queue -->
+    <div class="card p-6 bg-surface border border-line space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-base font-bold text-ink">Pending Space Owners</h2>
+        <a href="/admin/verify-owners" class="text-xs text-primary font-medium hover:underline">View All &rarr;</a>
+      </div>
+
+      <% if (stats.pending_verifications > 0) { %>
+        <div class="p-4 rounded-xl bg-surface-tint border border-line flex justify-between items-center">
+          <div>
+            <div class="font-bold text-ink text-sm">Sunita Rao</div>
+            <div class="text-xs text-ink-muted">Applied to list: Greenwood School Playground</div>
+          </div>
+          <a href="/admin/verify-owners" class="btn btn-primary text-xs">
+            Review Documents
+          </a>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-ink-muted">No space owners waiting for verification.</p>
+      <% } %>
+    </div>
+
+    <!-- Open Disputes Queue -->
+    <div class="card p-6 bg-surface border border-line space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-base font-bold text-ink">Score Disputes Queue</h2>
+        <a href="/admin/disputes" class="text-xs text-primary font-medium hover:underline">View All &rarr;</a>
+      </div>
+
+      <% if (stats.open_disputes > 0) { %>
+        <div class="p-4 rounded-xl bg-surface-tint border border-line flex justify-between items-center">
+          <div>
+            <div class="font-bold text-ink text-sm">Rohan Desai (DSP-001)</div>
+            <div class="text-xs text-ink-muted">Disputing -30 penalty on BK-1005</div>
+          </div>
+          <a href="/admin/disputes" class="btn btn-secondary text-xs">
+            Mediate Dispute
+          </a>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-ink-muted">No open score disputes pending.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Recent Audit Ledger Feed -->
+  <div class="card p-6 bg-surface border border-line space-y-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <h2 class="text-base font-bold text-ink">Recent Audit Trail</h2>
+        <p class="text-xs text-ink-muted">Append-only administrative event stream</p>
+      </div>
+      <a href="/admin/audit-log" class="btn btn-secondary text-xs">
+        Complete Audit Log &rarr;
+      </a>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl border border-line">
+      <table class="w-full text-left text-xs divide-y divide-line">
+        <thead class="bg-surface-tint font-semibold text-ink-muted uppercase">
+          <tr>
+            <th class="px-4 py-3">Audit ID</th>
+            <th class="px-4 py-3">Timestamp</th>
+            <th class="px-4 py-3">Actor</th>
+            <th class="px-4 py-3">Action</th>
+            <th class="px-4 py-3">Details / Reason</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line bg-surface">
+          <% (recentAudits || []).forEach(log => { %>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink"><%= log.id %></td>
+              <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDateTime(log.created_at) %></td>
+              <td class="px-4 py-3 font-medium text-ink"><%= log.actor %></td>
+              <td class="px-4 py-3 font-mono text-primary"><%= log.action %></td>
+              <td class="px-4 py-3 text-ink-muted"><%= log.details %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Earnings &amp; Payouts</h1>
+      <p class="text-sm text-ink-muted">Track revenue from community space bookings and configure payout accounts</p>
+    </div>
+  </div>
+
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <%- include('../../partials/StatCard', {
+      title: 'Gross Earnings',
+      value: helpers.formatCurrency(earnings.gross),
+      subtext: 'From all space bookings'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Net Payout Received',
+      value: helpers.formatCurrency(earnings.netPayout),
+      subtext: 'After 5% platform fee'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Completed Bookings',
+      value: earnings.completedBookings,
+      subtext: 'Total successful handovers'
+    }) %>
+
+    <%- include('../../partials/StatCard', {
+      title: 'Space Utilization',
+      value: earnings.utilizationRate,
+      subtext: 'Available slots booked'
+    }) %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Payout Ledger Table -->
+    <div class="lg:col-span-2 card p-6 bg-surface border border-line space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-base font-bold text-ink">Payout Transfer History</h2>
+        <span class="text-xs text-ink-muted">Processed automatically every Monday</span>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-line">
+        <table class="w-full text-left text-xs divide-y divide-line">
+          <thead class="bg-surface-tint uppercase font-semibold text-ink-muted">
+            <tr>
+              <th class="px-4 py-3">Reference</th>
+              <th class="px-4 py-3">Date</th>
+              <th class="px-4 py-3">Payout Method</th>
+              <th class="px-4 py-3 text-right">Amount</th>
+              <th class="px-4 py-3 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line bg-surface">
+            <% (payouts || []).forEach(p => { %>
+              <tr>
+                <td class="px-4 py-3 font-mono text-ink"><%= p.id %></td>
+                <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDate(p.date) %></td>
+                <td class="px-4 py-3 font-medium text-ink"><%= p.method %></td>
+                <td class="px-4 py-3 text-right font-mono font-bold text-ink"><%= helpers.formatCurrency(p.amount) %></td>
+                <td class="px-4 py-3 text-center"><span class="badge badge-success text-[10px] uppercase"><%= p.status %></span></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Payout Settings Card -->
+    <div class="card p-6 bg-surface border border-line space-y-4">
+      <h2 class="text-base font-bold text-ink">Payout Configuration</h2>
+      <p class="text-xs text-ink-muted">Earnings are disbursed directly to your verified bank account or UPI ID.</p>
+
+      <form action="/owner/payout-method" method="POST" class="space-y-4">
+        <div>
+          <label for="payout_type" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Payout Channel</label>
+          <select id="payout_type" name="payout_type" class="input w-full text-xs">
+            <option value="upi">UPI ID (Instant)</option>
+            <option value="bank">Bank Transfer (NEFT/IMPS)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="payout_value" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Account / VPA Details</label>
+          <input type="text" id="payout_value" name="payout_value" value="rajesh@oksbi" class="input w-full text-xs" required>
+        </div>
+
+        <button type="submit" class="btn btn-secondary text-xs w-full py-2">
+          Update Payout Account (Demo)
+        </button>
+      </form>
+
+      <div class="p-3 bg-surface-tint rounded-xl border border-line text-[11px] text-ink-muted leading-relaxed">
+        🔒 Details are stored securely. BORO charges a nominal 5% maintenance fee on completed bookings to maintain the platform.
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">My Listed Spaces</h1>
+      <p class="text-sm text-ink-muted">Manage your halls, grounds, and rooms available for community sharing</p>
+    </div>
+    <a href="/owner/spaces/add" class="btn btn-primary text-xs">
+      + List a New Space
+    </a>
+  </div>
+
+  <!-- Unverified Owner Banner (if applicable) -->
+  <% if (owner.status === 'pending' || (owner.verificationStatus && !owner.verificationStatus.is_verified) || owner.verified === false) { %>
+    <div class="card p-4 bg-status-warning/10 border border-status-warning/30 flex items-center gap-3">
+      <span class="text-status-warning font-bold text-lg">⚠️</span>
+      <div class="text-xs text-ink">
+        <strong>Verification Pending:</strong> Your space owner account is pending administrative document review. Your spaces remain hidden from general search until verified.
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Space Listings Grid -->
+  <% if (spaces && spaces.length > 0) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <% spaces.forEach(space => { %>
+        <div class="card bg-surface border border-line overflow-hidden shadow-sm flex flex-col justify-between">
+          <div class="relative h-44 bg-surface-tint">
+            <img src="<%= space.photos && space.photos.length > 0 ? space.photos[0] : '/images/spaces/community-hall-1.jpg' %>" 
+                 alt="<%= space.name %>" 
+                 class="w-full h-full object-cover">
+            <div class="absolute top-3 left-3 flex gap-1.5">
+              <span class="badge badge-info text-xs"><%= helpers.formatSpaceType(space.space_type) %></span>
+              <span class="badge badge-secondary text-xs capitalize"><%= space.indoor_outdoor %></span>
+            </div>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <div>
+              <div class="flex justify-between items-start">
+                <h2 class="text-base font-bold text-ink"><%= space.name %></h2>
+                <span class="badge badge-success text-xs">Active</span>
+              </div>
+              <p class="text-xs text-ink-muted mt-0.5"><%= space.locality %>, <%= space.city %></p>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-tint border border-line text-center text-xs">
+              <div>
+                <span class="text-[10px] text-ink-muted uppercase">Capacity</span>
+                <div class="font-bold text-ink"><%= space.capacity %></div>
+              </div>
+              <div>
+                <span class="text-[10px] text-ink-muted uppercase">Rate/Hr</span>
+                <div class="font-bold text-ink"><%= helpers.formatCurrency(space.price_per_hour) %></div>
+              </div>
+              <div>
+                <span class="text-[10px] text-ink-muted uppercase">Deposit</span>
+                <div class="font-bold text-ink"><%= helpers.formatCurrency(space.deposit_amount) %></div>
+              </div>
+            </div>
+
+            <!-- Facilities -->
+            <div class="flex flex-wrap gap-1">
+              <% (space.facilities || []).slice(0, 3).forEach(f => { %>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-surface-tint border border-line text-ink-muted"><%= f %></span>
+              <% }); %>
+              <% if (space.facilities && space.facilities.length > 3) { %>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-surface-tint text-ink-muted">+<%= space.facilities.length - 3 %> more</span>
+              <% } %>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="pt-3 border-t border-line flex items-center justify-between">
+              <a href="/spaces/<%= space.id %>" class="text-xs text-primary font-medium hover:underline">
+                Public View &rarr;
+              </a>
+              <div class="flex gap-2">
+                <a href="/owner/spaces/<%= space.id %>/edit" class="btn btn-secondary text-xs px-3 py-1.5">
+                  Edit Listing
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No spaces listed yet',
+      description: 'You have not added any community spaces yet. Start by listing a community hall, playground, or spare room.',
+      actionText: 'Add First Space',
+      actionUrl: '/owner/spaces/add'
+    }) %>
+  <% } %>
+</div>

@@ -1,0 +1,63 @@
+<%
+  const ntf = locals.notification || {};
+  let borderClass = 'border-l-4 border-status-info';
+  let iconBg = 'bg-status-info-tint text-status-info';
+
+  if (ntf.type === 'overdue') {
+    borderClass = 'border-l-4 border-status-danger';
+    iconBg = 'bg-status-danger-tint text-status-danger';
+  } else if (ntf.type === 'score_credit' || ntf.type === 'booking_approved') {
+    borderClass = 'border-l-4 border-status-success';
+    iconBg = 'bg-status-success-tint text-status-success';
+  } else if (ntf.type === 'new_request') {
+    borderClass = 'border-l-4 border-primary';
+    iconBg = 'bg-surface-high text-primary';
+  }
+%>
+<div class="bg-surface-card border border-line <%= borderClass %> rounded-xl p-4 md:p-5 shadow-sm space-y-3">
+  <div class="flex items-start justify-between">
+    <div class="flex items-start space-x-3">
+      <div class="w-8 h-8 rounded-lg <%= iconBg %> flex items-center justify-center shrink-0 text-sm font-bold">
+        <% if (ntf.type === 'overdue') { %>!<% } else if (ntf.type === 'booking_approved') { %>✓<% } else if (ntf.type === 'score_credit') { %>★<% } else { %>ℹ<% } %>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            <%= ntf.type ? ntf.type.replace(/_/g, ' ') : 'Alert' %>
+          </span>
+          <% if (!ntf.read) { %>
+            <span class="w-2 h-2 rounded-full bg-status-danger"></span>
+            <span class="text-[10px] font-semibold text-status-danger">Unread</span>
+          <% } %>
+          <span class="text-[11px] text-ink-muted">• <%= formatDateTime(ntf.created_at) %></span>
+        </div>
+        <h4 class="text-sm font-bold text-ink mt-0.5"><%= ntf.title %></h4>
+      </div>
+    </div>
+
+    <!-- Dismiss / Read Button -->
+    <form action="/notifications/<%= ntf.id %>/read" method="POST">
+      <button type="submit" class="p-1 rounded-md text-ink-muted hover:text-ink focus:ring-2 focus:ring-primary text-xs" title="Mark as read">
+        ✕
+      </button>
+    </form>
+  </div>
+
+  <p class="text-xs text-ink-secondary leading-relaxed pl-11">
+    <%= ntf.message %>
+  </p>
+
+  <!-- Action CTAs -->
+  <% if (ntf.actions && ntf.actions.length > 0) { %>
+    <div class="flex flex-wrap gap-2 pl-11 pt-1">
+      <% ntf.actions.forEach(function(act) { %>
+        <a
+          href="<%= act.href %>"
+          class="<%= act.style === 'primary' ? 'btn-primary' : 'btn-secondary' %> text-xs py-1.5 px-3"
+        >
+          <%= act.label %>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+</div>

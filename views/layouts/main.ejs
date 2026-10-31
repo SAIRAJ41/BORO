@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= locals.title ? locals.title + ' — BORO' : 'BORO — Community Space Sharing Platform' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#333434', hover: '#1e1f1f', container: '#4a4a4a' },
+            secondary: { DEFAULT: '#5d5e5f', container: '#e0dfdf' },
+            surface: { DEFAULT: '#f7f9ff', card: '#ffffff', tint: '#edf4ff', container: '#e3efff', high: '#d8eaff', dim: '#c7dcf4' },
+            inverse: { DEFAULT: '#1e3244', ink: '#e8f2ff' },
+            ink: { DEFAULT: '#071d2e', secondary: '#444748', muted: '#52585c' },
+            line: { DEFAULT: '#c4c7c7', subtle: '#e8ecf2' },
+            status: {
+              success: '#3a6b35', 'success-tint': '#e6f0e5',
+              info: '#3b6b93', 'info-tint': '#e3efff',
+              warning: '#8a6d2a', 'warning-tint': '#f5f0dc',
+              danger: '#a13225', 'danger-tint': '#fde8e5'
+            },
+            error: { DEFAULT: '#ba1a1a', container: '#ffdad6' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface text-ink min-h-screen flex flex-col font-sans">
+
+  <!-- Accessible Skip Link -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:ring-2 focus:ring-[#edf4ff]">
+    Skip to main content
+  </a>
+
+  <!-- Global Top Navbar -->
+  <%- include('partials/navbar') %>
+
+  <!-- Flash Toast Notifications -->
+  <%- include('partials/Toast') %>
+
+  <!-- Main Application Body: Sidebar + Main Content -->
+  <div class="flex flex-1 relative overflow-hidden">
+    
+    <!-- Desktop Sidebar by Role -->
+    <div class="hidden lg:flex shrink-0">
+      <% if (locals.currentUser && locals.currentUser.role === 'owner') { %>
+        <%- include('partials/sidebar-owner') %>
+      <% } else if (locals.currentUser && locals.currentUser.role === 'admin') { %>
+        <%- include('partials/sidebar-admin') %>
+      <% } else { %>
+        <%- include('partials/sidebar-user') %>
+      <% } %>
+    </div>
+
+    <!-- Mobile Drawer (Off-canvas) -->
+    <div id="mobile-drawer" class="fixed inset-0 z-40 lg:hidden hidden">
+      <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-ink/40 backdrop-blur-sm"></div>
+      <div class="fixed inset-y-0 left-0 w-64 bg-surface-card border-r border-line shadow-xl flex flex-col z-50">
+        <div class="p-4 border-b border-line flex items-center justify-between">
+          <span class="font-bold text-primary">Navigation Menu</span>
+          <button id="mobile-drawer-close" class="p-1 rounded-md text-ink-muted hover:text-ink focus:ring-2 focus:ring-primary" aria-label="Close navigation">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <% if (locals.currentUser && locals.currentUser.role === 'owner') { %>
+            <%- include('partials/sidebar-owner') %>
+          <% } else if (locals.currentUser && locals.currentUser.role === 'admin') { %>
+            <%- include('partials/sidebar-admin') %>
+          <% } else { %>
+            <%- include('partials/sidebar-user') %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+      <%- body %>
+    </main>
+  </div>
+
+  <!-- Global Footer -->
+  <footer class="bg-surface-card border-t border-line py-4 px-6 text-center text-xs text-ink-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>&copy; 2026 BORO Community Trust. All rights reserved.</div>
+      <div class="flex items-center space-x-4">
+        <span>Photo credits: Civic Community Registry</span>
+        <span>•</span>
+        <a href="/search" class="hover:underline">Discover Spaces</a>
+        <span>•</span>
+        <a href="/login" class="hover:underline">Demo Logins</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Universal ReasonDialog Modal -->
+  <%- include('partials/ReasonDialog') %>
+
+  <!-- Vanilla JS: Global Modals, Drawer & Tab Controls -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

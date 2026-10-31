@@ -1,0 +1,100 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Space Schedule &amp; Calendar</h1>
+      <p class="text-sm text-ink-muted">View scheduled reservations and resolve overlapping slot conflicts</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="badge badge-info text-xs">Today: <%= helpers.formatDate(new Date()) %></span>
+    </div>
+  </div>
+
+  <!-- Overlapping Conflict Alerts -->
+  <% if (conflicts && conflicts.length > 0) { %>
+    <div class="card p-6 bg-status-warning/10 border border-status-warning/40 shadow-sm space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xl text-status-warning font-bold">⚠️</span>
+        <div>
+          <h2 class="text-base font-bold text-ink">Slot Conflict Detected</h2>
+          <p class="text-xs text-ink-muted">Two residents have requested overlapping time slots for the same space. Please resolve below.</p>
+        </div>
+      </div>
+
+      <% conflicts.forEach(conflict => { %>
+        <div class="p-4 rounded-xl bg-surface border border-line space-y-4">
+          <div class="flex justify-between items-center text-xs font-semibold text-ink border-b border-line pb-2">
+            <span><%= conflict.space_name %></span>
+            <span class="text-primary font-mono"><%= conflict.slot_desc %></span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% conflict.bookings.forEach((booking, idx) => { %>
+              <div class="p-4 rounded-xl bg-surface-tint border border-line flex flex-col justify-between space-y-3">
+                <div>
+                  <div class="flex justify-between items-start">
+                    <span class="font-mono text-xs text-ink-muted"><%= booking.id %></span>
+                    <%- include('../../partials/ScoreBadge', { score: booking.user ? booking.user.score : 80, showExplanation: false }) %>
+                  </div>
+                  <div class="font-bold text-ink text-sm mt-1"><%= booking.user ? booking.user.name : 'Resident ' + (idx + 1) %></div>
+                  <div class="text-xs text-ink-muted capitalize">Purpose: <%= booking.purpose %></div>
+                  <div class="text-xs text-ink-muted mt-1">Requested: <%= helpers.formatTime(booking.start_time) %> &ndash; <%= helpers.formatTime(booking.end_time) %></div>
+                </div>
+
+                <div class="pt-3 border-t border-line flex gap-2 justify-end">
+                  <button onclick="window.openReasonDialog('/owner/requests/<%= booking.id %>/reject', 'Decline Request', 'State reason for resolving schedule conflict in favor of the other request.')"
+                          class="btn btn-secondary text-xs text-status-danger border-status-danger/30 hover:bg-status-danger/10">
+                    Decline
+                  </button>
+                  <button onclick="window.openReasonDialog('/owner/requests/<%= booking.id %>/approve', 'Approve Slot Reservation', 'Confirm booking and generate PIN code.')"
+                          class="btn btn-primary text-xs">
+                    Approve
+                  </button>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- Weekly Calendar Grid / Bookings List -->
+  <div class="card p-6 bg-surface border border-line space-y-4">
+    <div class="flex justify-between items-center">
+      <h2 class="text-base font-bold text-ink">Upcoming Confirmed &amp; In-Progress Slots</h2>
+      <span class="text-xs text-ink-muted"><%= bookings.length %> total entries</span>
+    </div>
+
+    <% if (bookings && bookings.length > 0) { %>
+      <div class="overflow-x-auto rounded-xl border border-line">
+        <table class="w-full text-left text-xs divide-y divide-line">
+          <thead class="bg-surface-tint uppercase font-semibold text-ink-muted">
+            <tr>
+              <th class="px-4 py-3">Booking ID</th>
+              <th class="px-4 py-3">Space</th>
+              <th class="px-4 py-3">Schedule</th>
+              <th class="px-4 py-3">Purpose</th>
+              <th class="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line bg-surface">
+            <% bookings.forEach(b => { %>
+              <tr>
+                <td class="px-4 py-3 font-mono text-ink"><%= b.id %></td>
+                <td class="px-4 py-3 font-medium text-ink"><%= b.space ? b.space.name : 'Community Space' %></td>
+                <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDateTime(b.start_time) %> &ndash; <%= helpers.formatTime(b.end_time) %></td>
+                <td class="px-4 py-3 capitalize"><%= b.purpose %></td>
+                <td class="px-4 py-3">
+                  <%- include('../../partials/StatusBadge', { status: b.status }) %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-xs text-ink-muted">No scheduled slots for this period.</p>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,83 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">User &amp; Stewardship Directory</h1>
+      <p class="text-sm text-ink-muted">Monitor resident reliability scores, account standing, and usage limits</p>
+    </div>
+    <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
+      Total Accounts: <span class="font-bold text-ink"><%= users.length %></span>
+    </div>
+  </div>
+
+  <!-- Search Filter -->
+  <form action="/admin/users" method="GET" class="card p-3 bg-surface border border-line flex gap-2">
+    <input type="text" name="q" value="<%= q || '' %>" placeholder="Search by resident name or email..." class="input flex-1 text-xs">
+    <button type="submit" class="btn btn-primary text-xs px-4">Search</button>
+    <% if (q) { %>
+      <a href="/admin/users" class="btn btn-ghost text-xs">Clear</a>
+    <% } %>
+  </form>
+
+  <!-- Users Table -->
+  <div class="card p-6 bg-surface border border-line space-y-4">
+    <div class="overflow-x-auto rounded-xl border border-line">
+      <table class="w-full text-left text-xs divide-y divide-line">
+        <thead class="bg-surface-tint font-semibold text-ink-muted uppercase">
+          <tr>
+            <th class="px-4 py-3">User</th>
+            <th class="px-4 py-3">Role</th>
+            <th class="px-4 py-3">Reliability Score</th>
+            <th class="px-4 py-3 text-center">Active Bookings</th>
+            <th class="px-4 py-3 text-center">Status</th>
+            <th class="px-4 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line bg-surface">
+          <% (users || []).forEach(u => { %>
+            <tr>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                    <%= helpers.getUserInitials(u.name) %>
+                  </div>
+                  <div>
+                    <div class="font-bold text-ink"><%= u.name %></div>
+                    <div class="text-ink-muted text-[11px]"><%= u.email %></div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 font-medium capitalize text-ink-muted"><%= u.role %></td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold font-mono text-ink"><%= u.score %>/120</span>
+                  <%- include('../../partials/ScoreBadge', { score: u.score, showExplanation: false }) %>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-center font-mono">
+                <span class="<%= (u.active_bookings_count || 0) >= 2 ? 'text-status-warning font-bold' : 'text-ink-muted' %>">
+                  <%= u.active_bookings_count || 0 %> / 2
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% if (u.suspended) { %>
+                  <span class="badge badge-danger text-[10px]">Suspended</span>
+                <% } else { %>
+                  <span class="badge badge-success text-[10px]">Active</span>
+                <% } %>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <% if (u.role !== 'admin') { %>
+                  <button onclick="window.openReasonDialog('/admin/users/<%= u.id %>/suspend', '<%= u.suspended ? 'Unsuspend Account' : 'Suspend Account' %>', 'Mandatory: Enter the administrative reason for account state change.')"
+                          class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
+                    <%= u.suspended ? 'Unsuspend' : 'Suspend' %>
+                  </button>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

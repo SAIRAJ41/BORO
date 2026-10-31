@@ -1,0 +1,82 @@
+<div class="space-y-6">
+  <!-- Search Header & Title -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Find Community Spaces</h1>
+      <p class="text-sm text-ink-muted">Halls, grounds, school playgrounds, rooms, and underused spaces</p>
+    </div>
+    <div class="text-xs text-ink-muted flex items-center gap-1.5 bg-surface px-3 py-2 rounded-xl border border-line">
+      <span class="inline-block w-2 h-2 rounded-full bg-status-success"></span>
+      Showing <%= spaces.length %> available spaces
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <form action="/search" method="GET" class="card p-4 bg-surface border border-line shadow-sm space-y-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <!-- Search keyword -->
+      <div>
+        <label for="q" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">Search</label>
+        <input type="text" id="q" name="q" value="<%= filters.q || '' %>" placeholder="Name or area..." class="input w-full text-xs">
+      </div>
+
+      <!-- Space Type -->
+      <div>
+        <label for="space_type" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">Space Type</label>
+        <select id="space_type" name="space_type" class="input w-full text-xs">
+          <option value="all">All Types</option>
+          <option value="community_hall" <%= filters.space_type === 'community_hall' ? 'selected' : '' %>>Community Hall</option>
+          <option value="community_ground" <%= filters.space_type === 'community_ground' ? 'selected' : '' %>>Community Ground</option>
+          <option value="school_playground" <%= filters.space_type === 'school_playground' ? 'selected' : '' %>>School Playground</option>
+          <option value="small_room" <%= filters.space_type === 'small_room' ? 'selected' : '' %>>Small Room</option>
+          <option value="storeroom" <%= filters.space_type === 'storeroom' ? 'selected' : '' %>>Storeroom</option>
+        </select>
+      </div>
+
+      <!-- Indoor / Outdoor -->
+      <div>
+        <label for="indoor_outdoor" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">Environment</label>
+        <select id="indoor_outdoor" name="indoor_outdoor" class="input w-full text-xs">
+          <option value="all">Any Environment</option>
+          <option value="indoor" <%= filters.indoor_outdoor === 'indoor' ? 'selected' : '' %>>Indoor</option>
+          <option value="outdoor" <%= filters.indoor_outdoor === 'outdoor' ? 'selected' : '' %>>Outdoor (Weather protected)</option>
+        </select>
+      </div>
+
+      <!-- Allowed Purpose -->
+      <div>
+        <label for="purpose" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">Allowed Purpose</label>
+        <select id="purpose" name="purpose" class="input w-full text-xs">
+          <option value="all">Any Purpose</option>
+          <option value="meeting" <%= filters.purpose === 'meeting' ? 'selected' : '' %>>Meeting / Workshop</option>
+          <option value="event" <%= filters.purpose === 'event' ? 'selected' : '' %>>Community Event</option>
+          <option value="sports" <%= filters.purpose === 'sports' ? 'selected' : '' %>>Sports & Games</option>
+          <option value="study" <%= filters.purpose === 'study' ? 'selected' : '' %>>Study & Coaching</option>
+          <option value="storage" <%= filters.purpose === 'storage' ? 'selected' : '' %>>Storage & Staging</option>
+        </select>
+      </div>
+
+      <!-- Submit & Reset Buttons -->
+      <div class="flex items-end gap-2">
+        <button type="submit" class="btn btn-primary text-xs w-full py-2">Filter</button>
+        <a href="/search" class="btn btn-ghost text-xs py-2 px-3">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Space Grid -->
+  <% if (spaces && spaces.length > 0) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% spaces.forEach(space => { %>
+        <%- include('../../partials/SpaceCard', { space: space, helpers: helpers }) %>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No spaces match your criteria',
+      description: 'Try adjusting your space type, environment, or purpose filters to discover other available community spaces.',
+      actionText: 'Reset Filters',
+      actionUrl: '/search'
+    }) %>
+  <% } %>
+</div>

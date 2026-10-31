@@ -1,0 +1,20 @@
+<%
+  const title = locals.title || 'No records found';
+  const desc = locals.description || 'There are currently no items matching your criteria.';
+  const ctaText = locals.ctaText || null;
+  const ctaHref = locals.ctaHref || null;
+%>
+<div class="bg-surface-card border border-line rounded-xl p-8 md:p-12 text-center max-w-lg mx-auto my-6">
+  <div class="w-12 h-12 rounded-full bg-surface-tint border border-line flex items-center justify-center mx-auto text-ink-muted text-xl mb-3">
+    📂
+  </div>
+  <h3 class="text-base font-bold text-ink"><%= title %></h3>
+  <p class="text-xs text-ink-muted mt-1 leading-relaxed"><%= desc %></p>
+  <% if (ctaText && ctaHref) { %>
+    <div class="mt-4">
+      <a href="<%= ctaHref %>" class="btn-primary text-xs py-2 px-4">
+        <%= ctaText %>
+      </a>
+    </div>
+  <% } %>
+</div>

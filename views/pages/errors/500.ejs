@@ -1,0 +1,17 @@
+<div class="max-w-md mx-auto text-center py-16 px-4">
+  <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-status-danger/10 text-status-danger flex items-center justify-center text-3xl font-bold">
+    500
+  </div>
+  <h1 class="text-3xl font-bold text-ink mb-2">Something Went Wrong</h1>
+  <p class="text-ink-muted mb-6">
+    An unexpected error occurred while processing your request. Please try again or return to search.
+  </p>
+  <% if (typeof error !== 'undefined' && error && error.message) { %>
+    <div class="p-3 mb-6 bg-surface-tint border border-line rounded-xl text-xs font-mono text-left text-ink overflow-x-auto">
+      <%= error.message %>
+    </div>
+  <% } %>
+  <div class="flex justify-center gap-3">
+    <a href="/search" class="btn btn-primary">Return Home</a>
+  </div>
+</div>

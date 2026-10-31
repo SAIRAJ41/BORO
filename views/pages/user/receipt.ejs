@@ -1,0 +1,84 @@
+<div class="max-w-2xl mx-auto space-y-6 py-6">
+  <!-- Top navigation -->
+  <div class="flex items-center justify-between no-print">
+    <a href="/my-bookings" class="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink">
+      <span>&larr;</span> Back to My Bookings
+    </a>
+    <button onclick="window.print()" class="btn btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5">
+      <span>🖨️</span> Print Receipt
+    </button>
+  </div>
+
+  <!-- Receipt Card -->
+  <div class="card p-8 bg-surface border border-line shadow-sm space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-start pb-6 border-b border-line">
+      <div>
+        <div class="inline-flex items-center gap-2 mb-2">
+          <div class="w-8 h-8 rounded-xl bg-primary text-surface font-black text-sm flex items-center justify-center">
+            B
+          </div>
+          <span class="font-bold text-lg text-ink">BORO Receipt</span>
+        </div>
+        <p class="text-xs text-ink-muted">Community Space Sharing Platform</p>
+      </div>
+      <div class="text-right">
+        <span class="badge badge-success text-xs capitalize"><%= booking.payment_status || 'Paid' %></span>
+        <div class="text-xs font-mono text-ink-muted mt-1">Receipt #<%= booking.id %></div>
+        <div class="text-xs text-ink-muted"><%= helpers.formatDate(booking.created_at) %></div>
+      </div>
+    </div>
+
+    <!-- Space & Booking Information -->
+    <div class="grid grid-cols-2 gap-4 text-xs">
+      <div>
+        <div class="text-ink-muted uppercase tracking-wider text-[10px] font-semibold">Reserved Space</div>
+        <div class="font-bold text-ink text-sm mt-0.5"><%= booking.space ? booking.space.name : 'Community Space' %></div>
+        <div class="text-ink-muted"><%= booking.space ? booking.space.locality : '' %></div>
+      </div>
+      <div>
+        <div class="text-ink-muted uppercase tracking-wider text-[10px] font-semibold">Reserved For</div>
+        <div class="font-bold text-ink text-sm mt-0.5 capitalize"><%= booking.purpose %></div>
+        <div class="text-ink-muted"><%= helpers.formatDateTime(booking.start_time) %> &ndash; <%= helpers.formatTime(booking.end_time) %></div>
+      </div>
+    </div>
+
+    <!-- Payment & Custody Details -->
+    <div class="p-4 rounded-xl bg-surface-tint border border-line space-y-2 text-xs">
+      <div class="flex justify-between text-ink-muted">
+        <span>Payment Method:</span>
+        <span class="font-medium text-ink uppercase"><%= booking.payment_method || 'UPI (Demo)' %></span>
+      </div>
+      <div class="flex justify-between text-ink-muted">
+        <span>Deposit Status:</span>
+        <span class="font-medium text-ink capitalize"><%= booking.deposit_status || 'Held in Deposit' %></span>
+      </div>
+      <div class="flex justify-between text-ink-muted">
+        <span>Paid At:</span>
+        <span class="font-medium text-ink"><%= helpers.formatDateTime(booking.paid_at || booking.created_at) %></span>
+      </div>
+    </div>
+
+    <!-- Itemized Ledger Table -->
+    <div class="border-t border-b border-line py-4 space-y-2 text-sm">
+      <div class="flex justify-between text-ink">
+        <span>Space Hourly Rental</span>
+        <span class="font-mono"><%= helpers.formatCurrency(booking.hourly_fee_total) %></span>
+      </div>
+      <div class="flex justify-between text-ink">
+        <span>Refundable Security Deposit</span>
+        <span class="font-mono"><%= helpers.formatCurrency(booking.deposit_amount) %></span>
+      </div>
+      <div class="flex justify-between font-bold text-base pt-3 border-t border-line text-ink">
+        <span>Total Paid (Demo)</span>
+        <span class="font-mono text-primary"><%= helpers.formatCurrency(booking.total_amount) %></span>
+      </div>
+    </div>
+
+    <!-- Notes & Footer -->
+    <div class="text-[11px] text-ink-muted leading-relaxed space-y-1">
+      <p><strong>Deposit Policy:</strong> The security deposit is held securely until successful check-out and condition verification. Upon clean and undamaged handover, it will be automatically refunded to your original payment method.</p>
+      <p>Thank you for keeping community spaces clean and accessible for everyone.</p>
+    </div>
+  </div>
+</div>

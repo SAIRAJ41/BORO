@@ -1,0 +1,73 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Booking &amp; Custody History</h1>
+      <p class="text-sm text-ink-muted">Complete audit trail of past space reservations, condition reports, and deposit reconciliations</p>
+    </div>
+    <a href="/my-bookings" class="btn btn-secondary text-xs">
+      &larr; View Active Bookings
+    </a>
+  </div>
+
+  <% if (bookings && bookings.length > 0) { %>
+    <div class="space-y-6">
+      <% bookings.forEach(booking => { %>
+        <div class="card p-6 bg-surface border border-line shadow-sm space-y-5">
+          <!-- Card Header -->
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-4 border-b border-line">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono text-xs text-ink-muted"><%= booking.id %></span>
+                <%- include('../../partials/StatusBadge', { status: booking.status }) %>
+              </div>
+              <h2 class="text-lg font-bold text-ink"><%= booking.space ? booking.space.name : 'Community Space' %></h2>
+              <p class="text-xs text-ink-muted">
+                Slot: <%= helpers.formatDateTime(booking.start_time) %> &ndash; <%= helpers.formatTime(booking.end_time) %>
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <a href="/bookings/<%= booking.id %>/receipt" class="btn btn-secondary text-xs">
+                View Receipt
+              </a>
+              <button onclick="window.openReasonDialog('/bookings/<%= booking.id %>/rate', 'Rate this Space &amp; Owner', 'Leave your feedback (1-5 stars and comments) to help community members.')"
+                      class="btn btn-primary text-xs">
+                Rate Space
+              </button>
+            </div>
+          </div>
+
+          <!-- Financial Reconciliation Box -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-surface-tint border border-line text-xs">
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Hourly Rental Paid</span>
+              <div class="font-mono font-bold text-ink text-sm mt-0.5"><%= helpers.formatCurrency(booking.hourly_fee_total) %></div>
+            </div>
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Deposit Amount</span>
+              <div class="font-mono font-bold text-ink text-sm mt-0.5"><%= helpers.formatCurrency(booking.deposit_amount) %></div>
+            </div>
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Deposit Status</span>
+              <div class="font-bold text-status-success text-sm mt-0.5 capitalize"><%= booking.deposit_status || 'Refunded in Full' %></div>
+            </div>
+          </div>
+
+          <!-- 5-Stage Custodial Lifecycle Timeline -->
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-3">Custody Lifecycle</h3>
+            <%- include('../../partials/Timeline', { status: booking.status }) %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No past booking records',
+      description: 'Once you complete your first community hall, sports ground, or room reservation, your custody audit records will appear here.',
+      actionText: 'Browse Spaces',
+      actionUrl: '/search'
+    }) %>
+  <% } %>
+</div>

@@ -1,0 +1,43 @@
+<% if (locals.flash) { %>
+  <div class="fixed top-16 right-4 z-50 flex flex-col space-y-2 max-w-md w-full pointer-events-none">
+    <% (locals.flash.success || []).forEach(function(msg) { %>
+      <div class="toast-alert pointer-events-auto bg-surface-card border-l-4 border-status-success shadow-lg rounded-r-lg p-3.5 flex items-start justify-between text-xs transition-opacity duration-300">
+        <div class="flex items-center space-x-2 text-ink">
+          <svg class="w-4 h-4 text-status-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          <span class="font-medium"><%= msg %></span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-ink-muted hover:text-ink ml-2">&times;</button>
+      </div>
+    <% }); %>
+
+    <% (locals.flash.error || []).forEach(function(msg) { %>
+      <div class="toast-alert pointer-events-auto bg-surface-card border-l-4 border-status-danger shadow-lg rounded-r-lg p-3.5 flex items-start justify-between text-xs transition-opacity duration-300">
+        <div class="flex items-center space-x-2 text-ink">
+          <svg class="w-4 h-4 text-status-danger shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="font-medium"><%= msg %></span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-ink-muted hover:text-ink ml-2">&times;</button>
+      </div>
+    <% }); %>
+
+    <% (locals.flash.info || []).forEach(function(msg) { %>
+      <div class="toast-alert pointer-events-auto bg-surface-card border-l-4 border-status-info shadow-lg rounded-r-lg p-3.5 flex items-start justify-between text-xs transition-opacity duration-300">
+        <div class="flex items-center space-x-2 text-ink">
+          <svg class="w-4 h-4 text-status-info shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="font-medium"><%= msg %></span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-ink-muted hover:text-ink ml-2">&times;</button>
+      </div>
+    <% }); %>
+
+    <% (locals.flash.warning || []).forEach(function(msg) { %>
+      <div class="toast-alert pointer-events-auto bg-surface-card border-l-4 border-status-warning shadow-lg rounded-r-lg p-3.5 flex items-start justify-between text-xs transition-opacity duration-300">
+        <div class="flex items-center space-x-2 text-ink">
+          <svg class="w-4 h-4 text-status-warning shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <span class="font-medium"><%= msg %></span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-ink-muted hover:text-ink ml-2">&times;</button>
+      </div>
+    <% }); %>
+  </div>
+<% } %>

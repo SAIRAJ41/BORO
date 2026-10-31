@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "inverse-on-surface": "#e8f2ff",
+          "outline-variant": "#c4c7c7",
+          "secondary": "#5d5e5f",
+          "on-primary": "#ffffff",
+          "primary": "#333434",
+          "error": "#ba1a1a",
+          "surface-container-highest": "#d0e5fc",
+          "on-error-container": "#93000a",
+          "on-surface-variant": "#444748",
+          "on-secondary-container": "#626363",
+          "on-surface": "#071d2e",
+          "inverse-surface": "#1e3244",
+          "surface-tint": "#5e5e5e",
+          "outline": "#747878",
+          "secondary-container": "#e0dfdf",
+          "tertiary-fixed": "#e4e4c9",
+          "on-secondary": "#ffffff",
+          "on-primary-container": "#bbb9b9",
+          "secondary-fixed": "#e3e2e2",
+          "surface-variant": "#d0e5fc",
+          "background": "#f7f9ff",
+          "surface-bright": "#f7f9ff",
+          "on-background": "#071d2e",
+          "on-secondary-fixed-variant": "#464747",
+          "tertiary": "#343523",
+          "surface": "#f7f9ff",
+          "error-container": "#ffdad6",
+          "inverse-primary": "#c8c6c6",
+          "tertiary-container": "#4a4c38",
+          "on-tertiary-container": "#bbbca3",
+          "surface-container-low": "#edf4ff",
+          "on-primary-fixed": "#1b1c1c",
+          "on-error": "#ffffff",
+          "surface-container-high": "#d8eaff",
+          "tertiary-fixed-dim": "#c8c8ae",
+          "on-tertiary-fixed-variant": "#474834",
+          "on-primary-fixed-variant": "#474747",
+          "surface-dim": "#c7dcf4",
+          "secondary-fixed-dim": "#c6c6c6",
+          "primary-container": "#4a4a4a",
+          "surface-container": "#e3efff",
+          "on-tertiary-fixed": "#1b1d0c",
+          "surface-container-lowest": "#ffffff",
+          "primary-fixed": "#e4e2e2",
+          "on-secondary-fixed": "#1a1c1c",
+          "primary-fixed-dim": "#c8c6c6",
+          "on-tertiary": "#ffffff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "gutter": "1rem",
+          "space-md": "1rem",
+          "margin": "1.5rem",
+          "space-sm": "0.5rem",
+          "space-xl": "2rem",
+          "space-xs": "0.25rem",
+          "space-lg": "1.5rem"
+        },
+        "fontFamily": {
+          "body-md": [
+            "Inter"
+          ],
+          "label-sm": [
+            "Inter"
+          ],
+          "headline-lg": [
+            "Inter"
+          ],
+          headline: ["Inter"],
+          display: ["Inter"],
+          body: ["Inter"],
+          label: ["Inter"]
+        },
+        "fontSize": {
+          "body-md": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "400"
+            }
+          ],
+          "label-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-lg": [
+            "32px",
+            {
+              "lineHeight": "40px",
+              "fontWeight": "600"
+            }
+          ]
+        }
+      },
+    },
+  }
+</script></head><body class="bg-background font-body text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest/80 border-r border-outline-variant/30 backdrop-blur-2xl z-50 flex flex-col justify-between p-6 shadow-sm"><div class="flex flex-col gap-6"><div class="flex items-center gap-3 px-2"><img alt="CivicHall Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WO9RwFUWNQXcba0ybgz24aJTc5UnwgYKVlO8p-c70gGRs5BDEZtPWbvvqIRWdctUMznYr0YsT85tQaeP4wYsf_aUUytaXhixZPa4cVnlMlmG38pzYluY9Plat_M8xEf7vaQshp2ZOyXQnhV3thT_ZGXZ9U0JInvRsryq-fMvuvP-_QksYDI5-Ax_JeGiQexnb1Ac-inPN2DwsQvkT1p50fLMKiFe_c2tPYAoWG8Vqmlw"/><div class="flex flex-col"><span class="text-lg font-headline font-bold tracking-tight text-on-surface">CivicHall</span><span class="text-xs text-on-surface-variant font-medium">Community Spaces</span></div></div><div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex items-center justify-between shadow-sm"><div class="flex items-center gap-2.5"><div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div><div class="flex flex-col"><span class="text-xs text-on-surface-variant font-medium">Reliability Status</span><span class="text-sm font-semibold text-on-surface">Tier 1 Resident</span></div></div><span class="text-xs font-bold text-on-primary bg-primary px-2.5 py-1 rounded-full">95</span></div><nav class="flex flex-col gap-1.5" data-active-classes="bg-primary text-on-primary font-semibold shadow-sm"><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="search" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">search</span><span class="text-sm font-medium">Search</span></div></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="hall-details" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">apartment</span><span class="text-sm font-medium">Hall Details</span></div></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="my-bookings" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">calendar_month</span><span class="text-sm font-medium">My Bookings</span></div><span class="text-xs font-bold text-on-primary bg-primary px-2 py-0.5 rounded-full">3</span></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="my-score" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="text-sm font-medium">My Score</span></div><span class="text-xs font-semibold text-primary bg-surface-container-highest px-2 py-0.5 rounded-full">95</span></a><a aria-current="page" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all bg-primary text-on-primary font-semibold shadow-sm" data-path="history" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">history</span><span class="text-sm font-medium">History</span></div></a><a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="notifications" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="text-sm font-medium">Notifications</span></div><span class="text-xs font-bold text-on-primary bg-secondary px-2 py-0.5 rounded-full">2</span></a></nav></div><div class="pt-4 border-t border-outline-variant/30 flex items-center justify-between px-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[20px]">help_outline</span><span class="text-xs text-on-surface-variant hover:text-on-surface cursor-pointer">Support &amp; FAQ</span></div><span class="text-[10px] text-on-surface-variant/60 tracking-wider uppercase font-mono">v2.4.0</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/80 border-b border-outline-variant/30 backdrop-blur-2xl z-40 px-8 flex items-center justify-between shadow-sm"><div class="flex items-center gap-4 flex-1 max-w-md"><div class="relative w-full"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary backdrop-blur-md transition-all" placeholder="Quick search halls, dates, regulations..." type="text"/></div></div><div class="flex items-center gap-5"><button class="relative p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary"></span></button><div class="flex items-center gap-3 pl-3 border-l border-outline-variant/40"><div class="flex flex-col text-right"><span class="text-sm font-semibold text-on-surface leading-tight">Elena Vance</span><span class="text-xs text-secondary font-medium">Verified Resident</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwjSeN8uB1px42PyEJhG8u26zGVy1HbpwioBDaVnIB0078iRFBtBpTEzh3P6_hM3ZkkRTYHABGhb5ENIiTWsHoUGFkN6LFWOVZy62wigiDwI-Cb2s6Hzo0CW0LEQ1eLND4lgk_D4brMi4ZUWxYq92Ces66AKCU0-fnH9YowZVFWXGXc5Ir5LIbLEMuBjJJPy9iAia2hNudRfkSATORWHiHfyyDHgODTbshEaq1ExE5"/></div></div></header><main class="relative pt-16 w-full min-h-screen bg-background"><div class="flex flex-col w-full">
+<div class="relative px-8 py-10 max-w-7xl mx-auto w-full space-y-10">
+<div class="absolute -top-24 right-1/4 w-96 h-96 bg-surface-container-highest/40 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+<div class="absolute top-1/3 -left-20 w-80 h-80 bg-surface-container/60 rounded-full blur-[130px] pointer-events-none -z-10"></div>
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+<div class="space-y-2">
+<div class="flex items-center gap-2.5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-surface-container-highest text-primary">
+            Verified Archives
+          </span>
+<span class="text-xs text-on-surface-variant font-mono">SYSTEM LOG v2.4 // LEDGER #CIV-2025</span>
+</div>
+<h1 class="text-3xl lg:text-4xl font-headline font-bold text-on-surface tracking-tight">
+          Completed Bookings &amp; Audits
+        </h1>
+<p class="text-sm text-on-surface-variant max-w-xl">
+          Complete 5-stage lifecycle verification logs, custodial condition check-ins, and automated smart-contract deposit settlements.
+        </p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2.5 rounded-xl bg-surface-container border border-outline-variant/30 hover:bg-surface-container-high text-on-surface text-xs font-medium backdrop-blur-xl transition-all flex items-center gap-2 shadow-sm" id="toggle-state-btn">
+<span class="material-symbols-outlined text-primary text-[18px]">toggle_on</span>
+<span>Preview Empty State</span>
+</button>
+<button class="px-4 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-all shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+<span>Export Annual Ledger</span>
+</button>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="relative overflow-hidden rounded-2xl p-6 bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-xl shadow-sm flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-surface-container/40 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between pb-4">
+<span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Completed Sessions</span>
+<span class="p-2.5 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">domain_verification</span>
+</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tight">11</span>
+<span class="text-xs text-secondary font-medium flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> 100% on schedule
+            </span>
+</div>
+<p class="text-xs text-on-surface-variant">Archived community reservations since inception</p>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-xs text-on-surface-variant/80 border-t border-outline-variant/20">
+<span>Tier 1 Pre-Approved</span>
+<span class="font-mono text-on-surface font-semibold">11 / 11 Records</span>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-2xl p-6 bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-xl shadow-sm flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-surface-container/40 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between pb-4">
+<span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Handover Clean Ratio</span>
+<span class="p-2.5 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">cleaning_services</span>
+</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tight">100%</span>
+<span class="text-xs text-secondary font-medium">Pristine Grade</span>
+</div>
+<p class="text-xs text-on-surface-variant">66/66 photo verification checks passed spotless</p>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-xs text-on-surface-variant/80 border-t border-outline-variant/20">
+<span>Reliability Points Added</span>
+<span class="font-semibold text-primary">+55 Pts Total</span>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-2xl p-6 bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-xl shadow-sm flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-surface-container/40 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between pb-4">
+<span class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Deposits Restored</span>
+<span class="p-2.5 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tight">$1,650</span>
+<span class="text-xs font-mono px-2 py-0.5 rounded bg-surface-container text-secondary font-semibold">$0 forfeited</span>
+</div>
+<p class="text-xs text-on-surface-variant">Automated smart escrow returned to CivicWallet</p>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-xs text-on-surface-variant/80 border-t border-outline-variant/20">
+<span>Avg. Release Speed</span>
+<span class="font-mono text-on-surface font-semibold">34 mins post-lockout</span>
+</div>
+</div>
+</section>
+<section class="rounded-2xl p-5 bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-xl shadow-sm space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+<div class="md:col-span-4 relative">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:bg-surface-container transition-all" id="history-search" placeholder="Search booking reference, hall, or purpose..." type="text"/>
+</div>
+<div class="md:col-span-3">
+<select class="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-on-surface focus:outline-none focus:bg-surface-container transition-all" id="location-filter">
+<option value="all">All Hall Locations (3 facilities)</option>
+<option value="kensington">Kensington Heritage Hall</option>
+<option value="oakwood">Oakwood Assembly Room</option>
+<option value="pavilion">Arts Pavilion Studio</option>
+</select>
+</div>
+<div class="md:col-span-3">
+<select class="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-on-surface focus:outline-none focus:bg-surface-container transition-all" id="outcome-filter">
+<option value="all">All Outcomes</option>
+<option value="refund">Full Refund (100%)</option>
+<option value="arbitrated">Arbitration Resolved</option>
+<option value="deduction">Partial Deduction</option>
+</select>
+</div>
+<div class="md:col-span-2">
+<select class="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-on-surface focus:outline-none focus:bg-surface-container transition-all">
+<option>Last 12 Months</option>
+<option>Year 2025</option>
+<option>Year 2024</option>
+</select>
+</div>
+</div>
+</section>
+<div class="space-y-8" id="booking-list-container">
+<article class="booking-item relative rounded-2xl bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-2xl shadow-sm overflow-hidden transition-all duration-300" data-location="kensington" data-outcome="refund">
+<div class="p-6 lg:p-7 flex flex-col gap-6">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-outline-variant/20">
+<div class="flex items-start gap-4">
+<div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="Grand arched high ceiling of Kensington Heritage Community Hall illuminated with architectural warm and cool ice-blue cove lights, polished hardwood floor and grand acoustic diffusers" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAXGiKBHYBlsgRjMyDbgwKHZbIviyTTtG2Oa0HK15dhKhROv6i9ufh99wST26wEqylpBDx3OUUDLPyJmESNDohV97MprT0tYuaQh1WkGNDsAiVSIJZ-AfSMtGc2VKOBizE1bUNThS4C-G9RKXShn0pAOgOz672Z_ddsTNUsiI3gEsLMKNo7XqAfCJu9RGUMW5a0uFeguM8_GJaGsD4ihJJAKuz8uwfa6tFOfGhsmiQ"/>
+<span class="absolute bottom-1 right-1 text-[10px] font-mono px-1 rounded bg-surface-container-lowest/90 text-primary font-medium border border-outline-variant/30">#6940</span>
+</div>
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-2.5">
+<h2 class="text-xl font-headline font-bold text-on-surface tracking-tight">Kensington Heritage Community Hall</h2>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface">BK-6940</span>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Closed &amp; Reconciled
+                  </span>
+</div>
+<p class="text-sm font-medium text-secondary">Event: District Youth Orchestra Practice</p>
+<div class="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant font-mono pt-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Sep 12, 2025
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 09:00 - 13:00 (4h reserved)
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">pin</span> Access Code: #4819-AUTH
+                  </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-3 bg-surface-container-low p-4 rounded-xl border border-outline-variant/30">
+<div class="text-right">
+<div class="text-xs text-on-surface-variant">Escrow Security Deposit</div>
+<div class="text-lg font-headline font-bold text-on-surface">$150.00 <span class="text-xs font-normal text-secondary">Returned in full</span></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[14px]">shield</span> +5 Reliability Pts
+                </span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 5-Stage Custodial Lifecycle
+              </h3>
+<span class="text-xs font-mono text-secondary font-medium">Audit Status: Fully Verified (0 Flags)</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md relative flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">1. Requested</span>
+<span class="material-symbols-outlined text-primary text-[18px]">task_alt</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Aug 28, 14:20</div>
+<div class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Tier 1 automated resident reservation bypass</div>
+</div>
+<span class="inline-block text-[10px] font-mono text-secondary">Sec: Direct Slot Locked</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md relative flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">2. Approved</span>
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Aug 28, 14:21</div>
+<div class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Instant municipal trust sign-off granted</div>
+</div>
+<span class="inline-block text-[10px] font-mono text-secondary">Smart Contract Init</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md relative flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">3. Checked-In</span>
+<span class="material-symbols-outlined text-primary text-[18px]">key</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Sep 12, 08:50</div>
+<div class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Smart PIN lock unlocked. Baseline condition: Pristine</div>
+</div>
+<span class="inline-block text-[10px] font-mono text-secondary">Floor: Polished &amp; Ready</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md relative flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">4. Returned</span>
+<span class="material-symbols-outlined text-primary text-[18px]">door_front</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Sep 12, 12:55</div>
+<div class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Lock engaged. Inspection photos: 6/6 verified spotless</div>
+</div>
+<span class="inline-block text-[10px] font-mono text-secondary">Bins emptied &amp; reset</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 backdrop-blur-md relative flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">5. Settlement</span>
+<span class="material-symbols-outlined text-primary text-[18px]">savings</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Sep 12, 13:30</div>
+<div class="text-[11px] text-on-surface-variant leading-snug mt-0.5">$150 full deposit released back to CivicWallet</div>
+</div>
+<span class="inline-block text-[10px] font-mono text-primary font-semibold">+5 Score added to ledger</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4 pt-4 bg-surface-container-low -mx-6 -mb-6 p-6 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<span class="text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+<span class="material-symbols-outlined text-primary text-[16px]">fingerprint</span> Hash: 0x8a94...de81b3
+              </span>
+<span class="text-xs text-outline-variant">|</span>
+<span class="text-xs text-on-surface-variant font-medium">Inspector: Automated Vision Sentinel &amp; Civic Custodian #4</span>
+</div>
+<div class="flex items-center gap-2.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span>Municipal Inspection Log</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+<span>Deposit Receipt (PDF)</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<article class="booking-item relative rounded-2xl bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-2xl shadow-sm overflow-hidden transition-all duration-300" data-location="oakwood" data-outcome="refund">
+<div class="p-6 lg:p-7 flex flex-col gap-6">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-outline-variant/20">
+<div class="flex items-start gap-4">
+<div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="Sunlit Oakwood Assembly Room with warm natural timber columns, botanical wall installations, large acoustic window panes, and stacked ergonomic chairs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4cvu8do_zyfyk7I1f3wH4AlIr28KFhybi6bkLubBmWzJy1X3Kz0iOE-VgnKy4t5CFV5P59_lhHBrjnOh3AV44_zNtatmpZXph6kAmsaTaXWYHWdUcOIME9A6mlr5_fziUxd4vN8v4Z9rGkoh77if9LRAN_C1uH-hk8wJun9LqYYfYg5bHmiI_fxCD71aOk2xweCQQPhbYxZ-gBZAETXYDjzwok2PaPa7GgP8_DwAI"/>
+<span class="absolute bottom-1 right-1 text-[10px] font-mono px-1 rounded bg-surface-container-lowest/90 text-primary font-medium border border-outline-variant/30">#8821</span>
+</div>
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-2.5">
+<h2 class="text-xl font-headline font-bold text-on-surface tracking-tight">Oakwood Assembly Room</h2>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface">BK-8821</span>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Reconciled Clean
+                  </span>
+</div>
+<p class="text-sm font-medium text-secondary">Event: Local Garden Guild Workshop</p>
+<div class="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant font-mono pt-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Oct 18, 2025
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 10:00 - 14:00 (4h reserved)
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">pin</span> Access Code: #9102-OAK
+                  </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-3 bg-surface-container-low p-4 rounded-xl border border-outline-variant/30">
+<div class="text-right">
+<div class="text-xs text-on-surface-variant">Escrow Security Deposit</div>
+<div class="text-lg font-headline font-bold text-on-surface">$150.00 <span class="text-xs font-normal text-secondary">Full Refund</span></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[14px]">shield</span> +5 Reliability Pts
+                </span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 5-Stage Custodial Lifecycle
+              </h3>
+<span class="text-xs font-mono text-secondary font-medium">Completed in 4h 35m total</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">1. Requested</span>
+<span class="material-symbols-outlined text-primary text-[18px]">task_alt</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Oct 02, 11:14</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Resident app submission</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Pre-validated</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">2. Approved</span>
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Oct 02, 11:15</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Automated municipal clearing</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">1 min response</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">3. Checked-In</span>
+<span class="material-symbols-outlined text-primary text-[18px]">key</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Oct 18, 10:00</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">NFC badge unlock logged</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Initial audit ok</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">4. Returned</span>
+<span class="material-symbols-outlined text-primary text-[18px]">door_front</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Oct 18, 14:02</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Condition: Spotless (Tables folded)</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">No residue detected</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">5. Settlement</span>
+<span class="material-symbols-outlined text-primary text-[18px]">savings</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Oct 18, 14:35</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">$150.00 refunded into balance</div>
+</div>
+<span class="text-[10px] font-mono text-primary font-semibold">+5 Pts awarded</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4 pt-4 bg-surface-container-low -mx-6 -mb-6 p-6 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<span class="text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+<span class="material-symbols-outlined text-primary text-[16px]">fingerprint</span> Hash: 0x4f12...cc1990
+              </span>
+<span class="text-xs text-outline-variant">|</span>
+<span class="text-xs text-on-surface-variant font-medium">Smartlock Node #Oak-3</span>
+</div>
+<div class="flex items-center gap-2.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span>Municipal Inspection Log</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+<span>Deposit Receipt (PDF)</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<article class="booking-item relative rounded-2xl bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-2xl shadow-sm overflow-hidden transition-all duration-300" data-location="pavilion" data-outcome="arbitrated">
+<div class="p-6 lg:p-7 flex flex-col gap-6">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-outline-variant/20">
+<div class="flex items-start gap-4">
+<div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="Modernist concrete and glazed glass Arts Pavilion Studio with ceramic display plinths, track spotlighting, polished terrazzo floor, and contemporary art fixtures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZaYZunpib6lyhryjdfgwjWHrZd50LjfImxRURlC5-P-mM-iRUxFiJFV4or__pWxD1N2NxOZwr9y-ZHkMlC6vg5EDDOamDDicGcSrQa-mzGAvIHXKcHnYvtztLRkDHmwT_WVSUFtV-RVflO2LAsXfJbifhVrle3zetA9dxX6ktUDQ1BBdmUXVFmxhg9ECisAL-C_Kdr6_3am5ummkhaMaNys-sJWZxPHb7XX7hh0Sv"/>
+<span class="absolute bottom-1 right-1 text-[10px] font-mono px-1 rounded bg-surface-container-lowest/90 text-secondary font-medium border border-outline-variant/30">#5820</span>
+</div>
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-2.5">
+<h2 class="text-xl font-headline font-bold text-on-surface tracking-tight">Arts Pavilion Studio</h2>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface">BK-5820</span>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">gavel</span> Arbitration Resolved
+                  </span>
+</div>
+<p class="text-sm font-medium text-secondary">Event: Ceramics Exhibition &amp; Gallery Showcase</p>
+<div class="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant font-mono pt-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Aug 05, 2025
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 13:00 - 19:00 (6h reserved)
+                  </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">pin</span> Access Code: #7721-ART
+                  </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-3 bg-surface-container-low p-4 rounded-xl border border-outline-variant/30">
+<div class="text-right">
+<div class="text-xs text-on-surface-variant">Arbitrated Escrow Settlement</div>
+<div class="text-lg font-headline font-bold text-on-surface">$150.00 <span class="text-xs font-normal text-secondary">100% Retained Post-Appeal</span></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[14px]">verified</span> Honor Restored (+5 Pts)
+                </span>
+</div>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase tracking-wide">
+<span class="material-symbols-outlined text-[18px] text-primary">sync_problem</span> Handover Flag &amp; Rapid Appeal Audit Trail
+              </span>
+<span class="text-xs font-mono text-secondary font-medium">Resolution Duration: 1h 14m</span>
+</div>
+<div class="text-xs text-on-surface space-y-1">
+<p><span class="text-on-surface-variant font-mono">[19:08] Automated Vision:</span> Flagged minor dry watermarks near kiln water sink (-$20 hold suggested).</p>
+<p><span class="text-on-surface-variant font-mono">[19:15] Resident Response:</span> Handover photo #AP-03 uploaded illustrating pre-existing mineral stain from previous booking session.</p>
+<p><span class="text-on-surface-variant font-mono">[20:22] Custodial Sign-Off:</span> Municipal Custodian corroborated time stamp logs. Hold removed. Full $150 escrow immediately reimbursed with clean profile mark.</p>
+</div>
+</div>
+<div class="pt-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 5-Stage Custodial Lifecycle
+              </h3>
+<span class="text-xs font-mono text-secondary font-medium">Appealed &amp; Fully Closed</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">1. Requested</span>
+<span class="material-symbols-outlined text-primary text-[18px]">task_alt</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Jul 18, 09:30</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Art exhibition application</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Verified Host</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">2. Approved</span>
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Jul 18, 09:31</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Community arts council pass</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Escrow deposited</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">3. Checked-In</span>
+<span class="material-symbols-outlined text-primary text-[18px]">key</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Aug 05, 12:55</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Pre-event photos submitted (8/8)</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Baselines logged</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-secondary uppercase tracking-wide">4. Returned &amp; Flag</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">flag</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Aug 05, 19:08</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">Sink spill noted -&gt; Photo appealed</div>
+</div>
+<span class="text-[10px] font-mono text-secondary">Quick Arbitration</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 backdrop-blur-md flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wide">5. Settlement</span>
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Aug 05, 20:22</div>
+<div class="text-[11px] text-on-surface-variant leading-snug">$150.00 released without penalty</div>
+</div>
+<span class="text-[10px] font-mono text-primary font-semibold">Reliability Intact</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4 pt-4 bg-surface-container-low -mx-6 -mb-6 p-6 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<span class="text-xs text-on-surface-variant flex items-center gap-1.5 font-mono">
+<span class="material-symbols-outlined text-primary text-[16px]">gavel</span> Appeal Dossier #ARB-229-CIV
+              </span>
+<span class="text-xs text-outline-variant">|</span>
+<span class="text-xs text-on-surface-variant font-medium">Arbitrator: Council Lead H. Jenkins</span>
+</div>
+<div class="flex items-center gap-2.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">balance</span>
+<span>Arbitration Findings Log</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:bg-surface-container text-on-surface text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+<span>Full Settlement Statement</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+</div>
+<div class="hidden rounded-3xl p-12 bg-surface-container-lowest border border-outline-variant/30 backdrop-blur-2xl text-center space-y-6 shadow-sm" id="empty-state-view">
+<div class="w-20 h-20 mx-auto rounded-2xl bg-surface-container flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[40px]">inventory_2</span>
+</div>
+<div class="space-y-2 max-w-md mx-auto">
+<h3 class="text-2xl font-headline font-bold text-on-surface tracking-tight">No Completed Bookings in Archive Yet</h3>
+<p class="text-sm text-on-surface-variant">
+          You haven't completed any community space reservations yet. When you conclude an event and check out via digital smart lock, full audit reports will populate here.
+        </p>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+<a class="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-all shadow-sm" href="#">
+          Explore Available Halls
+        </a>
+<button class="px-5 py-2.5 rounded-xl bg-surface-container border border-outline-variant/30 hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-all shadow-sm" id="reset-state-btn">
+          Return to History View
+        </button>
+</div>
+</div>
+<footer class="pt-6 pb-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant/80 border-t border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>All records cryptographically signed with Municipal Audit Certificate SHA-256</span>
+</div>
+<div class="flex items-center gap-4">
+<a class="hover:text-primary transition-colors" href="#">Custodial Standards</a>
+<span>•</span>
+<a class="hover:text-primary transition-colors" href="#">Appeals Charter</a>
+<span>•</span>
+<a class="hover:text-primary transition-colors" href="#">Smart Lock Protocol</a>
+</div>
+</footer>
+</div>
+<script>
+    (function() {
+      const toggleBtn = document.getElementById('toggle-state-btn');
+      const resetBtn = document.getElementById('reset-state-btn');
+      const bookingContainer = document.getElementById('booking-list-container');
+      const emptyStateView = document.getElementById('empty-state-view');
+      const searchInput = document.getElementById('history-search');
+      const locationFilter = document.getElementById('location-filter');
+      const outcomeFilter = document.getElementById('outcome-filter');
+
+      let showingEmpty = false;
+
+      function updateStateDisplay() {
+        if (showingEmpty) {
+          bookingContainer.classList.add('hidden');
+          emptyStateView.classList.remove('hidden');
+          toggleBtn.innerHTML = '<span class="material-symbols-outlined text-primary text-[18px]">toggle_off</span><span>Show Active Records</span>';
+        } else {
+          bookingContainer.classList.remove('hidden');
+          emptyStateView.classList.add('hidden');
+          toggleBtn.innerHTML = '<span class="material-symbols-outlined text-primary text-[18px]">toggle_on</span><span>Preview Empty State</span>';
+        }
+      }
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          showingEmpty = !showingEmpty;
+          updateStateDisplay();
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          showingEmpty = false;
+          updateStateDisplay();
+        });
+      }
+
+      function filterCards() {
+        const query = (searchInput?.value || '').toLowerCase();
+        const loc = locationFilter?.value || 'all';
+        const outcome = outcomeFilter?.value || 'all';
+
+        const cards = document.querySelectorAll('.booking-item');
+        cards.forEach(card => {
+          const cardText = card.textContent.toLowerCase();
+          const cardLoc = card.getAttribute('data-location');
+          const cardOutcome = card.getAttribute('data-outcome');
+
+          const matchesQuery = cardText.includes(query);
+          const matchesLoc = loc === 'all' || cardLoc === loc;
+          const matchesOutcome = outcome === 'all' || cardOutcome === outcome;
+
+          if (matchesQuery && matchesLoc && matchesOutcome) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      if (searchInput) searchInput.addEventListener('input', filterCards);
+      if (locationFilter) locationFilter.addEventListener('change', filterCards);
+      if (outcomeFilter) outcomeFilter.addEventListener('change', filterCards);
+    })();
+  </script>
+</div></main></div></body></html>

@@ -1,0 +1,48 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Custody Archives &amp; Booking History</h1>
+      <p class="text-sm text-ink-muted">Historical records of completed community reservations and condition logs</p>
+    </div>
+  </div>
+
+  <% if (bookings && bookings.length > 0) { %>
+    <div class="space-y-4">
+      <% bookings.forEach(b => { %>
+        <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-line">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono text-xs text-ink-muted"><%= b.id %></span>
+                <%- include('../../partials/StatusBadge', { status: b.status }) %>
+              </div>
+              <h2 class="text-base font-bold text-ink"><%= b.space ? b.space.name : 'Community Space' %></h2>
+              <p class="text-xs text-ink-muted">
+                Slot: <%= helpers.formatDateTime(b.start_time) %> &ndash; <%= helpers.formatTime(b.end_time) %>
+              </p>
+            </div>
+
+            <div class="text-left sm:text-right">
+              <span class="text-[10px] uppercase font-semibold text-ink-muted">Net Payout</span>
+              <div class="font-mono font-bold text-sm text-primary"><%= helpers.formatCurrency(b.hourly_fee_total) %></div>
+              <div class="text-xs text-status-success font-medium">Deposit Settled</div>
+            </div>
+          </div>
+
+          <!-- Lifecycle Timeline -->
+          <div class="pt-2">
+            <%- include('../../partials/Timeline', { status: b.status }) %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No past booking archives',
+      description: 'Completed space reservations will automatically appear here once checkout inspections are finished.',
+      actionText: 'View Today Operations',
+      actionUrl: '/owner/today'
+    }) %>
+  <% } %>
+</div>

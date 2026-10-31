@@ -1,0 +1,21 @@
+<%#
+  Tabs Partial
+  Props:
+    tabs: [{ id: 'upcoming', label: 'Upcoming', count: 2, href: '?tab=upcoming' }]
+    activeTab: 'upcoming'
+%>
+<nav class="flex border-b border-line gap-2 overflow-x-auto no-scrollbar" aria-label="Tabs">
+  <% (tabs || []).forEach(tab => { %>
+    <% const isActive = tab.id === activeTab; %>
+    <a href="<%= tab.href || ('#' + tab.id) %>"
+       class="inline-flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap <%= isActive ? 'border-primary text-primary font-semibold' : 'border-transparent text-ink-muted hover:text-ink hover:border-line' %>"
+       <%= isActive ? 'aria-current="page"' : '' %>>
+      <span><%= tab.label %></span>
+      <% if (typeof tab.count !== 'undefined') { %>
+        <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full <%= isActive ? 'bg-primary text-surface' : 'bg-surface-tint text-ink-muted' %>">
+          <%= tab.count %>
+        </span>
+      <% } %>
+    </a>
+  <% }); %>
+</nav>

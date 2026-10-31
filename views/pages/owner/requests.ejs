@@ -1,0 +1,110 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Booking Requests</h1>
+      <p class="text-sm text-ink-muted">Review incoming requests. You have full discretion over all booking decisions.</p>
+    </div>
+    <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
+      Pending Requests: <span class="font-bold text-ink"><%= requests.length %></span>
+    </div>
+  </div>
+
+  <!-- Manual Decision Policy Reminder -->
+  <div class="card p-4 bg-surface-tint border border-line flex items-start gap-3">
+    <span class="text-lg">⚖️</span>
+    <div class="text-xs text-ink-muted leading-relaxed">
+      <strong class="text-ink">Owner Discretion Policy:</strong> BORO never automatically approves bookings. Reliability score tiers are strictly advisory to assist your evaluation. You may approve, reject, or waitlist any request based on your community rules.
+    </div>
+  </div>
+
+  <!-- Requests Queue -->
+  <% if (requests && requests.length > 0) { %>
+    <div class="space-y-4">
+      <% requests.forEach(reqItem => { %>
+        <% const isTier3 = reqItem.user.score < 70; %>
+        <div class="card p-6 bg-surface border <%= isTier3 ? 'border-status-warning/60 bg-status-warning/5' : 'border-line' %> shadow-sm space-y-4">
+          <!-- Tier 3 Advisory Banner -->
+          <% if (isTier3) { %>
+            <div class="p-3 rounded-xl bg-status-warning/15 border border-status-warning/30 flex items-center gap-2.5 text-xs text-ink">
+              <span class="text-status-warning font-bold text-base">⚠️</span>
+              <div>
+                <strong>Tier 3 Advisory:</strong> This applicant currently has a low reliability score (<%= reqItem.user.score %>/120). Carefully inspect past history and usage purpose before deciding.
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Request Top Details -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-line">
+            <!-- Requester Profile -->
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+                <%= helpers.getUserInitials(reqItem.user.name) %>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink"><%= reqItem.user.name %></span>
+                  <%- include('../../partials/ScoreBadge', { score: reqItem.user.score, showExplanation: false }) %>
+                </div>
+                <div class="text-xs text-ink-muted mt-0.5">
+                  <%= reqItem.user.email %> &bull; Active bookings: <%= reqItem.user.active_bookings_count || 1 %>/2
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial & Payment Status -->
+            <div class="text-left md:text-right">
+              <div class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Total Payable</div>
+              <div class="text-lg font-bold text-primary font-mono"><%= helpers.formatCurrency(reqItem.total_amount) %></div>
+              <div class="flex items-center md:justify-end gap-1.5 mt-0.5">
+                <span class="badge badge-success text-[10px] uppercase"><%= helpers.formatStatus(reqItem.payment_status) || 'Paid' %></span>
+                <span class="text-xs text-ink-muted font-mono">(<%= helpers.formatPaymentMethod(reqItem.payment_method) %>)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Space & Slot Specs -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-surface-tint border border-line text-xs">
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Requested Space</span>
+              <div class="font-bold text-ink text-sm mt-0.5"><%= reqItem.space ? reqItem.space.name : 'Community Space' %></div>
+            </div>
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Time Slot</span>
+              <div class="font-medium text-ink mt-0.5"><%= helpers.formatDateTime(reqItem.start_time) %> &ndash; <%= helpers.formatTime(reqItem.end_time) %></div>
+            </div>
+            <div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Stated Purpose</span>
+              <div class="font-bold text-ink capitalize mt-0.5"><%= reqItem.purpose %></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons (with ReasonDialog modal triggers) -->
+          <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+            <button onclick="window.openReasonDialog('/owner/requests/<%= reqItem.id %>/waitlist', 'Place Request on Waitlist', 'Specify why this applicant is being placed on the slot waitlist.')"
+                    class="btn btn-ghost text-xs">
+              Waitlist
+            </button>
+
+            <button onclick="window.openReasonDialog('/owner/requests/<%= reqItem.id %>/reject', 'Reject Booking Request', 'Mandatory: Enter the reason for rejection (this will be logged and shared with the applicant).')"
+                    class="btn btn-secondary text-xs text-status-danger border-status-danger/30 hover:bg-status-danger/10">
+              Reject
+            </button>
+
+            <button onclick="window.openReasonDialog('/owner/requests/<%= reqItem.id %>/approve', 'Approve Booking Request', 'Provide any check-in instructions or conditions for the applicant.')"
+                    class="btn btn-primary text-xs">
+              Approve Request
+            </button>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No pending booking requests',
+      description: 'You have reviewed all incoming requests for your community spaces.',
+      actionText: 'View Calendar',
+      actionUrl: '/owner/calendar'
+    }) %>
+  <% } %>
+</div>

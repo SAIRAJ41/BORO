@@ -1,0 +1,54 @@
+<%
+  const st = locals.status || '';
+  let badgeClass = 'text-ink-muted bg-surface-container';
+  let label = st;
+
+  switch (st) {
+    case 'requested':
+      badgeClass = 'text-status-info bg-status-info-tint border border-status-info/20';
+      label = 'Requested';
+      break;
+    case 'approved':
+      badgeClass = 'text-status-success bg-status-success-tint border border-status-success/20';
+      label = 'Confirmed & Approved';
+      break;
+    case 'checked_in':
+      badgeClass = 'text-status-success bg-status-success-tint border border-status-success/20';
+      label = 'Checked-in';
+      break;
+    case 'returned':
+      badgeClass = 'text-ink-secondary bg-surface-container border border-line-subtle';
+      label = 'Returned & Clean';
+      break;
+    case 'closed':
+      badgeClass = 'text-ink-secondary bg-surface-container border border-line-subtle';
+      label = 'Closed & Settled';
+      break;
+    case 'waitlisted':
+      badgeClass = 'text-status-info bg-status-info-tint border border-status-info/20';
+      label = 'Waitlisted';
+      break;
+    case 'overdue':
+      badgeClass = 'text-status-warning bg-status-warning-tint border border-status-warning/30 font-semibold animate-pulse';
+      label = 'Overdue Return';
+      break;
+    case 'damaged':
+      badgeClass = 'text-status-danger bg-status-danger-tint border border-status-danger/30 font-semibold';
+      label = 'Incident / Damaged';
+      break;
+    case 'rejected':
+      badgeClass = 'text-status-danger bg-status-danger-tint border border-status-danger/30';
+      label = 'Rejected';
+      break;
+    case 'cancelled':
+      badgeClass = 'text-ink-muted bg-[#e8ecf2] border border-[#d5d8dc]';
+      label = 'Cancelled';
+      break;
+    default:
+      label = st.replace(/_/g, ' ');
+  }
+%>
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs <%= badgeClass %>">
+  <span class="w-1.5 h-1.5 rounded-full mr-1.5 <%= st === 'approved' || st === 'checked_in' ? 'bg-status-success' : (st === 'overdue' ? 'bg-status-warning' : (st === 'damaged' || st === 'rejected' ? 'bg-status-danger' : (st === 'cancelled' ? 'bg-ink-muted' : 'bg-status-info'))) %>"></span>
+  <span><%= label %></span>
+</span>

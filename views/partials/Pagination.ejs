@@ -1,0 +1,47 @@
+<%#
+  Pagination Partial
+  Props:
+    page: current page number (default 1)
+    totalPages: total number of pages (default 1)
+    baseUrl: url prefix (e.g., '/history?tab=completed&')
+%>
+<% const curPage = typeof page !== 'undefined' ? parseInt(page) : 1; %>
+<% const total = typeof totalPages !== 'undefined' ? parseInt(totalPages) : 1; %>
+<% const urlPrefix = typeof baseUrl !== 'undefined' ? baseUrl : '?'; %>
+
+<% if (total > 1) { %>
+<nav class="flex items-center justify-between border-t border-line px-4 py-3 sm:px-6 mt-6" aria-label="Pagination">
+  <div class="hidden sm:block">
+    <p class="text-sm text-ink-muted">
+      Page <span class="font-medium text-ink"><%= curPage %></span> of <span class="font-medium text-ink"><%= total %></span>
+    </p>
+  </div>
+  <div class="flex flex-1 justify-between sm:justify-end gap-2">
+    <% if (curPage > 1) { %>
+      <a href="<%= urlPrefix %>page=<%= curPage - 1 %>" class="btn btn-secondary text-xs px-3 py-1.5">
+        &larr; Previous
+      </a>
+    <% } else { %>
+      <span class="btn btn-secondary text-xs px-3 py-1.5 opacity-50 cursor-not-allowed">&larr; Previous</span>
+    <% } %>
+
+    <div class="hidden sm:flex gap-1">
+      <% for (let p = 1; p <= total; p++) { %>
+        <% if (p === curPage) { %>
+          <span class="btn btn-primary text-xs px-3 py-1.5 font-bold" aria-current="page"><%= p %></span>
+        <% } else { %>
+          <a href="<%= urlPrefix %>page=<%= p %>" class="btn btn-ghost text-xs px-3 py-1.5"><%= p %></a>
+        <% } %>
+      <% } %>
+    </div>
+
+    <% if (curPage < total) { %>
+      <a href="<%= urlPrefix %>page=<%= curPage + 1 %>" class="btn btn-secondary text-xs px-3 py-1.5">
+        Next &rarr;
+      </a>
+    <% } else { %>
+      <span class="btn btn-secondary text-xs px-3 py-1.5 opacity-50 cursor-not-allowed">Next &rarr;</span>
+    <% } %>
+  </div>
+</nav>
+<% } %>

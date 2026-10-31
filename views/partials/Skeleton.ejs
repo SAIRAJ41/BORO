@@ -1,0 +1,41 @@
+<%#
+  Skeleton Loader Partial
+  Props:
+    type: 'card' | 'table' | 'line' | 'avatar' (default 'card')
+    count: number of items (default 1)
+%>
+<% const skCount = typeof count !== 'undefined' ? count : 1; %>
+<% const skType = typeof type !== 'undefined' ? type : 'card'; %>
+
+<div class="space-y-4 w-full" aria-busy="true" aria-label="Loading content...">
+  <% for (let i = 0; i < skCount; i++) { %>
+    <% if (skType === 'card') { %>
+      <div class="card p-5 bg-surface border border-line animate-pulse">
+        <div class="h-40 bg-surface-tint rounded-xl mb-4"></div>
+        <div class="h-5 bg-line rounded w-3/4 mb-2"></div>
+        <div class="h-4 bg-line rounded w-1/2 mb-4"></div>
+        <div class="flex justify-between items-center pt-3 border-t border-line">
+          <div class="h-4 bg-line rounded w-1/4"></div>
+          <div class="h-8 bg-surface-tint rounded-lg w-24"></div>
+        </div>
+      </div>
+    <% } else if (skType === 'table') { %>
+      <div class="border border-line rounded-xl p-4 bg-surface animate-pulse space-y-3">
+        <div class="h-6 bg-line rounded w-1/3 mb-4"></div>
+        <div class="h-4 bg-surface-tint rounded w-full"></div>
+        <div class="h-4 bg-surface-tint rounded w-5/6"></div>
+        <div class="h-4 bg-surface-tint rounded w-4/6"></div>
+      </div>
+    <% } else if (skType === 'avatar') { %>
+      <div class="flex items-center space-x-3 animate-pulse">
+        <div class="w-10 h-10 rounded-full bg-line"></div>
+        <div class="space-y-2 flex-1">
+          <div class="h-4 bg-line rounded w-1/3"></div>
+          <div class="h-3 bg-surface-tint rounded w-1/4"></div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="h-4 bg-line rounded w-full animate-pulse"></div>
+    <% } %>
+  <% } %>
+</div>

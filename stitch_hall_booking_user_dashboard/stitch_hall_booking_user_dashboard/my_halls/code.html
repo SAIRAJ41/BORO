@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#444748", "outline-variant": "#c4c7c7", "tertiary-container": "#4a4c38", "inverse-on-surface": "#e8f2ff", "secondary": "#5d5e5f", "on-tertiary-fixed-variant": "#474834", "on-secondary-container": "#626363", "on-tertiary-fixed": "#1b1d0c", "primary-container": "#4a4a4a", "on-primary-fixed-variant": "#474747", "tertiary-fixed-dim": "#c8c8ae", "on-primary-fixed": "#1b1c1c", "surface-container-highest": "#d0e5fc", "surface-bright": "#f7f9ff", "surface-container": "#e3efff", "surface-tint": "#5e5e5e", "on-error-container": "#93000a", "inverse-primary": "#c8c6c6", "error-container": "#ffdad6", "on-primary-container": "#bbb9b9", "on-primary": "#ffffff", "secondary-fixed": "#e3e2e2", "error": "#ba1a1a", "secondary-fixed-dim": "#c6c6c6", "secondary-container": "#e0dfdf", "tertiary": "#343523", "surface-dim": "#c7dcf4", "primary-fixed": "#e4e2e2", "surface": "#f7f9ff", "primary-fixed-dim": "#c8c6c6", "on-error": "#ffffff", "background": "#f7f9ff", "tertiary-fixed": "#e4e4c9", "surface-variant": "#d0e5fc", "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#464747", "on-tertiary-container": "#bbbca3", "inverse-surface": "#1e3244", "surface-container-low": "#edf4ff", "on-background": "#071d2e", "primary": "#333434", "on-secondary-fixed": "#1a1c1c", "on-secondary": "#ffffff", "surface-container-lowest": "#ffffff", "surface-container-high": "#d8eaff", "on-surface": "#071d2e", "outline": "#747878" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-md": "1rem", "space-xl": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "margin": "1.5rem", "space-lg": "1.5rem", "space-sm": "0.5rem" }, "fontFamily": { "headline-lg": [ "Inter" ], "label-sm": [ "Inter" ], "body-md": [ "Inter" ] }, "fontSize": { "headline-lg": [ "32px", { "lineHeight": "40px", "fontWeight": "600" } ], "label-sm": [ "12px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-md": [ "16px", { "lineHeight": "24px", "fontWeight": "400" } ] } } } };</script></head><body class="bg-background font-body-md text-body-md text-on-surface min-h-screen selection:bg-surface-container-highest selection:text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 min-h-0"><div class="h-16 px-margin flex items-center gap-space-sm bg-surface-container-lowest"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[20px]">account_balance</span></div><div class="flex flex-col"><span class="font-label-sm text-label-sm font-semibold tracking-tight text-on-surface leading-tight">CivicHall Portal</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Property Management</span></div></div><div class="px-margin py-space-sm"><div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-tertiary">verified_user</span><span class="font-label-sm text-label-sm text-on-surface font-medium">Municipal Verified</span></div><span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span></div></div><nav class="flex-1 px-space-sm py-space-xs space-y-space-xs overflow-y-auto" data-active-classes="bg-primary-container text-on-primary-container font-medium rounded-lg shadow-sm"><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="requests" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">inbox</span><span class="font-label-sm text-label-sm">Requests</span></div><span class="px-space-xs py-0.5 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-medium leading-none">4</span></a><a aria-current="page" class="group flex items-center justify-between px-space-md py-space-sm transition-colors bg-primary-container text-on-primary-container font-medium rounded-lg shadow-sm" data-path="my-halls" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">holiday_village</span><span class="font-label-sm text-label-sm">My Halls</span></div><span class="px-space-xs py-0.5 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-medium leading-none">3</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="calendar" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">calendar_month</span><span class="font-label-sm text-label-sm">Calendar</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="today" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">today</span><span class="font-label-sm text-label-sm">Today</span></div><span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>2 due</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="incidents" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">report_problem</span><span class="font-label-sm text-label-sm">Incidents</span></div><span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-medium leading-none">1</span></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="history" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">history</span><span class="font-label-sm text-label-sm">History</span></div></a><a class="group flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="earnings" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-label-sm text-label-sm">Earnings</span></div></a></nav></div><div class="p-space-margin bg-surface-container-lowest flex flex-col gap-space-sm"><div class="flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant"><a class="hover:text-on-surface transition-colors flex items-center gap-space-xs" data-path="support" href="#"><span class="material-symbols-outlined text-[16px]">contact_support</span>Support &amp; Assistance</a><a class="hover:text-on-surface transition-colors flex items-center gap-space-xs" data-path="bylaw-regulations" href="#"><span class="material-symbols-outlined text-[16px]">gavel</span>Bylaw Regulations</a></div><div class="pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span>CivicHall OS</span><span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface">v2.4</span></div></div></aside><div class="pl-72 flex flex-col min-h-screen"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container-low text-on-surface"><span class="material-symbols-outlined text-[18px] text-on-surface-variant">domain</span><select class="bg-transparent font-label-sm text-label-sm font-medium text-on-surface focus:outline-none cursor-pointer pr-space-xs"><option selected="">All Managed Halls (3)</option><option>Westminster Assembly Hall</option><option>Maplewood Community Guild</option><option>Harbor Point Center</option></select></div><div class="relative flex-1 max-w-md"><span class="material-symbols-outlined absolute left-space-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full pl-9 pr-space-md py-1.5 rounded-lg bg-surface-container-low font-label-sm text-label-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-all" placeholder="Search permit, booking, or citizen..." type="text"/></div></div><div class="flex items-center gap-space-lg"><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface font-label-sm text-label-sm"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>Monitoring 3 Facilities</span></div><div class="flex items-center gap-space-xs"><button aria-label="Alerts" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface relative transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><button aria-label="Emergency Alert" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">emergency_home</span></button></div><div class="h-6 w-px bg-surface-container"></div><div class="flex items-center gap-space-md pl-space-xs"><div class="flex flex-col text-right"><div class="flex items-center justify-end gap-1"><span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Marcus Vance</span><span class="material-symbols-outlined text-primary text-[14px]" title="Verified Custodian">verified</span></div><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Hall Custodian &amp; Owner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-background flex-1 px-space-xl py-space-xl"><div class="flex flex-col w-full">
+<div class="w-full space-y-space-xl pb-space-xl">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span>Municipal Asset Registry</span>
+<span>/</span>
+<span>Facility Portfolios</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Managed Community Halls &amp; Facilities</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Oversee credentialed spaces, tariff tiers, municipal bylaws, and public availability slots.</p>
+</div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="inline-flex items-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-highest transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+<span>Export Facility Registry</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold hover:bg-primary-container transition-all shadow-sm" onclick="document.getElementById('listing-editor-section').scrollIntoView({ behavior: 'smooth' })" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Add New Hall Listing</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-low p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Municipal Accreditation Active</span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Ward Compliance Ref: 2024-AC-9104</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">All 3 active listings are fully licensed under Civic Assembly Code standard § 48-B for civic, private, and non-profit usage.</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-start md:self-auto">
+<span class="px-space-sm py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">Bylaw Status: In Full Standing</span>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Assets</span>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">3</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">100% compliant</span>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Aggregated Capacity</span>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">430</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Total guests</span>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Average Review Rating</span>
+<div class="flex items-baseline justify-between mt-1">
+<div class="flex items-center gap-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">4.88</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">194 verified reviews</span>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">This Month Utilization</span>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">82.4%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+5.2% vs last mo</span>
+</div>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest font-semibold">Live Facilities</span>
+<h2 class="font-headline-lg text-[22px] leading-7 text-on-surface font-semibold">Active Managed Inventory</h2>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">sort</span>
+<span>Sorted by Capacity (Desc)</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<div class="rounded-xl bg-surface-container-lowest overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="relative h-48 w-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Expansive interior of Harborview Waterfront Pavilion featuring exposed cedar trusses, panoramic floor-to-ceiling harbor glass windows, clean polished hardwood flooring, natural coastal sunlight, modern event seating, high fidelity architectural photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCnvbns0HWP0OysQ7FhD8eNtKEEBxEr4lDLHdYRCuGvlZbXiBqFDtn0z67LTPCNogIdWR0Qh1mFsDXgVIJgzqBEJaYzR5iiUNP3fYm88b7nqfI65MdDUlHYexvF4pMG4GadyH8xG1xqU4kmEL-En0de6KT3Cr2tU8ggdOE_H4LLwcuXANROI9Pn4ALuNF3pcOcgy4Ogl7TUsAQ-35nYcSTZ7Wo2SJZNkn2HddBgkJG"/>
+<div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Published &amp; Active</span>
+</div>
+<div class="absolute top-3 right-3 px-2 py-1 rounded-lg bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-label-sm font-semibold text-on-surface">
+                ID: HP-1049
+              </div>
+</div>
+<div class="p-space-lg space-y-space-md">
+<div>
+<div class="flex items-center justify-between gap-space-xs">
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Harborview Waterfront Pavilion</h3>
+<div class="flex items-center gap-0.5 font-label-sm text-label-sm font-semibold text-on-surface bg-surface-container-low px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px] text-tertiary" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.95</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Harbor District • Tier 1 Civic Center</p>
+</div>
+<div class="grid grid-cols-3 gap-space-xs py-space-xs rounded-lg bg-surface-container-low px-space-sm text-center">
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Capacity</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">250 Guests</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Tariff</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$110/hr</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Deposit</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$250</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium block">Configured Time Windows:</span>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Morning (09-13)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Afternoon (14-18)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Evening (19-23)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">accessible</span> DDA Compliant</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">local_parking</span> 120 Stalls</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">wifi</span> Wi-Fi 6</span>
+</div>
+</div>
+</div>
+<div class="p-space-lg pt-0 flex items-center justify-between gap-space-xs">
+<button class="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-highest transition-colors" type="button">Configure Slots</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="relative h-48 w-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Kensington Heritage Community Hall with restored Victorian vaulted timber beam roof, polished oak parquet flooring, warm civic architectural lighting, clean modular table arrangements, high quality architectural perspective." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfqpD5BFypLefkV5AfASfTWDy9JGSjgzzonMrVwCMiGDOGH_9RqyHM3FmbHGtFBKVCKrKkNc671iRKPRRBaXQ-tZTqXONF4oxQbq48OwvSMTrFNl4JdGVw5n8OvngrMGUFAdVWPNEWxdC1CfwM81ofup-YJjjf1jNy8SMI726noVnOeJJIGN8nge9dC_GgXy0lvL09RHyA9wr1xZQ5i5XUS5LI7Yftn5mfzot79EzW"/>
+<div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Published &amp; Active</span>
+</div>
+<div class="absolute top-3 right-3 px-2 py-1 rounded-lg bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-label-sm font-semibold text-on-surface">
+                ID: KH-8820
+              </div>
+</div>
+<div class="p-space-lg space-y-space-md">
+<div>
+<div class="flex items-center justify-between gap-space-xs">
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Kensington Heritage Community Hall</h3>
+<div class="flex items-center gap-0.5 font-label-sm text-label-sm font-semibold text-on-surface bg-surface-container-low px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px] text-tertiary" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.9</span>
+<span class="text-on-surface-variant font-normal">(84)</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Ward 4 Heritage Precinct • Historic Monument</p>
+</div>
+<div class="grid grid-cols-3 gap-space-xs py-space-xs rounded-lg bg-surface-container-low px-space-sm text-center">
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Capacity</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">120 Guests</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Tariff</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$65/hr</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Deposit</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$150</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium block">Configured Time Windows:</span>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Morning (09-13)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Afternoon (14-18)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Evening (19-22)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">restaurant</span> Full Kitchen</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">theater_comedy</span> Stage &amp; DMX</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">local_parking</span> 50+ Stalls</span>
+</div>
+</div>
+</div>
+<div class="p-space-lg pt-0 flex items-center justify-between gap-space-xs">
+<button class="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-highest transition-colors" type="button">Configure Slots</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="relative h-48 w-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Modern Oakwood Assembly Room with acoustic slotted wall paneling, modular presentation tables, bright natural perimeter lighting, professional conference room setting, neutral Scandinavian tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW38mlHAAvhigGU4VUOadU1_4MqexSgV2X3bXRjOKfKG2FaaY8G_BXRb1Uv9evdCTZuQRTLQmn48id_oPjMskENZiS8yUH2YqLlkSwmMZhITi9Nbt1wSvS9WgyYTgQmC_r0XmYWox13plvDh9d9_HkQp_LO4YUECDka4tmWIQWcCXmuYyQ5IIq5GW-A9kbeHA9Ne22wT41so7p1s2df5K41ztZ_ZovlPVmBVQs7KTs"/>
+<div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Published &amp; Active</span>
+</div>
+<div class="absolute top-3 right-3 px-2 py-1 rounded-lg bg-surface-container-lowest/90 backdrop-blur-md font-label-sm text-label-sm font-semibold text-on-surface">
+                ID: OA-4412
+              </div>
+</div>
+<div class="p-space-lg space-y-space-md">
+<div>
+<div class="flex items-center justify-between gap-space-xs">
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Oakwood Assembly Room</h3>
+<div class="flex items-center gap-0.5 font-label-sm text-label-sm font-semibold text-on-surface bg-surface-container-low px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px] text-tertiary" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.8</span>
+<span class="text-on-surface-variant font-normal">(52)</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Oakwood Guild Ward • Multi-Purpose Center</p>
+</div>
+<div class="grid grid-cols-3 gap-space-xs py-space-xs rounded-lg bg-surface-container-low px-space-sm text-center">
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Capacity</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">60 Guests</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Tariff</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$42/hr</span>
+</div>
+<div>
+<span class="font-label-sm text-[11px] text-on-surface-variant block uppercase">Deposit</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">$100</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium block">Configured Time Windows:</span>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Morning (08-12)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Afternoon (13-17)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Evening (18-21)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">videocam</span> 4K Projection</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">coffee</span> Wet Bar</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">podium</span> Lectern</span>
+</div>
+</div>
+</div>
+<div class="p-space-lg pt-0 flex items-center justify-between gap-space-xs">
+<button class="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-highest transition-colors" type="button">Configure Slots</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm space-y-space-xl scroll-mt-20" id="listing-editor-section">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between pb-space-md gap-space-sm bg-surface-container-low/50 p-space-md rounded-xl">
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded bg-primary text-on-primary font-label-sm text-label-sm uppercase font-semibold">Listing Studio</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-medium">Currently Editing: Kensington Heritage Community Hall</span>
+</div>
+<h2 class="font-headline-lg text-[24px] leading-8 font-semibold text-on-surface">Comprehensive Facility Specification</h2>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Last saved: 14 mins ago</span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">1</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Basic Facility Details</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<div class="space-y-1.5 md:col-span-2">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Hall / Venue Name</label>
+<input class="w-full px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:bg-surface-container" type="text" value="Kensington Heritage Community Hall"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Ward / District Area</label>
+<input class="w-full px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:bg-surface-container" type="text" value="Ward 4 — Heritage Precinct"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Municipal Property ID</label>
+<input class="w-full px-space-md py-2 rounded-lg bg-surface-container text-on-surface-variant font-body-md text-body-md cursor-not-allowed" readonly="" type="text" value="KH-8820"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Max Guest Capacity</label>
+<div class="relative">
+<input class="w-full pl-space-md pr-10 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:bg-surface-container" type="number" value="120"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-sm text-label-sm">guests</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Gross Floor Area</label>
+<div class="relative">
+<input class="w-full pl-space-md pr-12 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:bg-surface-container" type="text" value="3,450 sq ft"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-sm text-label-sm">sq ft</span>
+</div>
+</div>
+<div class="space-y-1.5 md:col-span-2">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Physical Municipal Address</label>
+<input class="w-full px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:bg-surface-container" type="text" value="842 Kensington Terrace, Civic Center Way, Postal Code K2G 3J1"/>
+</div>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">2</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Photos &amp; Media Gallery</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Recommended: Minimum 4 geo-tagged inspection photos</span>
+</div>
+<div class="rounded-xl bg-surface-container-low p-space-lg flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary mb-space-xs">
+<span class="material-symbols-outlined text-[26px]">cloud_upload</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Drag &amp; drop high-resolution venue photos here</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Supports PNG, JPG, or WEBP up to 25MB each (EXIF preserved for municipal records)</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
+<div class="relative group rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-32 object-cover" data-alt="Main auditorium interior of community hall with wide polished floor, soft overhead chandeliers, clean acoustic walls, architectural daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9-gTuDSYrp30h07Uj3xLUfZ_D4bajanZDLqh6Q1-VNwnf7RxUgKs02JMzpDoILKKGDw33rRbnc8Bs9BDDvWxWC_c-JzXLE1D5O85iZbNeVFxyejqESzge-E9t-4B9ITI02a_XJ1Zb1_4y_VR9As6qVQm-91NQXkKaHUtl0pOjmE3YgfZY9gT60pu4CBrT2uj4eE7GoPX-T6Ayv3EI2ngnUg0QYVwkRsSi4KR5g5_T"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-sm font-label-sm text-[10px] font-semibold text-on-surface">Main Auditorium</span>
+</div>
+<div class="relative group rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-32 object-cover" data-alt="Commercial stainless steel preparation kitchen in community hall with multi-compartment sinks, pass-through counter, clean hygienic tile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0Gn-2IyvZUdRD-VpVT4uiwg84fL_divU9vdg1M19gWucf9kqLlXPYFO9fIMxvz3uOJbK40EQ1Pz0L_Vyzar5FMOFy4FqsjsLh9jhc0EbXaOFo8eig39DxmuCB_2gf0oCdzIadAbW1N9zsfvbS6nb6tr_tcTAT5RaQYr9HUwLKcSQVYqkIP0LzZ_QRFBeYtbzItJutXPzfG-sYjfukKHQYILqW-zq95mJHG_LWDzlf"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-sm font-label-sm text-[10px] font-semibold text-on-surface">Commercial Kitchen</span>
+</div>
+<div class="relative group rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-32 object-cover" data-alt="Universal step-free exterior entry ramp with ADA dual stainless steel handrails, tactile paving, well lit concrete architectural pathway." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKiDF291Jm1QUCGauD6P-1PRWjIv6ZXowGpemBPNzs7zcsx5NPyVCyDxWk7RVKjZHFx482aw45XBAfutUp7NIsn7I1s04lK6JUZ2D_CqlCK5xZmmka2nlbpBWJKoB1ZMW2qfPDp688KUDyLsgpD3JzZSqO_T-xuhlc8fpG-xhEDvEEdnf9ymnFm2Dhiu0WixaazkS6bh-DaL2NWun5t8ZpG8RZk4GsnGry6lHe8ktG"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-sm font-label-sm text-[10px] font-semibold text-on-surface">Universal Ramp Access</span>
+</div>
+<div class="relative group rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-32 object-cover" data-alt="Stage proscenium in community hall with automated DMX lighting truss, black velvet backdrop curtains, wooden risers, professional audio monitors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwO7EpM50rb3YuYZ6i6oa9Jcln2F6bpvl3VoW1j81YGVxnflEgtat3fURdOTgf86UQtXaRTPXOlTXoTkK2Z3QNWLOHDtX0CdSd_lxwL_CAfgoW4yoNOcjEaw1pDNq_xLf5VGRplCbYRiMv9zbYlUCQR8dteKdcayNIEec1IxSLNEfl-ynS1CI8ELaUccv1DuKJMwh6mRUz69l8au2Ug3keLISkOzxvHVsGp-ZCFPKl"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs text-on-primary">
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface flex items-center justify-center shadow"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-sm font-label-sm text-[10px] font-semibold text-on-surface">Stage &amp; Rig</span>
+</div>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">3</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Pricing &amp; Security Deposit</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-space-md rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Hourly Resident Tariff</label>
+<span class="material-symbols-outlined text-[18px] text-tertiary">payments</span>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface font-semibold">$</span>
+<input class="w-full pl-8 pr-12 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md font-semibold focus:outline-none" type="number" value="65"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-sm text-label-sm">/ hr</span>
+</div>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Approved civic non-commercial cap: $75/hr max</p>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Refundable Security Deposit</label>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">lock_clock</span>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface font-semibold">$</span>
+<input class="w-full pl-8 pr-12 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md font-semibold focus:outline-none" type="number" value="150"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-sm text-label-sm">USD</span>
+</div>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Escrowed via municipal clearing portal</p>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">Minimum Booking Duration</label>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">schedule</span>
+</div>
+<div class="relative">
+<input class="w-full pl-space-md pr-14 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md font-semibold focus:outline-none" type="number" value="2"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-sm text-label-sm">Hours</span>
+</div>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Mandated minimum to prevent slot fragmentation</p>
+</div>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">4</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Facilities &amp; Amenities Checklist</h3>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-space-sm">
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">speaker</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">A/V System</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">JBL Arrays &amp; Mics</span>
+</div>
+</label>
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">skillet</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Commercial Kitchen</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Stove &amp; Warmers</span>
+</div>
+</label>
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">accessible_forward</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Step-Free Ramp</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Universal DDA Path</span>
+</div>
+</label>
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">theater_comedy</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Stage &amp; DMX Rig</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Overhead Truss</span>
+</div>
+</label>
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">local_parking</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Parking 50+</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Dedicated Lot</span>
+</div>
+</label>
+<label class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col justify-between gap-space-sm cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-[22px] text-primary">wifi</span>
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+</div>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Wi-Fi 6</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Gigabit Symmetrical</span>
+</div>
+</label>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">5</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Bylaw Rules &amp; Regulations</h3>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Municipal Clause §48 enforced</span>
+</div>
+<div class="space-y-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-error mt-0.5">local_fire_department</span>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">No open flames or pyrotechnic machinery indoors</span>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Includes birthday candles over 2 inches, chafing fuel without guard tray, and smoke generators.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-[11px] font-semibold flex-shrink-0">Strict Bylaw</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-secondary mt-0.5">volume_off</span>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">10:00 PM noise curfew • 55dB environmental threshold</span>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Acoustic cutoff triggers automatically via municipal sound-limiter box in main distribution board.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-[11px] font-semibold flex-shrink-0">Audited</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-tertiary mt-0.5">cleaning_services</span>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Mandatory sweep and mop checkout checklist</span>
+<p class="font-label-sm text-[11px] text-on-surface-variant">Renter photo verification required at time of lockbox drop. Deducted from deposit if not completed.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-[11px] font-semibold flex-shrink-0">Custodian Rule</span>
+</div>
+</div>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-label-sm text-[12px] font-bold">6</div>
+<h3 class="font-headline-lg text-[18px] leading-6 font-semibold text-on-surface">Recurring Availability Slot Configurator</h3>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">update</span>
+<span>Buffer Cleanup Window: <strong>45 mins</strong></span>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low space-y-space-md">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface mr-2">Operating Days:</span>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">M</button>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">T</button>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">W</button>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">T</button>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">F</button>
+<button class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">S</button>
+<button class="w-9 h-9 rounded-lg bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold" type="button">S</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-space-sm rounded-lg bg-surface-container-lowest space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Slot 1: Morning</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px]">4 Hours</span>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="09:00"/>
+<span class="text-on-surface-variant">→</span>
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="13:00"/>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Slot 2: Afternoon</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px]">4 Hours</span>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="14:00"/>
+<span class="text-on-surface-variant">→</span>
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="18:00"/>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Slot 3: Evening</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px]">3 Hours</span>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="19:00"/>
+<span class="text-on-surface-variant">→</span>
+<input class="w-full text-center py-1.5 rounded bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold" type="text" value="22:00"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<button class="w-full sm:w-auto px-space-md py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-label-sm text-label-sm font-semibold transition-colors" type="button">
+          Discard Changes
+        </button>
+<div class="w-full sm:w-auto flex items-center gap-space-sm">
+<button class="flex-1 sm:flex-initial px-space-lg py-2.5 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-highest transition-colors shadow-sm" type="button">
+            Save as Draft
+          </button>
+<button class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-space-xs px-space-xl py-2.5 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold hover:bg-primary-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span>Publish Facility Listing</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

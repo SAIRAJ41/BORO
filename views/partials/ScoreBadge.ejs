@@ -1,0 +1,20 @@
+<%
+  const sc = locals.score != null ? locals.score : 100;
+  const tier = locals.tier || (sc >= 80 ? 1 : (sc >= 50 ? 2 : 3));
+  let tierLabel = 'Tier 1: Normal';
+  let tierBg = 'bg-status-success-tint text-status-success border-status-success/30';
+
+  if (tier === 2) {
+    tierLabel = 'Tier 2: Owner Review';
+    tierBg = 'bg-status-warning-tint text-status-warning border-status-warning/40';
+  } else if (tier === 3) {
+    tierLabel = 'Tier 3: Advisory Caution';
+    tierBg = 'bg-status-danger-tint text-status-danger border-status-danger/40';
+  }
+%>
+<div class="inline-flex items-center space-x-1.5 text-xs">
+  <span class="font-bold text-ink"><%= sc %> <span class="text-ink-muted font-normal text-[10px]">/ 120</span></span>
+  <span class="px-2 py-0.5 rounded-full border text-[11px] font-medium <%= tierBg %>">
+    <%= tierLabel %>
+  </span>
+</div>

@@ -1,0 +1,186 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Today's Operations</h1>
+      <p class="text-sm text-ink-muted">Active custodial handovers, check-ins, returns, and on-site payments</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="badge badge-info text-xs">Today: <%= helpers.formatDate(new Date()) %></span>
+    </div>
+  </div>
+
+  <!-- Extension Request Banner (for BK-1004) -->
+  <% const extBooking = returnsDue.find(b => b.extension_requested); %>
+  <% if (extBooking) { %>
+    <div class="card p-5 bg-surface border-2 border-primary/40 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="flex items-start gap-3">
+        <span class="text-xl">⏱️</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-ink text-sm">Time Extension Requested</span>
+            <span class="badge badge-warning text-[10px]">+1 Hour Requested</span>
+          </div>
+          <p class="text-xs text-ink-muted mt-0.5">
+            Resident for <strong><%= extBooking.id %></strong> (<%= extBooking.space ? extBooking.space.name : 'Space' %>) requested to extend until <%= helpers.formatTime(extBooking.end_time) %>.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <form action="/owner/bookings/<%= extBooking.id %>/reject-extension" method="POST">
+          <button type="submit" class="btn btn-secondary text-xs">Decline</button>
+        </form>
+        <form action="/owner/bookings/<%= extBooking.id %>/approve-extension" method="POST">
+          <button type="submit" class="btn btn-primary text-xs">Approve (+₹300)</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Section 1: Returns & Check-Outs Due -->
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-base font-bold text-ink flex items-center gap-2">
+        <span>Returns &amp; Custody Handover</span>
+        <span class="badge badge-info text-xs"><%= returnsDue.length %></span>
+      </h2>
+    </div>
+
+    <% if (returnsDue && returnsDue.length > 0) { %>
+      <div class="space-y-4">
+        <% returnsDue.forEach(b => { %>
+          <% const isOverdue = b.status === 'overdue'; %>
+          <div class="card p-6 bg-surface border <%= isOverdue ? 'border-status-danger/60 bg-status-danger/5' : 'border-line' %> shadow-sm space-y-4">
+            <!-- Top Details -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-line">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-mono text-xs text-ink-muted"><%= b.id %></span>
+                  <%- include('../../partials/StatusBadge', { status: b.status }) %>
+                  <% if (isOverdue) { %>
+                    <span class="badge badge-danger text-[10px]">Overdue by 35 mins</span>
+                  <% } %>
+                </div>
+                <h3 class="text-base font-bold text-ink"><%= b.space ? b.space.name : 'Community Space' %></h3>
+                <p class="text-xs text-ink-muted">
+                  Reserved Slot: <%= helpers.formatTime(b.start_time) %> &ndash; <%= helpers.formatTime(b.end_time) %>
+                </p>
+              </div>
+
+              <!-- Deposit & Payment State -->
+              <div class="text-left sm:text-right">
+                <span class="text-[10px] uppercase font-semibold text-ink-muted">Security Deposit Held</span>
+                <div class="font-bold text-sm font-mono text-ink"><%= helpers.formatCurrency(b.deposit_amount) %></div>
+                <% if (b.payment_status === 'pending' || b.payment_method === 'pay_at_venue') { %>
+                  <form action="/owner/bookings/<%= b.id %>/mark-paid" method="POST" class="mt-1">
+                    <button type="submit" class="btn btn-secondary text-[11px] py-1 px-2.5">
+                      Mark Venue Payment Received
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Overdue Advisory Box -->
+            <% if (isOverdue) { %>
+              <div class="p-3 rounded-xl bg-status-danger/10 border border-status-danger/30 text-xs text-ink flex items-center justify-between">
+                <div>
+                  <strong>Overdue Penalty Alert:</strong> Session ended past the grace window. A <strong>-10 point</strong> score penalty will be confirmed upon final checkout.
+                </div>
+              </div>
+            <% } %>
+
+            <!-- Condition Inspection Checklist Form -->
+            <form action="/owner/return/<%= b.id %>" method="POST" class="space-y-4">
+              <input type="hidden" name="is_late" value="<%= isOverdue ? 'true' : 'false' %>">
+              
+              <%- include('../../partials/ConditionForm', { 
+                spaceType: b.space ? b.space.space_type : 'community_hall',
+                stage: 'closing',
+                indoorOutdoor: b.space ? b.space.indoor_outdoor : 'indoor'
+              }) %>
+
+              <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
+                <div class="flex items-center gap-2">
+                  <button type="button" 
+                          onclick="window.location.href='/owner/incidents'"
+                          class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
+                    🚩 Flag Incident / Damage
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button type="submit" class="btn btn-primary text-xs font-bold">
+                    Verify Return &amp; Release Deposit
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="text-xs text-ink-muted">No returns pending today.</p>
+    <% } %>
+  </div>
+
+  <!-- Section 2: Check-Ins Due -->
+  <div class="space-y-4 pt-6 border-t border-line">
+    <div class="flex items-center justify-between">
+      <h2 class="text-base font-bold text-ink flex items-center gap-2">
+        <span>Check-Ins Due Today</span>
+        <span class="badge badge-info text-xs"><%= checkinsDue.length %></span>
+      </h2>
+    </div>
+
+    <% if (checkinsDue && checkinsDue.length > 0) { %>
+      <div class="space-y-4">
+        <% checkinsDue.forEach(b => { %>
+          <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-line">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-mono text-xs text-ink-muted"><%= b.id %></span>
+                  <%- include('../../partials/StatusBadge', { status: b.status }) %>
+                </div>
+                <h3 class="text-base font-bold text-ink"><%= b.space ? b.space.name : 'Community Space' %></h3>
+                <p class="text-xs text-ink-muted">
+                  Slot: <%= helpers.formatTime(b.start_time) %> &ndash; <%= helpers.formatTime(b.end_time) %> &bull; Purpose: <span class="capitalize"><%= b.purpose %></span>
+                </p>
+              </div>
+
+              <div class="text-left sm:text-right">
+                <span class="text-[10px] uppercase font-semibold text-ink-muted">Access PIN</span>
+                <div class="font-mono font-bold text-primary text-base"><%= b.access_pin || '••••' %></div>
+              </div>
+            </div>
+
+            <!-- Check-in Inspection Checklist -->
+            <form action="/owner/checkin/<%= b.id %>" method="POST" class="space-y-4">
+              <%- include('../../partials/ConditionForm', { 
+                spaceType: b.space ? b.space.space_type : 'community_hall',
+                stage: 'opening',
+                indoorOutdoor: b.space ? b.space.indoor_outdoor : 'indoor'
+              }) %>
+
+              <div class="flex justify-between items-center pt-3 border-t border-line">
+                <form action="/owner/today/<%= b.id %>/no-show" method="POST">
+                  <button type="submit" class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
+                    Mark No-Show
+                  </button>
+                </form>
+
+                <button type="submit" class="btn btn-primary text-xs font-bold">
+                  Confirm Handover &amp; Check-In
+                </button>
+              </div>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="text-xs text-ink-muted">No check-ins pending today.</p>
+    <% } %>
+  </div>
+</div>

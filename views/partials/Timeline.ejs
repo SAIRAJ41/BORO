@@ -1,0 +1,27 @@
+<%
+  const stages = locals.stages || [
+    { stage: 1, name: 'Requested', date: '', description: 'Request submitted' },
+    { stage: 2, name: 'Approved', date: '', description: 'Owner approval granted' },
+    { stage: 3, name: 'Checked-in', date: '', description: 'Pre-event condition signed' },
+    { stage: 4, name: 'Returned', date: '', description: 'Inspection & return verified' },
+    { stage: 5, name: 'Settlement', date: '', description: 'Deposit refunded & points awarded' }
+  ];
+%>
+<div class="py-3">
+  <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 relative">
+    <% stages.forEach(function(s, idx) { %>
+      <div class="bg-surface-tint border border-line rounded-lg p-2.5 relative">
+        <div class="flex items-center space-x-1.5 mb-1">
+          <span class="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold">
+            <%= s.stage || (idx + 1) %>
+          </span>
+          <span class="text-xs font-bold text-ink truncate"><%= s.name %></span>
+        </div>
+        <% if (s.date) { %>
+          <div class="text-[10px] font-mono text-ink-muted"><%= formatDate(s.date) %></div>
+        <% } %>
+        <div class="text-[11px] text-ink-secondary mt-1 leading-tight"><%= s.description %></div>
+      </div>
+    <% }); %>
+  </div>
+</div>

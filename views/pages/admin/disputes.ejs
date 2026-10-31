@@ -1,0 +1,74 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Score Disputes &amp; Mediation</h1>
+      <p class="text-sm text-ink-muted">Independent review of contested penalty deductions and condition reports</p>
+    </div>
+    <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
+      Pending Disputes: <span class="font-bold text-status-danger"><%= disputes.length %></span>
+    </div>
+  </div>
+
+  <% if (disputes && disputes.length > 0) { %>
+    <div class="space-y-4">
+      <% disputes.forEach(d => { %>
+        <div class="card p-6 bg-surface border-2 border-status-warning/40 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-line">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono text-xs text-ink-muted"><%= d.id %></span>
+                <span class="badge badge-warning text-xs">Awaiting Admin Mediation</span>
+              </div>
+              <h2 class="text-base font-bold text-ink"><%= d.user_name %> &bull; Contesting <%= d.penalty_points %> pts penalty</h2>
+              <p class="text-xs text-ink-muted">
+                Related Booking: <span class="font-mono text-ink"><%= d.booking_id %></span> &bull; Submitted <%= helpers.formatDateTime(d.created_at) %>
+              </p>
+            </div>
+
+            <div class="text-right">
+              <span class="text-[10px] uppercase font-semibold text-ink-muted">Current User Score</span>
+              <div class="text-base font-bold font-mono text-ink">45 / 120 (Tier 3)</div>
+            </div>
+          </div>
+
+          <!-- Dispute Explanation Box -->
+          <div class="p-4 rounded-xl bg-surface-tint border border-line space-y-2 text-xs">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Resident's Claim</span>
+            <p class="text-ink leading-relaxed">
+              "<%= d.reason %>"
+            </p>
+          </div>
+
+          <!-- Resolution Action Form -->
+          <form action="/admin/disputes/<%= d.id %>/resolve" method="POST" class="pt-2 flex flex-col sm:flex-row items-end gap-3">
+            <div class="flex-1 w-full space-y-1">
+              <label for="resolution" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Resolution Decision</label>
+              <select id="resolution" name="resolution" class="input w-full text-xs">
+                <option value="restore_full">Restore Full Points (+30 pts to resident)</option>
+                <option value="restore_partial">Partial Compromise (+15 pts)</option>
+                <option value="uphold">Uphold Owner Penalty (0 pts adjustment)</option>
+              </select>
+            </div>
+
+            <div class="flex-1 w-full space-y-1">
+              <label for="reason" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Mediation Notes (Mandatory)</label>
+              <input type="text" id="reason" name="reason" placeholder="Explain basis of mediation..." required class="input w-full text-xs">
+            </div>
+
+            <button type="submit" class="btn btn-primary text-xs font-bold whitespace-nowrap py-2 px-4">
+              Submit Ruling
+            </button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: 'No open disputes',
+      description: 'All score disputes have been resolved. The community trust system is currently operating without conflicts.',
+      actionText: 'Back to Overview',
+      actionUrl: '/admin/overview'
+    }) %>
+  <% } %>
+</div>

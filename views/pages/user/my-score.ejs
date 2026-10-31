@@ -1,0 +1,122 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-ink">My Reliability Score</h1>
+    <p class="text-sm text-ink-muted">A fair, transparent record of your community space stewardship</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Score Summary & Tier Card -->
+    <div class="card p-6 bg-surface border border-line flex flex-col justify-between space-y-6">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Current Score</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span class="text-5xl font-black text-ink"><%= user.score %></span>
+          <span class="text-ink-muted font-bold text-lg">/ 120</span>
+        </div>
+
+        <div class="mt-4">
+          <%- include('../../partials/ScoreBadge', { score: user.score, showExplanation: false }) %>
+        </div>
+      </div>
+
+      <!-- Tier Advisory Rules -->
+      <div class="p-4 rounded-xl bg-surface-tint border border-line space-y-2 text-xs">
+        <div class="font-bold text-ink">Advisory Tier Guidelines</div>
+        <p class="text-ink-muted">
+          Your score guides space owners when reviewing requests. <strong>All booking decisions are made manually by owners</strong>; no requests are approved automatically.
+        </p>
+      </div>
+
+      <!-- Score Clamp Bar -->
+      <div>
+        <div class="flex justify-between text-[11px] text-ink-muted mb-1">
+          <span>0 (Suspension threshold)</span>
+          <span>Baseline: 100</span>
+          <span>120 (Max)</span>
+        </div>
+        <div class="w-full bg-line h-2 rounded-full overflow-hidden">
+          <div class="bg-primary h-full rounded-full" style="width: <%= Math.min(100, Math.round((user.score / 120) * 100)) %>%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules & Multipliers -->
+    <div class="lg:col-span-2 card p-6 bg-surface border border-line space-y-5">
+      <h2 class="text-base font-bold text-ink">How Your Score Changes</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-status-success/10 border border-status-success/20">
+          <div class="text-status-success font-black text-lg">+5 Points</div>
+          <div class="text-xs font-bold text-ink mt-1">Clean &amp; On-Time Return</div>
+          <p class="text-[11px] text-ink-muted mt-1">Every checkout completed punctually with space left tidy and in order.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-status-warning/10 border border-status-warning/20">
+          <div class="text-status-warning font-black text-lg">-10 Points</div>
+          <div class="text-xs font-bold text-ink mt-1">Late Return (&le; 30 mins)</div>
+          <p class="text-[11px] text-ink-muted mt-1">Returning past reserved time slot, delaying next community members.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-status-warning/10 border border-status-warning/20">
+          <div class="text-status-warning font-black text-lg">-10 Points</div>
+          <div class="text-xs font-bold text-ink mt-1">Untidy / Minor Rule Infraction</div>
+          <p class="text-[11px] text-ink-muted mt-1">Leaving rubbish, furniture out of place, or failing to lock premises.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-status-danger/10 border border-status-danger/20">
+          <div class="text-status-danger font-black text-lg">-30 Points</div>
+          <div class="text-xs font-bold text-ink mt-1">Property Damage / Severe Breach</div>
+          <p class="text-[11px] text-ink-muted mt-1">Damage to fixtures, turf, padlocks, or unapproved commercial use.</p>
+        </div>
+      </div>
+
+      <div class="text-xs text-ink-muted bg-surface-tint p-3 rounded-xl border border-line">
+        <strong>Community Fairness Guarantee:</strong> Scores are calculated deterministically from audit events. If you believe a penalty was issued in error, you may submit a dispute below for admin mediation.
+      </div>
+    </div>
+  </div>
+
+  <!-- Score History Ledger & Dispute Trigger -->
+  <div class="card p-6 bg-surface border border-line">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-base font-bold text-ink">Score Audit History</h2>
+        <p class="text-xs text-ink-muted">Every point adjustment is recorded in an immutable audit ledger</p>
+      </div>
+      <button onclick="window.openReasonDialog('/disputes', 'Submit a Score Dispute', 'Specify the score event and explain why this penalty was inaccurate or unfair.')"
+              class="btn btn-secondary text-xs">
+        Submit Dispute
+      </button>
+    </div>
+
+    <% if (scoreEvents && scoreEvents.length > 0) { %>
+      <div class="overflow-x-auto rounded-xl border border-line">
+        <table class="w-full text-left text-xs divide-y divide-line">
+          <thead class="bg-surface-tint font-semibold text-ink-muted uppercase">
+            <tr>
+              <th class="px-4 py-3">Event Date</th>
+              <th class="px-4 py-3">Booking Ref</th>
+              <th class="px-4 py-3">Reason / Action</th>
+              <th class="px-4 py-3 text-right">Points Delta</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line bg-surface">
+            <% scoreEvents.forEach(evt => { %>
+              <tr>
+                <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDateTime(evt.created_at) %></td>
+                <td class="px-4 py-3 font-mono text-ink"><%= evt.booking_id || 'N/A' %></td>
+                <td class="px-4 py-3 text-ink font-medium"><%= evt.reason %></td>
+                <td class="px-4 py-3 text-right font-bold <%= evt.delta > 0 ? 'text-status-success' : 'text-status-danger' %>">
+                  <%= evt.delta > 0 ? '+' + evt.delta : evt.delta %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-xs text-ink-muted">No score adjustment events recorded yet.</p>
+    <% } %>
+  </div>
+</div>

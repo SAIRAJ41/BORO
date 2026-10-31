@@ -1,0 +1,96 @@
+<%
+  const sp = locals.space || {};
+  const isOutdoor = sp.indoor_outdoor === 'outdoor' || sp.space_type === 'community_ground' || sp.space_type === 'school_playground';
+%>
+<div class="bg-surface-card border border-line rounded-xl overflow-hidden hover:border-line-subtle hover:shadow-md transition-all flex flex-col justify-between">
+  <!-- Image Container with badges -->
+  <div class="relative h-48 bg-surface-high overflow-hidden">
+    <img
+      src="<%= (sp.photos && sp.photos[0] && sp.photos[0].url) ? sp.photos[0].url : '/images/spaces/community-hall-1.jpg' %>"
+      alt="<%= (sp.photos && sp.photos[0] && sp.photos[0].caption) ? sp.photos[0].caption : sp.name %>"
+      class="w-full h-full object-cover"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent"></div>
+
+    <!-- Badges Over Image -->
+    <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+      <% if (sp.verified) { %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 text-ink shadow-sm">
+          ✓ Verified Space
+        </span>
+      <% } %>
+      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-card/90 text-ink-secondary capitalize">
+        <%= formatSpaceType(sp.space_type) %>
+      </span>
+    </div>
+
+    <!-- Hourly Price on Image Bottom-Right -->
+    <div class="absolute bottom-3 right-3 text-right text-white">
+      <span class="text-xl font-bold"><%= formatCurrency(sp.price_per_hour) %></span>
+      <span class="text-xs text-white/80">/hour</span>
+    </div>
+
+    <!-- Area / Ward on Image Bottom-Left -->
+    <div class="absolute bottom-3 left-3 text-white text-xs font-medium">
+      <%= sp.area || sp.address %>
+    </div>
+  </div>
+
+  <!-- Content Body -->
+  <div class="p-4 flex-1 flex flex-col justify-between">
+    <div>
+      <h3 class="text-base font-bold text-ink mb-1 line-clamp-1">
+        <a href="/spaces/<%= sp.id %>" class="hover:underline focus:ring-2 focus:ring-primary rounded">
+          <%= sp.name %>
+        </a>
+      </h3>
+
+      <!-- Outdoor Weather Dependent Notice -->
+      <% if (isOutdoor) { %>
+        <div class="inline-flex items-center space-x-1 text-[11px] text-[#2c5364] bg-surface-container px-2 py-0.5 rounded-md mb-2">
+          <span>⛅ Weather dependent — free reschedule</span>
+        </div>
+      <% } %>
+
+      <!-- Key Specs Bar -->
+      <div class="grid grid-cols-3 gap-2 bg-surface-tint border border-line rounded-lg p-2 my-2 text-center text-xs">
+        <div>
+          <div class="text-[10px] uppercase text-ink-muted">Capacity</div>
+          <div class="font-bold text-ink"><%= sp.capacity %></div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase text-ink-muted">Rating</div>
+          <div class="font-bold text-ink">★ <%= sp.rating || '4.8' %> <span class="text-[10px] font-normal text-ink-muted">(<%= sp.review_count || 12 %>)</span></div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase text-ink-muted">Hygiene</div>
+          <div class="font-bold text-ink"><%= sp.hygiene_score || 9 %>/10</div>
+        </div>
+      </div>
+
+      <!-- Facility Chips -->
+      <div class="flex flex-wrap gap-1.5 my-3">
+        <% (sp.facilities || []).slice(0, 3).forEach(function(fac) { %>
+          <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-surface-container text-ink-secondary capitalize">
+            <%= fac.replace(/_/g, ' ') %>
+          </span>
+        <% }); %>
+        <% if (sp.facilities && sp.facilities.length > 3) { %>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] text-ink-muted bg-surface-tint">
+            +<%= sp.facilities.length - 3 %> more
+          </span>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="pt-3 border-t border-line flex items-center justify-between mt-auto">
+      <div class="text-[11px] text-ink-muted">
+        Deposit: <span class="font-semibold text-ink"><%= formatCurrency(sp.deposit_amount) %></span>
+      </div>
+      <a href="/spaces/<%= sp.id %>" class="btn-primary text-xs py-1.5 px-3">
+        View &amp; Book &rarr;
+      </a>
+    </div>
+  </div>
+</div>

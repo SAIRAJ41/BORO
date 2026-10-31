@@ -1,0 +1,64 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Audit Log &amp; Transparency Ledger</h1>
+      <p class="text-sm text-ink-muted">Immutable append-only record of every booking state change, score adjustment, and admin action</p>
+    </div>
+    <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
+      Total Ledger Entries: <span class="font-bold text-ink"><%= logs.length %></span>
+    </div>
+  </div>
+
+  <!-- Filter Controls -->
+  <div class="card p-4 bg-surface border border-line flex flex-wrap items-center justify-between gap-3">
+    <div class="flex gap-2">
+      <a href="/admin/audit-log?action=all" class="px-3 py-1.5 rounded-xl text-xs font-semibold <%= actionFilter === 'all' ? 'bg-primary text-surface' : 'bg-surface-tint border border-line text-ink-muted' %>">
+        All Actions
+      </a>
+      <a href="/admin/audit-log?action=BOOKING" class="px-3 py-1.5 rounded-xl text-xs font-semibold <%= actionFilter === 'BOOKING' ? 'bg-primary text-surface' : 'bg-surface-tint border border-line text-ink-muted' %>">
+        Bookings
+      </a>
+      <a href="/admin/audit-log?action=SCORE" class="px-3 py-1.5 rounded-xl text-xs font-semibold <%= actionFilter === 'SCORE' ? 'bg-primary text-surface' : 'bg-surface-tint border border-line text-ink-muted' %>">
+        Score Adjustments
+      </a>
+      <a href="/admin/audit-log?action=INCIDENT" class="px-3 py-1.5 rounded-xl text-xs font-semibold <%= actionFilter === 'INCIDENT' ? 'bg-primary text-surface' : 'bg-surface-tint border border-line text-ink-muted' %>">
+        Incidents
+      </a>
+    </div>
+
+    <span class="text-xs text-ink-muted">🔒 Append-Only Guarantee</span>
+  </div>
+
+  <!-- Audit Table -->
+  <div class="card p-6 bg-surface border border-line space-y-4">
+    <div class="overflow-x-auto rounded-xl border border-line">
+      <table class="w-full text-left text-xs divide-y divide-line">
+        <thead class="bg-surface-tint font-semibold text-ink-muted uppercase">
+          <tr>
+            <th class="px-4 py-3">Audit ID</th>
+            <th class="px-4 py-3">Timestamp</th>
+            <th class="px-4 py-3">Actor</th>
+            <th class="px-4 py-3">Action</th>
+            <th class="px-4 py-3">Entity Ref</th>
+            <th class="px-4 py-3">Audit Details &amp; Mandatory Reason</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line bg-surface">
+          <% (logs || []).forEach(log => { %>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink font-medium"><%= log.id %></td>
+              <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDateTime(log.created_at) %></td>
+              <td class="px-4 py-3 font-medium text-ink"><%= log.actor %></td>
+              <td class="px-4 py-3">
+                <span class="font-mono text-xs font-semibold text-primary"><%= log.action %></span>
+              </td>
+              <td class="px-4 py-3 font-mono text-ink-muted"><%= log.entity_id %></td>
+              <td class="px-4 py-3 text-ink"><%= log.details %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

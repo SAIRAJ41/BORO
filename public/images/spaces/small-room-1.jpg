@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="roomBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34495e" />
+      <stop offset="100%" stop-color="#2c3e50" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#roomBg)"/>
+  <!-- Whiteboard on wall -->
+  <rect x="220" y="80" width="360" height="180" rx="8" fill="#ffffff" stroke="#bdc3c7" stroke-width="6"/>
+  <!-- Conference Table -->
+  <polygon points="150,480 250,330 550,330 650,480" fill="#4a5568"/>
+  <rect x="240" y="325" width="320" height="15" rx="4" fill="#2d3748"/>
+  <text x="400" y="160" font-family="Inter, sans-serif" font-size="24" font-weight="600" fill="#2c3e50" text-anchor="middle">ACTIVITY &amp; STUDY ROOM</text>
+  <text x="400" y="195" font-family="Inter, sans-serif" font-size="13" font-weight="400" fill="#64748b" text-anchor="middle">High-Speed Wi-Fi • Whiteboard • Air Conditioning</text>
+</svg>

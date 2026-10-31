@@ -1,0 +1,142 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Incidents &amp; Damage Reconciliation</h1>
+      <p class="text-sm text-ink-muted">Itemize repair costs, reconcile security deposits, and resolve property condition reports</p>
+    </div>
+    <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
+      Open Incidents: <span class="font-bold text-status-danger">1</span>
+    </div>
+  </div>
+
+  <!-- Incident Policy Banner -->
+  <div class="card p-4 bg-surface-tint border border-line text-xs text-ink-muted leading-relaxed">
+    <strong class="text-ink">Deposit Reconciliation Rules:</strong> Deductions must be strictly itemized with photographic evidence. Remaining deposit funds are automatically refunded to the resident upon confirmation. Confirmed property damage applies a flat <strong>-30 point</strong> reliability score adjustment.
+  </div>
+
+  <!-- Open Incidents -->
+  <div class="space-y-6">
+    <% const openIncidents = (incidents || []).filter(i => i.status === 'open'); %>
+    <% const closedIncidents = (incidents || []).filter(i => i.status === 'resolved' || i.status === 'closed'); %>
+
+    <% if (openIncidents.length > 0) { %>
+      <div class="space-y-4">
+        <h2 class="text-base font-bold text-ink">Action Required</h2>
+
+        <% openIncidents.forEach(inc => { %>
+          <div class="card p-6 bg-surface border-2 border-status-danger/40 shadow-sm space-y-5">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-line">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs text-ink-muted"><%= inc.id %></span>
+                  <span class="badge badge-danger text-xs uppercase">Under Assessment</span>
+                </div>
+                <h3 class="text-lg font-bold text-ink mt-1"><%= inc.space_name %></h3>
+                <p class="text-xs text-ink-muted">
+                  Booking: <span class="font-mono text-ink"><%= inc.booking_id %></span> &bull; Resident: <span class="font-semibold text-ink"><%= inc.user_name %></span>
+                </p>
+              </div>
+
+              <div class="text-left sm:text-right">
+                <span class="text-[10px] uppercase font-semibold text-ink-muted">Reported At</span>
+                <div class="text-xs text-ink mt-0.5"><%= helpers.formatDateTime(inc.created_at) %></div>
+              </div>
+            </div>
+
+            <!-- Damage Description -->
+            <div>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Inspection Notes &amp; Findings</span>
+              <p class="text-xs text-ink mt-1 bg-surface-tint p-3 rounded-xl border border-line leading-relaxed">
+                <%= inc.description %>
+              </p>
+            </div>
+
+            <!-- Itemized Deductions & Deposit Reconciliation -->
+            <div class="rounded-xl border border-line overflow-hidden">
+              <div class="bg-surface-tint px-4 py-2.5 text-xs font-semibold text-ink uppercase tracking-wider">
+                Itemized Cost Assessment
+              </div>
+              <div class="p-4 space-y-2 bg-surface text-xs">
+                <% (inc.deductions || []).forEach(d => { %>
+                  <div class="flex justify-between items-center text-ink py-1 border-b border-line">
+                    <span><%= d.item %></span>
+                    <span class="font-mono font-bold"><%= helpers.formatCurrency(d.amount) %></span>
+                  </div>
+                <% }); %>
+
+                <!-- Reconciliation Summary -->
+                <div class="pt-3 space-y-1.5 font-medium">
+                  <div class="flex justify-between text-ink-muted">
+                    <span>Held Security Deposit:</span>
+                    <span class="font-mono text-ink"><%= helpers.formatCurrency(inc.deposit_held) %></span>
+                  </div>
+                  <div class="flex justify-between text-status-danger font-bold">
+                    <span>Total Deduction to Owner:</span>
+                    <span class="font-mono">-<%= helpers.formatCurrency(inc.deduction_total) %></span>
+                  </div>
+                  <div class="flex justify-between text-status-success font-bold pt-2 border-t border-line text-sm">
+                    <span>Refund Balance to Resident:</span>
+                    <span class="font-mono"><%= helpers.formatCurrency(inc.deposit_held - inc.deduction_total) %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
+              <form action="/owner/incidents/<%= inc.id %>/waive" method="POST">
+                <button type="submit" class="btn btn-secondary text-xs">
+                  Waive Damages &amp; Refund Full Deposit
+                </button>
+              </form>
+
+              <form action="/owner/incidents/<%= inc.id %>/confirm" method="POST">
+                <button type="submit" class="btn btn-primary text-xs font-bold">
+                  Confirm Deductions &amp; Settle (Demo)
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <!-- Incident Archive Ledger -->
+    <div class="card p-6 bg-surface border border-line space-y-4">
+      <h2 class="text-base font-bold text-ink">Past Incident History</h2>
+
+      <% if (closedIncidents.length > 0) { %>
+        <div class="overflow-x-auto rounded-xl border border-line">
+          <table class="w-full text-left text-xs divide-y divide-line">
+            <thead class="bg-surface-tint uppercase font-semibold text-ink-muted">
+              <tr>
+                <th class="px-4 py-3">Incident ID</th>
+                <th class="px-4 py-3">Space</th>
+                <th class="px-4 py-3">Deduction</th>
+                <th class="px-4 py-3">Refund</th>
+                <th class="px-4 py-3">Resolution</th>
+                <th class="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-line bg-surface">
+              <% closedIncidents.forEach(c => { %>
+                <tr>
+                  <td class="px-4 py-3 font-mono text-ink"><%= c.id %></td>
+                  <td class="px-4 py-3 font-medium text-ink"><%= c.space_name %></td>
+                  <td class="px-4 py-3 font-mono text-status-danger font-bold"><%= helpers.formatCurrency(c.deduction_total) %></td>
+                  <td class="px-4 py-3 font-mono text-status-success font-bold"><%= helpers.formatCurrency(c.deposit_held - c.deduction_total) %></td>
+                  <td class="px-4 py-3 text-ink-muted"><%= c.resolution_notes || 'Settled and closed' %></td>
+                  <td class="px-4 py-3"><span class="badge badge-success text-[10px]">Resolved</span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-ink-muted">No historical incident records.</p>
+      <% } %>
+    </div>
+  </div>
+</div>

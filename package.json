@@ -1,0 +1,15 @@
+{
+  "name": "boro",
+  "version": "1.0.0",
+  "description": "Fidelity Modern Community Space Sharing Platform Frontend",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node scripts/testRoutes.js && node scripts/testAuth.js",
+    "test:auth": "node scripts/testAuth.js",
+    "check-data": "node scripts/checkData.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
