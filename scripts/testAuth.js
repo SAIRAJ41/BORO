@@ -8,6 +8,7 @@
  */
 
 const http = require('http');
+require('./testUserServiceMock');
 const app = require('../app');
 
 async function runAuthTests() {
@@ -74,14 +75,26 @@ async function runAuthTests() {
     });
     assert(invalidLoginRes.status === 302 && invalidLoginRes.headers.get('location') === '/login', 'Invalid password redirects back to /login');
 
-    // 5. Verify /owner/requests returns 403 Forbidden for User account
+    // 5. Verify suspended accounts cannot authenticate
+    const suspendedLoginRes = await fetch(`${baseUrl}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ email: 'suspended@demo.com', password: 'demo123' }).toString(),
+      redirect: 'manual'
+    });
+    assert(
+      suspendedLoginRes.status === 302 && suspendedLoginRes.headers.get('location') === '/login',
+      'Suspended account redirects back to /login'
+    );
+
+    // 6. Verify /owner/requests returns 403 Forbidden for User account
     const forbiddenRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: userCookie },
       redirect: 'manual'
     });
     assert(forbiddenRes.status === 403, '/owner/requests returns 403 Forbidden for User account');
 
-    // 6. Verify /owner/requests redirects to /login when signed out
+    // 7. Verify /owner/requests redirects to /login when signed out
     const unauthenticatedRes = await fetch(`${baseUrl}/owner/requests`, {
       redirect: 'manual'
     });
@@ -90,17 +103,37 @@ async function runAuthTests() {
       '/owner/requests redirects to /login when signed out'
     );
 
-    // 7. Verify Owner can access /owner/requests (200 OK)
+    // 8. Verify Owner can access /owner/requests (200 OK)
     const ownerAccessRes = await fetch(`${baseUrl}/owner/requests`, {
       headers: { cookie: ownerCookie }
     });
     assert(ownerAccessRes.status === 200, 'Owner can access /owner/requests (200 OK)');
 
-    // 8. Verify Admin can access /admin/overview (200 OK)
+    // 9. Verify Admin can access /admin/overview (200 OK)
     const adminAccessRes = await fetch(`${baseUrl}/admin/overview`, {
       headers: { cookie: adminCookie }
     });
     assert(adminAccessRes.status === 200, 'Admin can access /admin/overview (200 OK)');
+
+    // 10. Verify logout destroys the authenticated session
+    const logoutRes = await fetch(`${baseUrl}/logout`, {
+      method: 'POST',
+      headers: { cookie: userCookie },
+      redirect: 'manual'
+    });
+    assert(
+      logoutRes.status === 302 && logoutRes.headers.get('location') === '/login',
+      'Logout redirects to /login'
+    );
+
+    const afterLogoutRes = await fetch(`${baseUrl}/profile`, {
+      headers: { cookie: userCookie },
+      redirect: 'manual'
+    });
+    assert(
+      afterLogoutRes.status === 302 && afterLogoutRes.headers.get('location') === '/login',
+      'Logged-out session cannot access protected routes'
+    );
 
   } catch (err) {
     failures.push(`Execution error: ${err.message}`);
@@ -120,4 +153,3 @@ async function runAuthTests() {
 }
 
 runAuthTests();
-

@@ -4,8 +4,8 @@
  */
 
 const http = require('http');
+require('./testUserServiceMock');
 const app = require('../app');
-const mockData = require('../data/mock');
 
 const routesToTest = [
   // Auth & General
@@ -69,10 +69,6 @@ async function testAll() {
   let successCount = 0;
 
   for (const item of routesToTest) {
-    const roleUser = item.role === 'admin' 
-      ? mockData.users.find(u => u.role === 'admin') 
-      : (item.role === 'owner' ? mockData.users.find(u => u.role === 'owner') : mockData.users[0]);
-
     // Set session cookie for the role being tested
     let cookie = '';
     if (item.role) {
@@ -113,4 +109,3 @@ async function testAll() {
 }
 
 testAll();
-
