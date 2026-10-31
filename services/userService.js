@@ -1,152 +1,517 @@
-/**
- * User Service
- * Backend teammate: Implement real database access and user authentication logic here.
- * 
- * Session user shape:
- * req.session.user = { id, name, email, role, initials, status }
- * (Nothing else, and never the password).
- */
-
-const mockData = require('../data/mock');
 
 /**
- * Authenticates user credentials.
- * BACKEND: replace with database lookup and bcrypt compare.
- * 
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{ id: string, name: string, email: string, role: string, initials: string, status: string } | null>}
+ * BORO — User Service
+ * PostgreSQL access through Prisma
  */
-exports.authenticate = async (email, password) => {
-  // BACKEND: replace with database lookup and bcrypt compare
-  if (mockData.USE_MOCK) {
-    const seededAccounts = {
-      'priya@demo.com': { id: 'USR-001', pass: 'demo123' },
-      'rajesh@demo.com': { id: 'USR-003', pass: 'demo123' },
-      'admin@demo.com': { id: 'USR-099', pass: 'demo123' }
-    };
 
-    const normEmail = (email || '').trim().toLowerCase();
-    const account = seededAccounts[normEmail];
+const prisma = require('../lib/prisma');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const helpers = require('../lib/helpers');
 
-    if (!account || password !== account.pass) {
-      return null;
-    }
-
-    const user = mockData.getUserById(account.id);
-    if (!user) return null;
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      initials: user.initials || 'U',
-      status: user.status || 'active'
-    };
-  }
-
-  throw new Error('Not implemented: backend database required');
+const DEMO_USERS = {
+  user: 'USR-001',
+  owner: 'USR-003',
+  admin: 'USR-099'
 };
 
-/**
- * Creates a new user record.
- * BACKEND: hash password with bcrypt, insert into database.
- * 
- * @param {Object} data
- * @param {string} data.name
- * @param {string} data.email
- * @param {string} data.phone
- * @param {string} data.password
- * @param {string} data.role
- * @param {string} [data.organisation]
- * @returns {Promise<{ id: string }>}
- */
-exports.create = async ({ name, email, phone, password, role, organisation }) => {
-  // BACKEND: hash password with bcrypt, insert into database
-  if (mockData.USE_MOCK) {
-    const newId = `USR-${String(mockData.users.length + 1).padStart(3, '0')}`;
-    return { id: newId };
-  }
+function getUserInitials(name) {
+  return (name || 'User')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join('')
+    .toUpperCase();
+}
 
-  throw new Error('Not implemented: backend database required');
-};
+function getTier(score) {
+  return helpers.getScoreTier(score || 100).tier;
+}
 
-/**
- * Retrieves the mock user corresponding to the specified demo role.
- * 
- * @param {string} role - 'user' | 'owner' | 'admin'
- * @returns {Promise<{ id: string, name: string, email: string, role: string, initials: string, status: string }>}
- */
-exports.getDemoUser = async (role) => {
-  let user;
-  if (role === 'owner') {
-    user = mockData.users.find(u => u.id === 'USR-003'); // Rajesh Kumar
-  } else if (role === 'admin') {
-    user = mockData.users.find(u => u.id === 'USR-099'); // Amit Verma
-  } else {
-    user = mockData.users.find(u => u.id === 'USR-001'); // Priya Mehta
-  }
-
-  if (!user) user = mockData.users[0];
-
+function formatSessionUser(user) {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    initials: user.initials || 'U',
+    initials: user.initials || getUserInitials(user.name),
     status: user.status || 'active'
+  };
+}
+
+function formatUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    score: user.score,
+    tier: getTier(user.score),
+    initials: user.initials || getUserInitials(user.name),
+    status: user.status,
+    joined_at: user.joinedAt
+  };
+}
+
+/**
+ * Authenticate user credentials.
+ */
+exports.authenticate = async (email, password) => {
+  const normalizedEmail = (email || '').trim().toLowerCase();
+
+  if (!normalizedEmail || !password) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail }
+  });
+
+  if (!user || user.status !== 'active') return null;
+
+  const passwordMatches = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
+
+  if (!passwordMatches) return null;
+
+  return formatSessionUser(user);
+};
+
+/**
+ * Create a new user.
+ */
+exports.create = async ({
+  name,
+  email,
+  phone,
+  password,
+  role,
+  organisation
+}) => {
+  const normalizedEmail = (email || '').trim().toLowerCase();
+
+  if (!name || !normalizedEmail || !password) {
+    throw new Error('Name, email and password are required.');
+  }
+
+  const normalizedRole = role === 'owner' ? 'owner' : 'user';
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email: normalizedEmail }
+  });
+
+  if (existingUser) {
+    throw new Error('An account with this email already exists.');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  const userId = `USR-${crypto.randomUUID()
+    .replace(/-/g, '')
+    .slice(0, 10)
+    .toUpperCase()}`;
+
+  const user = await prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        id: userId,
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone || null,
+        passwordHash,
+        role: normalizedRole,
+        initials: getUserInitials(name),
+        status: 'active'
+      }
+    });
+
+    if (normalizedRole === 'owner') {
+      await tx.ownerVerification.create({
+        data: {
+          userId: newUser.id,
+          organisation: organisation || null,
+          isVerified: false,
+          appliedAt: new Date()
+        }
+      });
+    }
+
+    return newUser;
+  });
+
+  return { id: user.id };
+};
+
+/**
+ * Get a demo account by role.
+ */
+exports.getDemoUser = async (role) => {
+  const userId = DEMO_USERS[role] || DEMO_USERS.user;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) {
+    throw new Error(`Demo account not found for role: ${role}`);
+  }
+
+  return formatSessionUser(user);
+};
+
+/**
+ * Get user by ID.
+ */
+exports.getById = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) return null;
+
+  return formatUser(user);
+};
+
+/**
+ * Get complete user profile.
+ */
+exports.getProfile = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      verifications: {
+        orderBy: { appliedAt: 'desc' },
+        take: 1
+      },
+      payoutMethod: true
+    }
+  });
+
+  if (!user) return null;
+
+  const verification = user.verifications[0] || null;
+
+  return {
+    user: formatUser(user),
+
+    verificationStatus: verification
+      ? {
+          is_verified: verification.isVerified,
+          document_type: verification.documentType,
+          document_url: verification.documentUrl,
+          organisation: verification.organisation,
+          applied_at: verification.appliedAt,
+          verified_at: verification.verifiedAt
+        }
+      : null,
+
+    payoutMethod: user.payoutMethod
+      ? {
+          type: user.payoutMethod.type,
+          masked_details: user.payoutMethod.maskedDetails,
+          ifsc_code: user.payoutMethod.ifscCode,
+          upi_id: user.payoutMethod.upiId
+        }
+      : null
   };
 };
 
-// Additional service signatures for backend teammates
-// BACKEND TODO: getById(userId) -> { id, name, email, role, score, tier, status, initials, joined_at }
-exports.getById = async (userId) => {
-  throw new Error('Not implemented: backend database required');
-};
-
-// BACKEND TODO: getProfile(userId) -> { user, verificationStatus, payoutMethod }
-exports.getProfile = async (userId) => {
-  throw new Error('Not implemented: backend database required');
-};
-
-// BACKEND TODO: updatePayoutMethod(ownerId, { type, masked_details }) -> void
+/**
+ * Create or update owner payout method.
+ */
 exports.updatePayoutMethod = async (ownerId, data) => {
-  throw new Error('Not implemented: backend database required');
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId }
+  });
+
+  if (!owner || owner.role !== 'owner') {
+    throw new Error('Owner account not found.');
+  }
+
+  const payoutData = {
+    type: data.type,
+    maskedDetails: data.masked_details || data.maskedDetails || '',
+    accountNumberEnc: data.account_number_enc || data.accountNumberEnc || null,
+    ifscCode: data.ifsc_code || data.ifscCode || null,
+    upiId: data.upi_id || data.upiId || null
+  };
+
+  await prisma.payoutMethod.upsert({
+    where: { ownerId },
+    create: {
+      ownerId,
+      ...payoutData
+    },
+    update: payoutData
+  });
 };
 
-// BACKEND TODO: getAllUsers(query, page, limit) -> { users: [...], total, totalPages }
+/**
+ * Get all users with optional search and pagination.
+ */
 exports.getAllUsers = async (query, page = 1, limit = 10) => {
-  throw new Error('Not implemented: backend database required');
+  page = Math.max(1, parseInt(page, 10) || 1);
+  limit = Math.max(1, parseInt(limit, 10) || 10);
+
+  const search = (query || '').trim();
+
+  const where = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } }
+        ]
+      }
+    : {};
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { joinedAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    }),
+
+    prisma.user.count({ where })
+  ]);
+
+  return {
+    users: users.map(formatUser),
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
-// BACKEND TODO: getPendingOwners() -> [{ id, name, email, phone, spaces_proposed, applied_at, documents }]
+/**
+ * Get owners awaiting verification.
+ */
 exports.getPendingOwners = async () => {
-  throw new Error('Not implemented: backend database required');
+  const verifications = await prisma.ownerVerification.findMany({
+    where: {
+      isVerified: false,
+      user: {
+        role: 'owner',
+        status: { not: 'rejected' }
+      }
+    },
+    include: {
+      user: true
+    },
+    orderBy: {
+      appliedAt: 'asc'
+    }
+  });
+
+  return Promise.all(
+    verifications.map(async (verification) => {
+      const spacesProposed = await prisma.space.count({
+        where: { ownerId: verification.userId }
+      });
+
+      return {
+        id: verification.user.id,
+        name: verification.user.name,
+        email: verification.user.email,
+        phone: verification.user.phone,
+        organisation: verification.organisation,
+        spaces_proposed: spacesProposed,
+        applied_at: verification.appliedAt,
+        documents: verification.documentUrl
+          ? [verification.documentUrl]
+          : [],
+        document_type: verification.documentType
+      };
+    })
+  );
 };
 
-// BACKEND TODO: approveOwner(ownerId, reason) -> void + auditService.log()
+/**
+ * Approve an owner.
+ */
 exports.approveOwner = async (ownerId, reason) => {
-  throw new Error('Not implemented: backend database required');
+  await prisma.$transaction(async (tx) => {
+    const verification = await tx.ownerVerification.findFirst({
+      where: {
+        userId: ownerId,
+        isVerified: false
+      }
+    });
+
+    if (!verification) {
+      throw new Error('Pending owner verification not found.');
+    }
+
+    await tx.ownerVerification.update({
+      where: { id: verification.id },
+      data: {
+        isVerified: true,
+        verifiedAt: new Date()
+      }
+    });
+
+    await tx.user.update({
+      where: { id: ownerId },
+      data: { status: 'active' }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actor: 'admin',
+        action: 'OWNER_APPROVED',
+        target: ownerId,
+        reason: reason || null
+      }
+    });
+  });
 };
 
-// BACKEND TODO: rejectOwner(ownerId, reason) -> void + auditService.log()
+/**
+ * Reject an owner application.
+ */
 exports.rejectOwner = async (ownerId, reason) => {
-  throw new Error('Not implemented: backend database required');
+  await prisma.$transaction(async (tx) => {
+    const verification = await tx.ownerVerification.findFirst({
+      where: {
+        userId: ownerId,
+        isVerified: false
+      }
+    });
+
+    if (!verification) {
+      throw new Error('Pending owner verification not found.');
+    }
+
+    await tx.user.update({
+      where: { id: ownerId },
+      data: { status: 'rejected' }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actor: 'admin',
+        action: 'OWNER_REJECTED',
+        target: ownerId,
+        reason: reason || null
+      }
+    });
+  });
 };
 
-// BACKEND TODO: suspend(userId, reason) -> void + auditService.log()
+/**
+ * Suspend a user.
+ */
 exports.suspend = async (userId, reason) => {
-  throw new Error('Not implemented: backend database required');
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { status: 'suspended' }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actor: 'admin',
+        action: 'USER_SUSPENDED',
+        target: userId,
+        reason: reason || null
+      }
+    });
+  });
 };
 
-// BACKEND TODO: unsuspend(userId, reason) -> void + auditService.log()
+/**
+ * Unsuspend a user.
+ */
 exports.unsuspend = async (userId, reason) => {
-  throw new Error('Not implemented: backend database required');
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { status: 'active' }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actor: 'admin',
+        action: 'USER_UNSUSPENDED',
+        target: userId,
+        reason: reason || null
+      }
+    });
+  });
 };
 
-// BACKEND TODO: getAdminCounts() -> { total_users, total_owners, pending_owners, total_spaces, active_bookings, completed_bookings, open_disputes, active_incidents }
+/**
+ * Get admin dashboard counts.
+ */
 exports.getAdminCounts = async () => {
-  throw new Error('Not implemented: backend database required');
+  const [
+    totalUsers,
+    totalOwners,
+    pendingOwners,
+    totalSpaces,
+    activeBookings,
+    completedBookings,
+    openDisputes,
+    activeIncidents
+  ] = await Promise.all([
+    prisma.user.count(),
+
+    prisma.user.count({
+      where: { role: 'owner' }
+    }),
+
+    prisma.ownerVerification.count({
+      where: {
+        isVerified: false,
+        user: {
+          status: { not: 'rejected' }
+        }
+      }
+    }),
+
+    prisma.space.count(),
+
+    // Active booking lifecycle statuses
+    prisma.booking.count({
+      where: {
+        status: {
+          in: ['requested', 'approved', 'overdue', 'damaged']
+        }
+      }
+    }),
+
+    // Returned and closed bookings are completed
+    prisma.booking.count({
+      where: {
+        status: {
+          in: ['returned', 'closed']
+        }
+      }
+    }),
+
+    prisma.dispute.count({
+      where: { status: 'open' }
+    }),
+
+    prisma.incident.count({
+      where: {
+        status: {
+          in: ['open', 'under_review']
+        }
+      }
+    })
+  ]);
+
+  return {
+    total_users: totalUsers,
+    total_owners: totalOwners,
+    pending_owners: pendingOwners,
+    total_spaces: totalSpaces,
+    active_bookings: activeBookings,
+    completed_bookings: completedBookings,
+    open_disputes: openDisputes,
+    active_incidents: activeIncidents
+  };
 };

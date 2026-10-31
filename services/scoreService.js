@@ -1,36 +1,187 @@
-/**
- * Score Service (Stub)
- * Backend teammate: Implement community reliability scoring logic.
- */
+const prisma = require('../lib/prisma');
+const crypto = require('crypto');
 
-// BACKEND TODO: getUserScore(userId) -> { score, tiers, penalties, auditTrail }
-// Rule: score is advisory only; humans make all decisions.
+function getTier(score) {
+  if (score >= 80) return 1;
+  if (score >= 50) return 2;
+  return 3;
+}
+
+// GET /my-score
 exports.getUserScore = async (userId) => {
-  throw new Error('Not implemented: backend database required');
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { score: true }
+  });
+
+  if (!user) {
+    throw new Error('User not found.');
+  }
+
+  return {
+    score: user.score,
+    tier: getTier(user.score)
+  };
 };
 
-// BACKEND TODO: getScoreAuditTrail(userId) -> [{ id, impact, date, reason, booking_ref, space_name, status }]
+// GET /my-score
 exports.getScoreAuditTrail = async (userId) => {
-  throw new Error('Not implemented: backend database required');
+  const events = await prisma.scoreEvent.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return events.map(event => ({
+    id: event.id,
+    delta: event.delta,
+    reason: event.reason,
+    created_at: event.createdAt
+  }));
 };
 
-// BACKEND TODO: adjust(userId, points, reason, bookingRef) -> void + auditService.log()
-// Rule: Clamp between 0 and 120. Multipliers: +5 clean on-time, -10 late, -10 no-show, -30 damage.
-exports.adjust = async (userId, points, reason, bookingRef) => {
-  throw new Error('Not implemented: backend database required');
-};
-
-// BACKEND TODO: fileDispute(userId, auditEntryId, reason) -> { id }
+// POST /disputes
 exports.fileDispute = async (userId, auditEntryId, reason) => {
-  throw new Error('Not implemented: backend database required');
+  if (!reason || !reason.trim()) {
+    throw new Error('Dispute reason is required.');
+  }
+
+  const event = await prisma.scoreEvent.findFirst({
+    where: {
+      id: auditEntryId,
+      userId
+    }
+  });
+
+  if (!event) {
+    throw new Error('Score entry not found.');
+  }
+
+  const existing = await prisma.dispute.findFirst({
+    where: {
+      userId,
+      scoreEventId: auditEntryId,
+      status: { in: ['open', 'under_review'] }
+    }
+  });
+
+  if (existing) {
+    throw new Error('A dispute already exists for this score entry.');
+  }
+
+  const id = `DISP-${crypto.randomUUID()}`;
+
+  await prisma.dispute.create({
+    data: {
+      id,
+      userId,
+      scoreEventId: event.id,
+      bookingId: event.bookingId,
+      reason: reason.trim(),
+      status: 'open'
+    }
+  });
+
+  return { id };
 };
 
-// BACKEND TODO: getDisputes() -> [{ id, booking_id, user_id, user_name, space_name, score_impact, reason, filed_at, status }]
+// GET /admin/disputes
 exports.getDisputes = async () => {
-  throw new Error('Not implemented: backend database required');
+  const disputes = await prisma.dispute.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
+  });
+
+  return disputes.map(dispute => ({
+    id: dispute.id,
+    user: dispute.user,
+    reason: dispute.reason,
+    status: dispute.status,
+    created_at: dispute.createdAt
+  }));
 };
 
-// BACKEND TODO: resolveDispute(disputeId, decision, reason) -> void + auditService.log()
+// POST /admin/disputes/:id/resolve
 exports.resolveDispute = async (disputeId, decision, reason) => {
-  throw new Error('Not implemented: backend database required');
+  if (!reason || !reason.trim()) {
+    throw new Error('Resolution reason is required.');
+  }
+
+  if (!['accept', 'dismiss'].includes(decision)) {
+    throw new Error('Invalid dispute decision.');
+  }
+
+  await prisma.$transaction(async tx => {
+    const dispute = await tx.dispute.findUnique({
+      where: { id: disputeId },
+      include: {
+        scoreEvent: true,
+        user: true
+      }
+    });
+
+    if (!dispute) {
+      throw new Error('Dispute not found.');
+    }
+
+    if (!['open', 'under_review'].includes(dispute.status)) {
+      throw new Error('This dispute has already been resolved.');
+    }
+
+    // Accepting a dispute reverses the disputed score change.
+    if (decision === 'accept' && dispute.scoreEvent) {
+      const settings = await tx.setting.findUnique({
+        where: { id: 1 }
+      });
+
+      const minScore = settings?.pointsMin ?? 0;
+      const maxScore = settings?.pointsMax ?? 120;
+
+      const newScore = Math.max(
+        minScore,
+        Math.min(
+          maxScore,
+          dispute.user.score - dispute.scoreEvent.delta
+        )
+      );
+
+      const actualDelta = newScore - dispute.user.score;
+
+      if (actualDelta !== 0) {
+        await tx.user.update({
+          where: { id: dispute.userId },
+          data: { score: newScore }
+        });
+
+        await tx.scoreEvent.create({
+          data: {
+            id: `SCR-${crypto.randomUUID()}`,
+            userId: dispute.userId,
+            bookingId: dispute.bookingId,
+            delta: actualDelta,
+            action: 'dispute_resolution',
+            reason: `Dispute accepted: ${reason.trim()}`
+          }
+        });
+      }
+    }
+
+    await tx.dispute.update({
+      where: { id: disputeId },
+      data: {
+        status: decision === 'accept' ? 'resolved' : 'rejected',
+        resolutionNotes: reason.trim(),
+        resolvedAt: new Date()
+      }
+    });
+  });
 };
