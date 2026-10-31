@@ -2,6 +2,7 @@ const http = require('http');
 require('./testUserServiceMock');
 require('./testSpaceServiceMock');
 require('./testBookingServiceMock');
+require('./testOperationalServiceMocks');
 const app = require('../app');
 
 function cookiePair(value) {

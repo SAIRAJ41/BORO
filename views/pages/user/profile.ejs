@@ -62,11 +62,11 @@
 
         <form action="/profile/verify" method="POST" class="p-4 rounded-xl border border-dashed border-line bg-surface-tint">
           <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-          <div class="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Upload Updated Proof (Demo)</div>
-          <p class="text-xs text-ink-muted mb-3">Upload utility bill or municipality tax receipt for updated residency status.</p>
+          <div class="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Resident identity documents</div>
+          <p class="text-xs text-ink-muted mb-3">General resident identity documents are blocked until a dedicated identity-document model exists. Owner verification uses the separate OwnerVerification records and private ownership-documents bucket.</p>
           <div class="flex items-center gap-3">
             <input type="file" class="text-xs text-ink-muted" disabled>
-            <button type="submit" class="btn btn-secondary text-xs">Submit Document</button>
+            <button type="submit" class="btn btn-secondary text-xs">Request unavailable</button>
           </div>
         </form>
       </div>

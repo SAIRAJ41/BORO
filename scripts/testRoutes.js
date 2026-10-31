@@ -50,6 +50,7 @@ const routesToTest = [
   { path: '/owner/incidents', role: 'owner', expectedStatus: 200 },
   { path: '/owner/history', role: 'owner', expectedStatus: 200 },
   { path: '/owner/earnings', role: 'owner', expectedStatus: 200 },
+  { path: '/owner/verification-document', role: 'owner', expectedStatus: 302 },
 
   // Admin Views
   { path: '/admin/overview', role: 'admin', expectedStatus: 200 },
@@ -57,6 +58,7 @@ const routesToTest = [
   { path: '/admin/listings/SP-001', role: 'admin', expectedStatus: 200 },
   { path: '/admin/listings/SP-001/document', role: 'admin', expectedStatus: 200 },
   { path: '/admin/verify-owners', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/owners/USR-003/document', role: 'admin', expectedStatus: 302 },
   { path: '/admin/users', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users?q=Priya', role: 'admin', expectedStatus: 200 },
   { path: '/admin/disputes', role: 'admin', expectedStatus: 200 },

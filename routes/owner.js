@@ -7,6 +7,7 @@ const bookingService = require('../services/bookingService');
 const incidentService = require('../services/incidentService');
 const ownershipDocumentService = require('../services/ownershipDocumentService');
 const propertyPhotoService = require('../services/propertyPhotoService');
+const userService = require('../services/userService');
 const { validateToken } = require('../middleware/csrf');
 
 // Helper to get active session user or Rajesh Kumar (owner)
@@ -88,10 +89,17 @@ router.get('/my-spaces', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
   try {
-    const spaces = await spaceService.getOwnerSpaces(owner.id);
+    const [spaces, verificationStatus] = await Promise.all([
+      spaceService.getOwnerSpaces(owner.id),
+      userService.getOwnerVerificationSummary(owner.id)
+    ]);
     res.render('pages/owner/my-spaces', {
       title: 'My Listed Spaces - BORO Owner',
-      owner,
+      owner: {
+        ...owner,
+        verificationStatus,
+        verified: Boolean(verificationStatus && verificationStatus.is_verified)
+      },
       spaces,
       helpers,
       activeNav: 'owner-spaces'
@@ -556,6 +564,7 @@ router.get('/earnings', async (req, res, next) => {
       owner,
       earnings,
       payouts,
+      payoutMethod: await userService.getPayoutMethod(owner.id, owner.id),
       helpers,
       activeNav: 'owner-earnings'
     });
@@ -565,10 +574,64 @@ router.get('/earnings', async (req, res, next) => {
 });
 
 // POST /owner/payout-method - Set payout method
-router.post('/payout-method', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/payout-method', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await userService.updatePayoutMethod(owner.id, req.body, owner.id);
+    req.flash('success', 'Payout method updated.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update payout method.');
+  }
   res.redirect('/owner/earnings');
+});
+
+router.post('/payout-method/delete', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await userService.deletePayoutMethod(owner.id, owner.id);
+    req.flash('success', 'Payout method deleted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to delete payout method.');
+  }
+  res.redirect('/owner/earnings');
+});
+
+router.get('/verification-document', async (req, res, next) => {
+  const owner = getOwnerUser(req);
+  try {
+    const url = await userService.getOwnerVerificationDocument(owner.id, owner.id);
+    res.redirect(url);
+  } catch (error) {
+    if (error.message.includes('access denied')) {
+      return res.status(403).render('pages/errors/403');
+    }
+    if (error.message.includes('not available')) {
+      return res.status(404).render('pages/errors/404', {
+        title: 'Identity Document Not Found'
+      });
+    }
+    next(error);
+  }
+});
+
+router.post('/verification-document', (req, res, next) => {
+  ownershipDocumentService.createUploadMiddleware('id_proof')(req, res, error => {
+    if (error) {
+      req.flash('error', error.message || 'Invalid identity document.');
+      return res.redirect('/owner/my-spaces');
+    }
+    if (!validateToken(req, res)) return;
+    next();
+  });
+}, async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await userService.submitOwnerVerificationDocument(owner.id, req.file, owner.id);
+    req.flash('success', 'Verification document submitted for review.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit the verification document.');
+  }
+  res.redirect('/owner/my-spaces');
 });
 
 module.exports = router;

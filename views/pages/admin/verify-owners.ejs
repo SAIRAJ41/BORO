@@ -3,7 +3,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-ink">Owner Verification Queue</h1>
-      <p class="text-sm text-ink-muted">Inspect identity and property ownership documents before spaces become publicly bookable</p>
+      <p class="text-sm text-ink-muted">Inspect identity documents before space owners can complete listing review</p>
     </div>
     <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
       Pending Reviews: <span class="font-bold text-status-warning"><%= pendingOwners.length %></span>
@@ -24,42 +24,52 @@
                   <h2 class="text-base font-bold text-ink"><%= owner.name %></h2>
                   <span class="badge badge-warning text-xs">Pending Verification</span>
                 </div>
-                <p class="text-xs text-ink-muted mt-0.5"><%= owner.email %> &bull; <%= owner.phone || '+91 98765 43210' %></p>
+                <p class="text-xs text-ink-muted mt-0.5"><%= owner.email %><%= owner.phone ? ' • ' + owner.phone : '' %></p>
               </div>
             </div>
 
             <div class="text-xs text-ink-muted">
-              Submitted: <%= helpers.formatDate(owner.created_at) %>
+              Submitted: <%= helpers.formatDate(owner.applied_at || owner.created_at) %>
             </div>
           </div>
 
-          <!-- Submitted Documents Check -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-surface-tint border border-line text-xs">
             <div>
-              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Aadhaar / ID Card</span>
-              <div class="font-medium text-ink mt-0.5">&check; Aadhaar_Card_Verified.pdf</div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Organisation</span>
+              <div class="font-medium text-ink mt-0.5"><%= owner.organisation || 'Not provided' %></div>
             </div>
             <div>
-              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Property / NOC Deed</span>
-              <div class="font-medium text-ink mt-0.5">&check; Municipal_Tax_Receipt.pdf</div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Identity document</span>
+              <div class="font-medium text-ink mt-0.5">
+                <% if (owner.document_available) { %>
+                  Available<%= owner.document_type ? ' (' + owner.document_type + ')' : '' %>
+                <% } else { %>
+                  Missing
+                <% } %>
+              </div>
             </div>
             <div>
-              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Proposed Space</span>
-              <div class="font-bold text-ink mt-0.5">School Playground (Greenwood)</div>
+              <span class="text-ink-muted uppercase tracking-wider text-[10px]">Proposed Spaces</span>
+              <div class="font-bold text-ink mt-0.5"><%= owner.spaces_proposed || 0 %></div>
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="flex justify-end gap-2 pt-2">
             <button onclick="window.openReasonDialog('/admin/owners/<%= owner.id %>/reject', 'Reject Owner Verification', 'Mandatory: Enter the reason for rejection so the applicant can submit corrected documents.')"
                     class="btn btn-secondary text-xs text-status-danger border-status-danger/30 hover:bg-status-danger/10">
               Reject
             </button>
 
+            <% if (owner.document_available) { %>
+              <a href="/admin/owners/<%= owner.id %>/document" target="_blank" rel="noopener" class="btn btn-secondary text-xs">
+                Open Secure Document
+              </a>
+            <% } %>
+
             <form action="/admin/owners/<%= owner.id %>/verify" method="POST">
               <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <button type="submit" class="btn btn-primary text-xs font-bold">
-                Approve Verification &amp; Activate Space
+              <button type="submit" class="btn btn-primary text-xs font-bold" <%= owner.document_available ? '' : 'disabled' %>>
+                Approve Verification
               </button>
             </form>
           </div>

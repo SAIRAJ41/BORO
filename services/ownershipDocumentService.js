@@ -26,6 +26,31 @@ const FILE_TYPES = {
   }
 };
 
+exports.uploadForOwnerVerification = async (ownerId, file) => {
+  if (!file) throw new Error('An identity document is required.');
+
+  const { extension, mimeType } = validateFile(file);
+  const storagePath = getPath(`owners/${ownerId}`, extension);
+  const { error } = await getClient().storage.from(BUCKET).upload(
+    storagePath,
+    file.buffer,
+    {
+      contentType: mimeType,
+      cacheControl: '3600',
+      upsert: false
+    }
+  );
+
+  if (error) throw new Error('Unable to upload the identity document.');
+
+  return {
+    path: storagePath,
+    name: path.basename(file.originalname),
+    size: file.size,
+    mimeType
+  };
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_SIZE },
@@ -40,6 +65,7 @@ const upload = multer({
 });
 
 exports.uploadMiddleware = upload.single('ownership_document');
+exports.createUploadMiddleware = fieldName => upload.single(fieldName);
 exports.maxFileSize = MAX_FILE_SIZE;
 
 function validateFile(file) {

@@ -115,6 +115,82 @@ const userServiceMock = {
     };
     users.push(user);
     return { id: user.id, status: user.status };
+  },
+
+  async getById(userId) {
+    const user = users.find(candidate => candidate.id === userId);
+    return user ? { ...user, suspended: user.status === 'suspended' } : null;
+  },
+
+  async getAdminCounts() {
+    return {
+      total_users: users.length,
+      total_owners: users.filter(user => user.role === 'owner').length,
+      pending_owners: 0,
+      pending_verifications: 0,
+      total_spaces: 0,
+      active_bookings: 0,
+      completed_bookings: 0,
+      open_disputes: 0,
+      active_incidents: 0,
+      total_volume: 0,
+      total_incidents: 0
+    };
+  },
+
+  async getPendingOwners() {
+    return [];
+  },
+
+  async getAllUsers(adminId, query) {
+    const search = (query || '').toLowerCase();
+    const matched = users.filter(user =>
+      !search || user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search)
+    );
+    return { users: matched, total: matched.length, totalPages: 1 };
+  },
+
+  payoutMethods: {},
+  async getPayoutMethod(ownerId) {
+    return this.payoutMethods[ownerId] || null;
+  },
+
+  async updatePayoutMethod(ownerId, data) {
+    const type = data.payout_type || data.type;
+    const value = data.payout_value || '';
+    this.payoutMethods[ownerId] = {
+      id: 'PAY-1',
+      type,
+      masked_details: type === 'upi' ? `${value.slice(0, 2)}***@${value.split('@')[1]}` : `Bank account ending ${value.slice(-4)}`,
+      ifsc_code: data.ifsc_code || null,
+      updated_at: new Date()
+    };
+  },
+  async deletePayoutMethod(ownerId) {
+    delete this.payoutMethods[ownerId];
+  },
+  async getOwnerVerificationSummary() {
+    return { is_verified: true, document_available: false };
+  },
+  async getOwnerVerificationDocument() {
+    return 'https://signed.test/owner-document';
+  },
+  async submitOwnerVerificationDocument() {},
+  async approveOwner(ownerId) {
+    const user = users.find(candidate => candidate.id === ownerId);
+    if (user) user.status = 'active';
+  },
+  async rejectOwner(ownerId) {
+    const user = users.find(candidate => candidate.id === ownerId);
+    if (user) user.status = 'rejected';
+  },
+  async suspend(userId) {
+    const user = users.find(candidate => candidate.id === userId);
+    if (user) user.status = 'suspended';
+  },
+  async unsuspend(userId) {
+    const user = users.find(candidate => candidate.id === userId);
+    if (user) user.status = 'active';
   }
 };
 

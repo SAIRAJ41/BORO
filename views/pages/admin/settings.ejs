@@ -3,16 +3,15 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line">
     <div>
       <h1 class="text-2xl font-bold text-ink">Fairness &amp; Platform Parameters</h1>
-      <p class="text-sm text-ink-muted">Configure platform governance rules, reliability score weights, and deposit policies</p>
+      <p class="text-sm text-ink-muted">Configure stored platform governance rules and reliability score weights</p>
     </div>
     <div class="flex items-center gap-2">
-      <span class="badge badge-info text-xs">Governance Version 1.4</span>
+      <span class="badge badge-info text-xs">Stored settings record</span>
     </div>
   </div>
 
   <form action="/admin/settings" method="POST" class="space-y-6">
     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-    <!-- Booking & Capacity Limits -->
     <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-surface-tint flex items-center justify-center text-primary font-bold">1</div>
@@ -22,67 +21,69 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label for="max_active_bookings" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Max Active Bookings Per Resident</label>
-          <input type="number" id="max_active_bookings" name="max_active_bookings" value="<%= settings.max_active_bookings || 2 %>" min="1" max="10" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Prevents slot hoarding by limiting concurrent active reservations (requested, approved, checked-in).</p>
+          <input type="number" id="max_active_bookings" name="max_active_bookings" value="<%= settings.max_active_bookings %>" min="1" max="10" required class="input w-full text-sm">
+          <p class="text-[11px] text-ink-muted mt-1">Limits concurrent requested, approved, checked-in, and overdue bookings.</p>
         </div>
 
         <div>
-          <label for="cancellation_deadline_hours" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Free Cancellation Deadline (Hours)</label>
-          <input type="number" id="cancellation_deadline_hours" name="cancellation_deadline_hours" value="<%= settings.cancellation_deadline_hours || 2 %>" min="1" max="48" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Hours before slot start where cancellations qualify for a 100% full deposit refund.</p>
+          <label for="weekly_booking_limit" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Weekly Space Booking Limit</label>
+          <input type="number" id="weekly_booking_limit" name="weekly_booking_limit" value="<%= settings.weekly_booking_limit %>" min="1" max="14" required class="input w-full text-sm">
+          <p class="text-[11px] text-ink-muted mt-1">Maximum bookings a resident may place in a rolling week.</p>
+        </div>
+
+        <div>
+          <label for="grace_period_mins" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Late Return Grace Period (Minutes)</label>
+          <input type="number" id="grace_period_mins" name="grace_period_mins" value="<%= settings.grace_period_mins %>" min="0" max="120" required class="input w-full text-sm">
+        </div>
+
+        <div>
+          <label for="no_show_window_hours" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">No-Show Window (Hours)</label>
+          <input type="number" id="no_show_window_hours" name="no_show_window_hours" value="<%= settings.no_show_window_hours %>" min="1" max="48" required class="input w-full text-sm">
         </div>
       </div>
     </div>
 
-    <!-- Reliability Score Weights -->
     <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-surface-tint flex items-center justify-center text-primary font-bold">2</div>
-        <h2 class="text-base font-bold text-ink">Reliability Score System Weights (Clamped 0 - 120)</h2>
+        <h2 class="text-base font-bold text-ink">Reliability Score Weights</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label for="baseline_score" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Baseline Starting Score</label>
-          <input type="number" id="baseline_score" name="baseline_score" value="<%= settings.baseline_score || 100 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">New resident starting score.</p>
+          <label for="score_min" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Minimum Score</label>
+          <input type="number" id="score_min" name="score_min" value="<%= settings.score_min %>" required class="input w-full text-sm">
         </div>
 
         <div>
           <label for="max_score" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Maximum Ceiling Score</label>
-          <input type="number" id="max_score" name="max_score" value="<%= settings.max_score || 120 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Highest trust tier limit.</p>
+          <input type="number" id="max_score" name="max_score" value="<%= settings.max_score %>" required class="input w-full text-sm">
         </div>
 
         <div>
           <label for="clean_return_bonus" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Clean Return Bonus (+pts)</label>
-          <input type="number" id="clean_return_bonus" name="clean_return_bonus" value="<%= settings.clean_return_bonus || 5 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Awarded on timely, clean return.</p>
+          <input type="number" id="clean_return_bonus" name="clean_return_bonus" value="<%= settings.clean_return_bonus %>" required class="input w-full text-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-line">
         <div>
-          <label for="late_return_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Late Return Penalty (-pts)</label>
-          <input type="number" id="late_return_penalty" name="late_return_penalty" value="<%= settings.late_return_penalty || 10 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Applied when returning past slot.</p>
+          <label for="late_return_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Late Return Penalty (pts)</label>
+          <input type="number" id="late_return_penalty" name="late_return_penalty" value="<%= settings.late_return_penalty %>" required class="input w-full text-sm">
         </div>
 
         <div>
-          <label for="untidy_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Untidy Handover Penalty (-pts)</label>
-          <input type="number" id="untidy_penalty" name="untidy_penalty" value="<%= settings.untidy_penalty || 10 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Leaving rubbish or disordered items.</p>
+          <label for="noshow_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">No-Show Penalty (pts)</label>
+          <input type="number" id="noshow_penalty" name="noshow_penalty" value="<%= settings.noshow_penalty %>" required class="input w-full text-sm">
         </div>
 
         <div>
-          <label for="damage_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Property Damage Penalty (-pts)</label>
-          <input type="number" id="damage_penalty" name="damage_penalty" value="<%= settings.damage_penalty || 30 %>" required class="input w-full text-sm">
-          <p class="text-[11px] text-ink-muted mt-1">Damage to fixtures or premises.</p>
+          <label for="damage_penalty" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Property Damage Penalty (pts)</label>
+          <input type="number" id="damage_penalty" name="damage_penalty" value="<%= settings.damage_penalty %>" required class="input w-full text-sm">
         </div>
       </div>
     </div>
 
-    <!-- Platform Fee & Maintenance -->
     <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-surface-tint flex items-center justify-center text-primary font-bold">3</div>
@@ -92,18 +93,16 @@
       <div>
         <label for="platform_fee_percent" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Platform Service Fee (%)</label>
         <div class="flex items-center gap-3 max-w-xs">
-          <input type="number" id="platform_fee_percent" name="platform_fee_percent" value="<%= settings.platform_fee_percent || 5 %>" min="0" max="20" required class="input w-full text-sm">
+          <input type="number" id="platform_fee_percent" name="platform_fee_percent" value="<%= settings.platform_fee_percent %>" min="0" max="20" required class="input w-full text-sm">
           <span class="text-sm font-bold text-ink">%</span>
         </div>
-        <p class="text-[11px] text-ink-muted mt-1">Deducted from space owner payouts to fund platform hosting, verification, and audit infrastructure.</p>
       </div>
     </div>
 
-    <!-- Submit Button -->
     <div class="flex justify-end gap-3 pt-2">
       <a href="/admin/overview" class="btn btn-secondary text-sm">Cancel</a>
       <button type="submit" class="btn btn-primary text-sm font-bold px-6">
-        Save Parameters (Demo)
+        Save Parameters
       </button>
     </div>
   </form>

@@ -8,12 +8,15 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const helpers = require('../lib/helpers');
+const ownershipDocumentService = require('./ownershipDocumentService');
 
 const DEMO_USERS = {
   user: 'USR-001',
   owner: 'USR-003',
   admin: 'USR-099'
 };
+
+const ACTIVE_BOOKING_STATUSES = ['requested', 'approved', 'checked_in', 'overdue'];
 
 function makeId(prefix) {
   return `${prefix}-${crypto.randomBytes(16).toString('hex')}`;
@@ -31,6 +34,25 @@ function getUserInitials(name) {
 
 function getTier(score) {
   return helpers.getScoreTier(score || 100).tier;
+}
+
+function requireReason(reason) {
+  const text = String(reason || '').trim();
+  if (text.length < 10) {
+    throw new Error('A meaningful reason is required.');
+  }
+  return text;
+}
+
+async function requireAdmin(adminId) {
+  const admin = await prisma.user.findUnique({
+    where: { id: adminId },
+    select: { id: true, role: true, status: true }
+  });
+  if (!admin || admin.role !== 'admin' || admin.status !== 'active') {
+    throw new Error('Administrator access denied.');
+  }
+  return admin;
 }
 
 function formatSessionUser(user) {
@@ -55,8 +77,33 @@ function formatUser(user) {
     tier: getTier(user.score),
     initials: user.initials || getUserInitials(user.name),
     status: user.status,
+    suspended: user.status === 'suspended',
+    verified: false,
     joined_at: user.joinedAt,
     created_at: user.createdAt
+  };
+}
+
+function formatPayoutMethod(method) {
+  if (!method) return null;
+  return {
+    id: method.id,
+    type: method.type,
+    masked_details: method.maskedDetails,
+    ifsc_code: method.type === 'bank' ? method.ifscCode : null,
+    updated_at: method.updatedAt
+  };
+}
+
+function formatVerificationSummary(verification) {
+  if (!verification) return null;
+  return {
+    is_verified: Boolean(verification.isVerified),
+    document_available: Boolean(verification.documentUrl),
+    document_type: verification.documentType,
+    organisation: verification.organisation,
+    applied_at: verification.appliedAt,
+    verified_at: verification.verifiedAt
   };
 }
 
@@ -72,7 +119,7 @@ exports.authenticate = async (email, password) => {
     where: { email: normalizedEmail }
   });
 
-  if (!user || user.status !== 'active') return null;
+  if (!user) return null;
 
   const passwordMatches = await bcrypt.compare(
     password,
@@ -93,7 +140,8 @@ exports.create = async ({
   phone,
   password,
   role,
-  organisation
+  organisation,
+  documentFile
 }) => {
   const normalizedEmail = (email || '').trim().toLowerCase();
 
@@ -118,37 +166,57 @@ exports.create = async ({
     .slice(0, 10)
     .toUpperCase()}`;
 
-  const user = await prisma.$transaction(async (tx) => {
-    const newUser = await tx.user.create({
-      data: {
-        id: userId,
-        name: name.trim(),
-        email: normalizedEmail,
-        phone: (phone || '').trim(),
-        passwordHash,
-        role: normalizedRole,
-        initials: getUserInitials(name),
-        status: 'active'
-      }
-    });
-
-    if (normalizedRole === 'owner') {
-      await tx.ownerVerification.create({
-        data: {
-          id: makeId('VER'),
-          userId: newUser.id,
-          organisation: organisation || null,
-          documentType: 'Pending submission',
-          isVerified: false,
-          appliedAt: new Date()
-        }
-      });
+  let uploadedDocument = null;
+  try {
+    if (normalizedRole === 'owner' && documentFile) {
+      uploadedDocument = await ownershipDocumentService.uploadForOwnerVerification(
+        userId,
+        documentFile
+      );
     }
 
-    return newUser;
-  });
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          id: userId,
+          name: name.trim(),
+          email: normalizedEmail,
+          phone: (phone || '').trim(),
+          passwordHash,
+          role: normalizedRole,
+          initials: getUserInitials(name),
+          status: 'active'
+        }
+      });
 
-  return { id: user.id };
+      if (normalizedRole === 'owner') {
+        await tx.ownerVerification.create({
+          data: {
+            id: makeId('VER'),
+            userId: newUser.id,
+            organisation: organisation || null,
+            documentType: uploadedDocument ? uploadedDocument.mimeType : 'Pending submission',
+            documentUrl: uploadedDocument ? uploadedDocument.path : null,
+            isVerified: false,
+            appliedAt: new Date()
+          }
+        });
+      }
+
+      return newUser;
+    });
+
+    return { id: user.id };
+  } catch (error) {
+    if (uploadedDocument) {
+      try {
+        await ownershipDocumentService.remove(uploadedDocument.path);
+      } catch (cleanupError) {
+        console.error('BORO Storage cleanup failed after owner registration error:', cleanupError.message);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -205,14 +273,13 @@ exports.getProfile = async (userId) => {
   if (!user) return null;
 
   const verification = user.verifications[0] || null;
-  const activeStatuses = ['requested', 'approved', 'checked_in', 'overdue'];
 
   return {
     user: {
       ...formatUser(user),
       verified: Boolean(verification && verification.isVerified),
       active_bookings_count: user.bookings.filter(booking =>
-        activeStatuses.includes(booking.status)
+        ACTIVE_BOOKING_STATUSES.includes(booking.status)
       ).length
     },
     scoreEvents: user.scoreEvents.map(event => ({
@@ -222,26 +289,8 @@ exports.getProfile = async (userId) => {
       created_at: event.createdAt
     })),
     totalBookingsCount: user.bookings.length,
-
-    verificationStatus: verification
-      ? {
-          is_verified: verification.isVerified,
-          document_type: verification.documentType,
-          document_url: verification.documentUrl,
-          organisation: verification.organisation,
-          applied_at: verification.appliedAt,
-          verified_at: verification.verifiedAt
-        }
-      : null,
-
-    payoutMethod: user.payoutMethod
-      ? {
-          type: user.payoutMethod.type,
-          masked_details: user.payoutMethod.maskedDetails,
-          ifsc_code: user.payoutMethod.ifscCode,
-          upi_id: user.payoutMethod.upiId
-        }
-      : null
+    verificationStatus: formatVerificationSummary(verification),
+    payoutMethod: formatPayoutMethod(user.payoutMethod)
   };
 };
 
@@ -277,37 +326,102 @@ exports.updateProfile = async (userId, { name, phone }) => {
 /**
  * Create or update owner payout method.
  */
-exports.updatePayoutMethod = async (ownerId, data) => {
-  const owner = await prisma.user.findUnique({
-    where: { id: ownerId }
-  });
+function normalizePayoutInput(data = {}) {
+  const type = String(data.type || data.payout_type || '').trim().toLowerCase();
+  const value = String(data.payout_value || '').trim();
+  if (!['upi', 'bank'].includes(type)) throw new Error('Invalid payout method.');
+  if (!value || value.length > 100) throw new Error('Payout details are required.');
 
-  if (!owner || owner.role !== 'owner') {
-    throw new Error('Owner account not found.');
+  if (type === 'upi') {
+    if (!/^[A-Za-z0-9._-]{2,100}@[A-Za-z0-9.-]{2,64}$/.test(value)) {
+      throw new Error('Enter a valid UPI ID.');
+    }
+    return {
+      type,
+      maskedDetails: `${value.slice(0, 2)}***@${value.split('@')[1]}`,
+      accountNumberEnc: null,
+      ifscCode: null,
+      upiId: value
+    };
   }
 
-  const payoutData = {
-    type: data.type,
-    maskedDetails: data.masked_details || data.maskedDetails || '',
-    accountNumberEnc: data.account_number_enc || data.accountNumberEnc || null,
-    ifscCode: data.ifsc_code || data.ifscCode || null,
-    upiId: data.upi_id || data.upiId || null
+  const accountNumber = value.replace(/\s+/g, '');
+  if (!/^\d{9,18}$/.test(accountNumber)) {
+    throw new Error('Enter a valid bank account number.');
+  }
+  const ifscCode = String(data.ifsc_code || '').trim().toUpperCase();
+  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) {
+    throw new Error('Enter a valid IFSC code.');
+  }
+  return {
+    type,
+    maskedDetails: `Bank account ending ${accountNumber.slice(-4)}`,
+    accountNumberEnc: accountNumber,
+    ifscCode,
+    upiId: null
   };
+}
 
-  await prisma.payoutMethod.upsert({
-    where: { ownerId },
-    create: {
-      ownerId,
-      ...payoutData
-    },
-    update: payoutData
+async function requireOwnerActor(ownerId, actorId, errorMessage) {
+  if (!ownerId || ownerId !== actorId) throw new Error(errorMessage);
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { id: true, role: true, status: true }
+  });
+  if (!owner || owner.role !== 'owner') throw new Error('Owner account not found.');
+  if (owner.status !== 'active') throw new Error('Owner account is not active.');
+  return owner;
+}
+
+exports.getPayoutMethod = async (ownerId, actorId = ownerId) => {
+  await requireOwnerActor(ownerId, actorId, 'Payout method access denied.');
+  const method = await prisma.payoutMethod.findUnique({ where: { ownerId } });
+  return formatPayoutMethod(method);
+};
+
+exports.updatePayoutMethod = async (ownerId, data, actorId = ownerId) => {
+  await requireOwnerActor(ownerId, actorId, 'Payout method access denied.');
+
+  const payoutData = normalizePayoutInput(data);
+  await prisma.$transaction(async tx => {
+    await tx.payoutMethod.upsert({
+      where: { ownerId },
+      create: { id: makeId('PAY'), ownerId, ...payoutData },
+      update: payoutData
+    });
+    await tx.auditLog.create({
+      data: {
+        id: makeId('AUD'),
+        actor: actorId,
+        action: 'PAYOUT_METHOD_UPDATED',
+        target: `user:${ownerId}`,
+        details: { type: payoutData.type }
+      }
+    });
+  });
+};
+
+exports.deletePayoutMethod = async (ownerId, actorId = ownerId) => {
+  await requireOwnerActor(ownerId, actorId, 'Payout method access denied.');
+  await prisma.$transaction(async tx => {
+    const deleted = await tx.payoutMethod.deleteMany({ where: { ownerId } });
+    if (!deleted.count) throw new Error('Payout method not found.');
+    await tx.auditLog.create({
+      data: {
+        id: makeId('AUD'),
+        actor: actorId,
+        action: 'PAYOUT_METHOD_DELETED',
+        target: `user:${ownerId}`
+      }
+    });
   });
 };
 
 /**
  * Get all users with optional search and pagination.
  */
-exports.getAllUsers = async (query, page = 1, limit = 10) => {
+exports.getAllUsers = async (adminId, query, page = 1, limit = 10) => {
+  await requireAdmin(adminId);
   page = Math.max(1, parseInt(page, 10) || 1);
   limit = Math.max(1, parseInt(limit, 10) || 10);
 
@@ -326,6 +440,16 @@ exports.getAllUsers = async (query, page = 1, limit = 10) => {
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
+      include: {
+        bookings: {
+          select: { status: true }
+        },
+        verifications: {
+          orderBy: { appliedAt: 'desc' },
+          take: 1,
+          select: { isVerified: true }
+        }
+      },
       orderBy: { joinedAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit
@@ -335,7 +459,15 @@ exports.getAllUsers = async (query, page = 1, limit = 10) => {
   ]);
 
   return {
-    users: users.map(formatUser),
+    users: users.map(user => ({
+      ...formatUser(user),
+      verified: user.role === 'owner'
+        ? Boolean(user.verifications && user.verifications[0] && user.verifications[0].isVerified)
+        : false,
+      active_bookings_count: user.bookings.filter(booking =>
+        ACTIVE_BOOKING_STATUSES.includes(booking.status)
+      ).length
+    })),
     total,
     totalPages: Math.ceil(total / limit)
   };
@@ -344,7 +476,8 @@ exports.getAllUsers = async (query, page = 1, limit = 10) => {
 /**
  * Get owners awaiting verification.
  */
-exports.getPendingOwners = async () => {
+exports.getPendingOwners = async adminId => {
+  await requireAdmin(adminId);
   const verifications = await prisma.ownerVerification.findMany({
     where: {
       isVerified: false,
@@ -354,45 +487,210 @@ exports.getPendingOwners = async () => {
       }
     },
     include: {
-      user: true
+      user: {
+        include: {
+          _count: { select: { ownedSpaces: true } }
+        }
+      }
     },
     orderBy: {
       appliedAt: 'asc'
     }
   });
 
-  return Promise.all(
-    verifications.map(async (verification) => {
-      const spacesProposed = await prisma.space.count({
-        where: { ownerId: verification.userId }
-      });
+  return verifications.map(verification => ({
+    id: verification.user.id,
+    name: verification.user.name,
+    email: verification.user.email,
+    phone: verification.user.phone,
+    organisation: verification.organisation,
+    spaces_proposed: verification.user._count.ownedSpaces,
+    applied_at: verification.appliedAt,
+    created_at: verification.appliedAt,
+    document_available: Boolean(verification.documentUrl),
+    document_type: verification.documentType
+  }));
+};
 
-      return {
-        id: verification.user.id,
-        name: verification.user.name,
-        email: verification.user.email,
-        phone: verification.user.phone,
-        organisation: verification.organisation,
-        spaces_proposed: spacesProposed,
-        applied_at: verification.appliedAt,
-        documents: verification.documentUrl
-          ? [verification.documentUrl]
-          : [],
-        document_type: verification.documentType
-      };
-    })
+exports.getOwnerVerificationSummary = async ownerId => {
+  const verification = await prisma.ownerVerification.findFirst({
+    where: { userId: ownerId },
+    orderBy: { appliedAt: 'desc' }
+  });
+  return formatVerificationSummary(verification);
+};
+
+exports.getOwnerVerificationDocument = async (ownerId, requesterId) => {
+  const requester = await prisma.user.findUnique({
+    where: { id: requesterId },
+    select: { id: true, role: true, status: true }
+  });
+  if (!requester || requester.status !== 'active') {
+    throw new Error('Verification access denied.');
+  }
+  if (requester.role !== 'admin' && requester.id !== ownerId) {
+    throw new Error('Verification access denied.');
+  }
+
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { role: true }
+  });
+  if (!owner || owner.role !== 'owner') {
+    throw new Error('Identity document is not available.');
+  }
+
+  const verification = await prisma.ownerVerification.findFirst({
+    where: { userId: ownerId },
+    orderBy: { appliedAt: 'desc' },
+    select: { documentUrl: true }
+  });
+  if (!verification || !verification.documentUrl) {
+    throw new Error('Identity document is not available.');
+  }
+  return ownershipDocumentService.getSignedUrl(verification.documentUrl);
+};
+
+exports.submitOwnerVerificationDocument = async (ownerId, file, actorId = ownerId) => {
+  if (ownerId !== actorId) throw new Error('Verification access denied.');
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { id: true, role: true, status: true }
+  });
+  if (!owner || owner.role !== 'owner') throw new Error('Owner account not found.');
+  if (owner.status === 'rejected' || owner.status === 'suspended') {
+    throw new Error('This owner account cannot submit verification documents.');
+  }
+
+  const existing = await prisma.ownerVerification.findFirst({
+    where: { userId: ownerId },
+    orderBy: { appliedAt: 'desc' }
+  });
+  if (existing && existing.isVerified) {
+    throw new Error('Owner verification is already approved.');
+  }
+
+  const uploadedDocument = await ownershipDocumentService.uploadForOwnerVerification(
+    ownerId,
+    file
   );
+
+  try {
+    await prisma.$transaction(async tx => {
+      if (existing) {
+        await tx.ownerVerification.update({
+          where: { id: existing.id },
+          data: {
+            documentType: uploadedDocument.mimeType,
+            documentUrl: uploadedDocument.path,
+            isVerified: false,
+            appliedAt: new Date(),
+            verifiedAt: null,
+            verifiedBy: null
+          }
+        });
+      } else {
+        await tx.ownerVerification.create({
+          data: {
+            id: makeId('VER'),
+            userId: ownerId,
+            documentType: uploadedDocument.mimeType,
+            documentUrl: uploadedDocument.path,
+            isVerified: false,
+            appliedAt: new Date()
+          }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          id: makeId('AUD'),
+          actor: actorId,
+          action: 'OWNER_VERIFICATION_DOCUMENT_SUBMITTED',
+          target: `user:${ownerId}`
+        }
+      });
+    });
+  } catch (error) {
+    try {
+      await ownershipDocumentService.remove(uploadedDocument.path);
+    } catch (cleanupError) {
+      console.error('BORO Storage cleanup failed after verification upload error:', cleanupError.message);
+    }
+    throw error;
+  }
+
+  if (existing && existing.documentUrl && existing.documentUrl !== uploadedDocument.path) {
+    try {
+      await ownershipDocumentService.remove(existing.documentUrl);
+    } catch (cleanupError) {
+      console.error('BORO Storage cleanup failed for replaced verification document:', cleanupError.message);
+    }
+  }
 };
 
 /**
  * Approve an owner.
  */
-exports.approveOwner = async (ownerId, reason) => {
+exports.approveOwner = async (ownerId, adminId, reason) => {
+  await requireAdmin(adminId);
+  const normalizedReason = reason ? requireReason(reason) : null;
+
   await prisma.$transaction(async (tx) => {
     const verification = await tx.ownerVerification.findFirst({
       where: {
         userId: ownerId,
-        isVerified: false
+        isVerified: false,
+        user: { role: 'owner', status: { notIn: ['rejected', 'suspended'] } }
+      }
+    });
+
+    if (!verification) {
+      throw new Error('Pending owner verification not found.');
+    }
+    if (!verification.documentUrl) {
+      throw new Error('An identity document is required before approval.');
+    }
+
+    await tx.ownerVerification.update({
+      where: { id: verification.id },
+      data: {
+        isVerified: true,
+        verifiedAt: new Date(),
+        verifiedBy: adminId
+      }
+    });
+
+    await tx.user.update({
+      where: { id: ownerId },
+      data: { status: 'active' }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        id: makeId('AUD'),
+        actor: adminId,
+        action: 'OWNER_APPROVED',
+        target: ownerId,
+        reason: normalizedReason
+      }
+    });
+  });
+};
+
+/**
+ * Reject an owner application.
+ */
+exports.rejectOwner = async (ownerId, adminId, reason) => {
+  await requireAdmin(adminId);
+  const normalizedReason = requireReason(reason);
+
+  await prisma.$transaction(async (tx) => {
+    const verification = await tx.ownerVerification.findFirst({
+      where: {
+        userId: ownerId,
+        isVerified: false,
+        user: { role: 'owner', status: { not: 'rejected' } }
       }
     });
 
@@ -403,42 +701,11 @@ exports.approveOwner = async (ownerId, reason) => {
     await tx.ownerVerification.update({
       where: { id: verification.id },
       data: {
-        isVerified: true,
-        verifiedAt: new Date()
+        isVerified: false,
+        verifiedAt: new Date(),
+        verifiedBy: adminId
       }
     });
-
-    await tx.user.update({
-      where: { id: ownerId },
-      data: { status: 'active' }
-    });
-
-    await tx.auditLog.create({
-      data: {
-        actor: 'admin',
-        action: 'OWNER_APPROVED',
-        target: ownerId,
-        reason: reason || null
-      }
-    });
-  });
-};
-
-/**
- * Reject an owner application.
- */
-exports.rejectOwner = async (ownerId, reason) => {
-  await prisma.$transaction(async (tx) => {
-    const verification = await tx.ownerVerification.findFirst({
-      where: {
-        userId: ownerId,
-        isVerified: false
-      }
-    });
-
-    if (!verification) {
-      throw new Error('Pending owner verification not found.');
-    }
 
     await tx.user.update({
       where: { id: ownerId },
@@ -447,10 +714,11 @@ exports.rejectOwner = async (ownerId, reason) => {
 
     await tx.auditLog.create({
       data: {
-        actor: 'admin',
+        id: makeId('AUD'),
+        actor: adminId,
         action: 'OWNER_REJECTED',
         target: ownerId,
-        reason: reason || null
+        reason: normalizedReason
       }
     });
   });
@@ -459,8 +727,17 @@ exports.rejectOwner = async (ownerId, reason) => {
 /**
  * Suspend a user.
  */
-exports.suspend = async (userId, reason) => {
+exports.suspend = async (userId, adminId, reason) => {
+  await requireAdmin(adminId);
+  if (userId === adminId) throw new Error('Administrators cannot suspend themselves.');
+  const normalizedReason = requireReason(reason);
+
   await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (!user || user.role === 'admin') throw new Error('User cannot be suspended.');
+    if (user.status === 'suspended') throw new Error('User is already suspended.');
+    if (user.status !== 'active') throw new Error('Only active users can be suspended.');
+
     await tx.user.update({
       where: { id: userId },
       data: { status: 'suspended' }
@@ -468,10 +745,11 @@ exports.suspend = async (userId, reason) => {
 
     await tx.auditLog.create({
       data: {
-        actor: 'admin',
+        id: makeId('AUD'),
+        actor: adminId,
         action: 'USER_SUSPENDED',
         target: userId,
-        reason: reason || null
+        reason: normalizedReason
       }
     });
   });
@@ -480,8 +758,15 @@ exports.suspend = async (userId, reason) => {
 /**
  * Unsuspend a user.
  */
-exports.unsuspend = async (userId, reason) => {
+exports.unsuspend = async (userId, adminId, reason) => {
+  await requireAdmin(adminId);
+  const normalizedReason = requireReason(reason);
+
   await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (!user || user.role === 'admin') throw new Error('User cannot be reactivated.');
+    if (user.status !== 'suspended') throw new Error('User is not suspended.');
+
     await tx.user.update({
       where: { id: userId },
       data: { status: 'active' }
@@ -489,10 +774,11 @@ exports.unsuspend = async (userId, reason) => {
 
     await tx.auditLog.create({
       data: {
-        actor: 'admin',
+        id: makeId('AUD'),
+        actor: adminId,
         action: 'USER_UNSUSPENDED',
         target: userId,
-        reason: reason || null
+        reason: normalizedReason
       }
     });
   });
@@ -501,12 +787,15 @@ exports.unsuspend = async (userId, reason) => {
 /**
  * Get admin dashboard counts.
  */
-exports.getAdminCounts = async () => {
+exports.getAdminCounts = async adminId => {
+  await requireAdmin(adminId);
   const [
     totalUsers,
     totalOwners,
     pendingOwners,
     totalSpaces,
+    totalVolume,
+    totalIncidents,
     activeBookings,
     completedBookings,
     openDisputes,
@@ -522,23 +811,30 @@ exports.getAdminCounts = async () => {
       where: {
         isVerified: false,
         user: {
+          role: 'owner',
           status: { not: 'rejected' }
         }
       }
     }),
 
-    prisma.space.count(),
+    prisma.space.count({
+      where: { active: true, listingStatus: 'approved' }
+    }),
 
-    // Active booking lifecycle statuses
+    prisma.booking.aggregate({
+      _sum: { totalAmount: true }
+    }),
+
+    prisma.incident.count(),
+
     prisma.booking.count({
       where: {
         status: {
-          in: ['requested', 'approved', 'overdue', 'damaged']
+          in: ACTIVE_BOOKING_STATUSES
         }
       }
     }),
 
-    // Returned and closed bookings are completed
     prisma.booking.count({
       where: {
         status: {
@@ -548,26 +844,35 @@ exports.getAdminCounts = async () => {
     }),
 
     prisma.dispute.count({
-      where: { status: 'open' }
+      where: {
+        status: {
+          in: ['pending', 'open', 'under_review']
+        }
+      }
     }),
 
     prisma.incident.count({
       where: {
         status: {
-          in: ['open', 'under_review']
+          in: ['pending', 'open', 'under_review']
         }
       }
     })
   ]);
 
+  const volume = Number((totalVolume && totalVolume._sum && totalVolume._sum.totalAmount) || 0);
+
   return {
-    total_users: totalUsers,
-    total_owners: totalOwners,
-    pending_owners: pendingOwners,
-    total_spaces: totalSpaces,
-    active_bookings: activeBookings,
-    completed_bookings: completedBookings,
-    open_disputes: openDisputes,
-    active_incidents: activeIncidents
+    total_users: totalUsers || 0,
+    total_owners: totalOwners || 0,
+    pending_owners: pendingOwners || 0,
+    pending_verifications: pendingOwners || 0,
+    total_spaces: totalSpaces || 0,
+    active_bookings: activeBookings || 0,
+    completed_bookings: completedBookings || 0,
+    open_disputes: openDisputes || 0,
+    active_incidents: activeIncidents || 0,
+    total_volume: Number.isFinite(volume) ? volume : 0,
+    total_incidents: totalIncidents || 0
   };
 };

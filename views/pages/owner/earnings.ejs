@@ -78,20 +78,33 @@
         <div>
           <label for="payout_type" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Payout Channel</label>
           <select id="payout_type" name="payout_type" class="input w-full text-xs">
-            <option value="upi">UPI ID (Instant)</option>
-            <option value="bank">Bank Transfer (NEFT/IMPS)</option>
+            <option value="upi" <%= payoutMethod && payoutMethod.type === 'upi' ? 'selected' : '' %>>UPI ID (Instant)</option>
+            <option value="bank" <%= payoutMethod && payoutMethod.type === 'bank' ? 'selected' : '' %>>Bank Transfer (NEFT/IMPS)</option>
           </select>
         </div>
 
         <div>
           <label for="payout_value" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Account / VPA Details</label>
-          <input type="text" id="payout_value" name="payout_value" value="rajesh@oksbi" class="input w-full text-xs" required>
+          <input type="text" id="payout_value" name="payout_value" value="" class="input w-full text-xs" required placeholder="Enter UPI ID or account number">
+        </div>
+        <div>
+          <label for="ifsc_code" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">IFSC Code (bank only)</label>
+          <input type="text" id="ifsc_code" name="ifsc_code" value="<%= payoutMethod && payoutMethod.type === 'bank' ? (payoutMethod.ifsc_code || '') : '' %>" class="input w-full text-xs" maxlength="11">
         </div>
 
         <button type="submit" class="btn btn-secondary text-xs w-full py-2">
-          Update Payout Account (Demo)
+          Update Payout Account
         </button>
       </form>
+      <% if (payoutMethod) { %>
+        <div class="flex items-center justify-between text-xs text-ink-muted">
+          <span>Saved: <%= payoutMethod.masked_details %></span>
+          <form action="/owner/payout-method/delete" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <button type="submit" class="text-status-danger font-semibold">Delete</button>
+          </form>
+        </div>
+      <% } %>
 
       <div class="p-3 bg-surface-tint rounded-xl border border-line text-[11px] text-ink-muted leading-relaxed">
         🔒 Details are stored securely. BORO charges a nominal 5% maintenance fee on completed bookings to maintain the platform.

@@ -372,10 +372,66 @@ notification isolation, and audit behavior. Existing route, authentication,
 booking, availability, ownership-document, photo, data, Prisma validation,
 syntax, and diff checks remain required.
 
-Remaining outside this milestone are mock-backed admin overview, owner
-verification, admin user status/settings, and several unrelated legacy
-mutation pages. The in-memory session store remains unsuitable for multi-instance production
-deployment and should be replaced with a durable, shared store.
+## Milestone 5 platform governance and administration
+
+### 1. Admin overview dashboard
+- Connected `GET /admin/overview` to `userService.getAdminCounts(adminId)` and `auditService.getEntries({}, 1, 5)`.
+- Replaced mock statistics with database-backed metrics: active community spaces, active bookings, pending owner verifications, open score disputes, registered users, gross rental volume, and total recorded incidents.
+- Safe handling of zero and empty results, with fallback to 0 and currency formatting via `helpers.formatCurrency`.
+- Status: **Fully implemented and tested** (in-memory Prisma mocks; not live-verified against production DB per strict constraints).
+
+### 2. Owner verification lifecycle
+- Space owners submit identity documents via `POST /owner/verification-document` using `ownershipDocumentService.uploadForOwnerVerification(ownerId, file)`.
+- Files are validated (PDF, JPEG, PNG <= 10 MB, file signature inspection) and stored under `owners/${ownerId}/` in the private `ownership-documents` Supabase bucket.
+- Stored records use the existing `OwnerVerification` Prisma model with transaction-local `OWNER_VERIFICATION_DOCUMENT_SUBMITTED` audit logging. Replacement documents clean up previous storage objects; failed transactions clean up newly uploaded objects.
+- Authorized document access provides 5-minute signed URLs via `GET /owner/verification-document` (for the owning owner) and `GET /admin/owners/:id/document` (for authenticated admins). Cross-owner access and public retrieval are rejected. Raw storage paths and public URLs are never exposed.
+- Admin approval via `POST /admin/owners/:id/verify` sets `isVerified: true`, records `verifiedBy` and `verifiedAt`, sets user status to `active`, and logs `OWNER_APPROVED` with reason. Approval requires an uploaded document and rejects already-approved or suspended owners.
+- Admin rejection via `POST /admin/owners/:id/reject` requires a meaningful reason (>= 10 characters), sets `isVerified: false`, sets user status to `rejected`, and logs `OWNER_REJECTED` with reason. Repeated rejection is rejected.
+- Status: **Fully implemented and tested** (storage and database operations verified with isolated mocks; live bucket upload not verified in this environment).
+
+### 3. Admin user suspension and session invalidation
+- Administrators suspend and reactivate user accounts via `POST /admin/users/:id/suspend` and `POST /admin/users/:id/unsuspend`.
+- Service layer `userService.suspend(userId, adminId, reason)` and `userService.unsuspend(userId, adminId, reason)` enforce admin authorization, prevent self-suspension, prevent suspending other administrators, require meaningful reasons (>= 10 characters), and write `USER_SUSPENDED` / `USER_UNSUSPENDED` audit logs.
+- Login blocks suspended accounts with descriptive flash notifications (`Account suspended, contact admin`).
+- Existing active sessions for suspended or rejected accounts are invalidated on every request via `attachUser` middleware in `app.js` and role/auth guards in `middleware/auth.js`.
+- Status: **Fully implemented and tested**.
+
+### 4. Platform fairness settings
+- `GET /admin/settings` and `POST /admin/settings` connected to `settingsService.getAll(adminId)` and `settingsService.update(data, adminId)`.
+- Persists to database record `Setting` (id: 1).
+- Normalizes and maps UI form inputs: `max_active_bookings`, `weekly_booking_limit`, `grace_period_mins`, `no_show_window_hours`, `platform_fee_percent`, `score_min`, `max_score`, `clean_return_bonus`, `late_return_penalty`, `noshow_penalty`, `damage_penalty`.
+- Penalty values are converted to negative numbers in the database and presented as positive numbers in UI forms.
+- Validates bounds (active bookings 1–10, weekly limit 1–14, grace period 0–120 mins, no-show window 1–48 hrs, platform fee 0–20%, score minimum <= maximum, score penalties <= 50 pts).
+- Logs `PLATFORM_SETTINGS_UPDATED` audit entries with updated field lists.
+- Status: **Fully implemented and tested**.
+
+### 5. Owner payout methods
+- Owner-scoped payout CRUD via `userService.getPayoutMethod`, `userService.updatePayoutMethod`, and `userService.deletePayoutMethod`.
+- Routes: `GET /owner/earnings` (renders saved masked method), `POST /owner/payout-method` (create/update), and `POST /owner/payout-method/delete`.
+- Detail validation:
+  - UPI: regex `/^[A-Za-z0-9._-]{2,100}@[A-Za-z0-9.-]{2,64}$/`.
+  - Bank account: 9–18 digits.
+  - Bank IFSC code: regex `/^[A-Z]{4}0[A-Z0-9]{6}$/`.
+- Detail masking: UI and service responses return only `masked_details` (`ra***@oksbi` or `Bank account ending 7890`). Sensitive raw account numbers are never exposed in responses or views.
+- Ownership isolation: operations strictly verify `ownerId === actorId` and require an active owner account.
+- Audits: `PAYOUT_METHOD_UPDATED` (logging channel type without sensitive values) and `PAYOUT_METHOD_DELETED`.
+- Preserves existing earnings calculations and ledger from completed bookings.
+- Status: **Fully implemented and tested**.
+
+### 6. Identity documents architecture & schema requirements
+- Schema analysis: `model User` has a relation `verifications OwnerVerification[]`, but no relation or fields for general resident identity documents.
+- `OwnerVerification` is strictly scoped to space owners (`role: 'owner'`) and is NOT misused for general user identity proof.
+- General resident identity documents: **Blocked by schema requirement**.
+  - Supporting resident verification requires a new database model (e.g. `model ResidentVerification { id, userId, documentType, documentUrl, status, appliedAt, verifiedAt, verifiedBy }`) or additive fields on `User`.
+  - Per project constraints, no unauthorized migrations or schema changes were applied.
+  - The feature remains explicitly blocked with safe, informative UI in `views/pages/user/profile.ejs` and a clear error notification on `POST /profile/verify`.
+  - Owner verification documents operate independently using the existing `OwnerVerification` schema.
+- Status: **Blocked by schema/product requirements** (owner verification completed; resident documents safely blocked).
+
+### Focused Milestone 5 governance coverage
+```text
+node scripts/testMilestone5Governance.js
+```
 
 ## Milestone 6 security hardening
 

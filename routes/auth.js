@@ -5,6 +5,8 @@ const helpers = require('../lib/helpers');
 const userService = require('../services/userService');
 const { isAuthenticated } = require('../middleware/auth');
 const { rateLimit } = require('../middleware/rateLimit');
+const { validateToken } = require('../middleware/csrf');
+const ownershipDocumentService = require('../services/ownershipDocumentService');
 
 // GET /login - Login view with optional Quick Demo accounts panel
 router.get('/login', (req, res) => {
@@ -38,15 +40,18 @@ router.post('/login', rateLimit({
     // 2. Authenticate against the database-backed user service.
     const user = await userService.authenticate(email, password);
 
-    // If credentials are invalid
     if (!user) {
       req.flash('error', 'Invalid email or password');
       return res.redirect('/login');
     }
 
-    // If account is suspended
     if (user.status === 'suspended') {
       req.flash('error', 'Account suspended, contact admin');
+      return res.redirect('/login');
+    }
+
+    if (user.status !== 'active') {
+      req.flash('error', 'This account cannot sign in.');
       return res.redirect('/login');
     }
 
@@ -109,11 +114,22 @@ router.get('/signup', (req, res) => {
 });
 
 // POST /signup - Process registration
+const signupUpload = ownershipDocumentService.createUploadMiddleware('id_proof');
+
 router.post('/signup', rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   message: 'Too many registration attempts. Please try again later.'
-}), async (req, res) => {
+}), (req, res, next) => {
+  signupUpload(req, res, error => {
+    if (error) {
+      req.flash('error', error.message || 'Invalid identity document.');
+      return res.redirect('/signup');
+    }
+    next();
+  });
+}, async (req, res) => {
+  if (!validateToken(req, res)) return;
   // BACKEND: validate with schema validator (e.g. zod/joi), hash password with bcrypt, insert into DB
   const { name, email, phone, password, confirm_password, role, organisation } = req.body;
 
@@ -133,7 +149,15 @@ router.post('/signup', rateLimit({
   }
 
   try {
-    await userService.create({ name, email, phone, password, role, organisation });
+    await userService.create({
+      name,
+      email,
+      phone,
+      password,
+      role,
+      organisation,
+      documentFile: req.file
+    });
 
     if (role === 'owner') {
       req.flash('info', 'Pending admin verification');
@@ -157,6 +181,10 @@ router.post('/demo/:role', async (req, res) => {
 
   try {
     const demoUser = await userService.getDemoUser(role);
+    if (!demoUser || demoUser.status !== 'active') {
+      req.flash('error', 'This demo account is not active.');
+      return res.redirect('/login');
+    }
 
     const setupSession = () => {
       req.session.user = {
@@ -226,8 +254,10 @@ router.post('/profile', isAuthenticated, async (req, res, next) => {
 
 // POST /profile/verify - Submit verification documents
 router.post('/profile/verify', isAuthenticated, (req, res) => {
-  // BACKEND TODO: save uploaded identity document and flag verificationStatus.pending
-  req.flash('info', 'Not connected yet');
+  req.flash(
+    'error',
+    'Resident identity documents are not available. The current schema only stores OwnerVerification records for space owners, and no general identity-document model exists.'
+  );
   res.redirect('/profile');
 });
 

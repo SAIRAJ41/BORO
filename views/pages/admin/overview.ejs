@@ -14,28 +14,28 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <%- include('../../partials/StatCard', {
       title: 'Active Community Spaces',
-      value: stats.total_spaces,
+      value: stats.total_spaces || 0,
       subtext: 'Halls, grounds & rooms'
     }) %>
 
     <%- include('../../partials/StatCard', {
       title: 'Active Bookings',
-      value: stats.active_bookings,
+      value: stats.active_bookings || 0,
       subtext: 'Within 2 per user limit'
     }) %>
 
     <%- include('../../partials/StatCard', {
       title: 'Pending Owner Verifications',
-      value: stats.pending_verifications,
+      value: stats.pending_verifications || 0,
       subtext: 'Require ID inspection',
-      variant: stats.pending_verifications > 0 ? 'warning' : 'default'
+      variant: (stats.pending_verifications || 0) > 0 ? 'warning' : 'default'
     }) %>
 
     <%- include('../../partials/StatCard', {
       title: 'Open Score Disputes',
-      value: stats.open_disputes,
+      value: stats.open_disputes || 0,
       subtext: 'Resident mediation queue',
-      variant: stats.open_disputes > 0 ? 'danger' : 'default'
+      variant: (stats.open_disputes || 0) > 0 ? 'danger' : 'default'
     }) %>
   </div>
 
@@ -43,19 +43,19 @@
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     <%- include('../../partials/StatCard', {
       title: 'Registered Users',
-      value: stats.total_users,
+      value: stats.total_users || 0,
       subtext: 'Residents & caretakers'
     }) %>
 
     <%- include('../../partials/StatCard', {
       title: 'Gross Rental Volume',
-      value: helpers.formatCurrency(stats.total_volume),
+      value: helpers.formatCurrency(stats.total_volume || 0),
       subtext: 'Total demo payments processed'
     }) %>
 
     <%- include('../../partials/StatCard', {
       title: 'Total Incidents Recorded',
-      value: stats.total_incidents,
+      value: stats.total_incidents || 0,
       subtext: 'Closed and under review'
     }) %>
   </div>
@@ -69,11 +69,11 @@
         <a href="/admin/verify-owners" class="text-xs text-primary font-medium hover:underline">View All &rarr;</a>
       </div>
 
-      <% if (stats.pending_verifications > 0) { %>
+      <% if ((stats.pending_verifications || 0) > 0) { %>
         <div class="p-4 rounded-xl bg-surface-tint border border-line flex justify-between items-center">
           <div>
-            <div class="font-bold text-ink text-sm">Sunita Rao</div>
-            <div class="text-xs text-ink-muted">Applied to list: Greenwood School Playground</div>
+            <div class="font-bold text-ink text-sm"><%= stats.pending_verifications %> owner application<%= stats.pending_verifications === 1 ? '' : 's' %></div>
+            <div class="text-xs text-ink-muted">Waiting for identity document review</div>
           </div>
           <a href="/admin/verify-owners" class="btn btn-primary text-xs">
             Review Documents
@@ -91,11 +91,11 @@
         <a href="/admin/disputes" class="text-xs text-primary font-medium hover:underline">View All &rarr;</a>
       </div>
 
-      <% if (stats.open_disputes > 0) { %>
+      <% if ((stats.open_disputes || 0) > 0) { %>
         <div class="p-4 rounded-xl bg-surface-tint border border-line flex justify-between items-center">
           <div>
-            <div class="font-bold text-ink text-sm">Rohan Desai (DSP-001)</div>
-            <div class="text-xs text-ink-muted">Disputing -30 penalty on BK-1005</div>
+            <div class="font-bold text-ink text-sm"><%= stats.open_disputes %> open dispute<%= stats.open_disputes === 1 ? '' : 's' %></div>
+            <div class="text-xs text-ink-muted">Require administrator mediation</div>
           </div>
           <a href="/admin/disputes" class="btn btn-secondary text-xs">
             Mediate Dispute
@@ -131,13 +131,19 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-line bg-surface">
-          <% (recentAudits || []).forEach(log => { %>
+          <% const audits = recentAudits || []; %>
+          <% if (audits.length === 0) { %>
+            <tr>
+              <td colspan="5" class="px-4 py-6 text-center text-ink-muted">No audit events recorded yet.</td>
+            </tr>
+          <% } %>
+          <% audits.forEach(log => { %>
             <tr>
               <td class="px-4 py-3 font-mono text-ink"><%= log.id %></td>
               <td class="px-4 py-3 text-ink-muted"><%= helpers.formatDateTime(log.created_at) %></td>
               <td class="px-4 py-3 font-medium text-ink"><%= log.actor %></td>
               <td class="px-4 py-3 font-mono text-primary"><%= log.action %></td>
-              <td class="px-4 py-3 text-ink-muted"><%= log.details %></td>
+              <td class="px-4 py-3 text-ink-muted"><%= log.reason || '' %></td>
             </tr>
           <% }); %>
         </tbody>

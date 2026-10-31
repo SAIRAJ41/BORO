@@ -241,6 +241,12 @@ async function run() {
   }
   console.log('✓ Valid PDF upload uses a unique listing-scoped path');
 
+  const ownerUploaded = await documents.uploadForOwnerVerification('OWNER-1', validPdf);
+  if (!ownerUploaded.path.startsWith('owners/OWNER-1/') || ownerUploaded.path.includes('..')) {
+    throw new Error('Owner verification upload did not use a unique owner-scoped private path');
+  }
+  console.log('✓ Owner verification upload uses a unique private owner-scoped path');
+
   await expectRejected(
     () => documents.uploadForListing('SP-1', {
       ...validPdf,
