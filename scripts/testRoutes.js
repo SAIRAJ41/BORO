@@ -4,8 +4,12 @@
  */
 
 const http = require('http');
+require('./testUserServiceMock');
+require('./testSpaceServiceMock');
+require('./testBookingServiceMock');
+require('./testIncidentServiceMock');
+require('./testOperationalServiceMocks');
 const app = require('../app');
-const mockData = require('../data/mock');
 
 const routesToTest = [
   // Auth & General
@@ -14,9 +18,9 @@ const routesToTest = [
   { path: '/profile', role: 'user', expectedStatus: 200 },
 
   // Role Switchers (expect 302 redirect)
-  { path: '/demo/user', role: 'user', expectedStatus: 302 },
-  { path: '/demo/owner', role: 'user', expectedStatus: 302 },
-  { path: '/demo/admin', role: 'user', expectedStatus: 302 },
+  { path: '/demo/user', role: 'user', expectedStatus: 404 },
+  { path: '/demo/owner', role: 'user', expectedStatus: 404 },
+  { path: '/demo/admin', role: 'user', expectedStatus: 404 },
 
   // User Views
   { path: '/', role: 'user', expectedStatus: 200 },
@@ -37,17 +41,24 @@ const routesToTest = [
   // Owner Views
   { path: '/owner/requests', role: 'owner', expectedStatus: 200 },
   { path: '/owner/my-spaces', role: 'owner', expectedStatus: 200 },
+  { path: '/owner/spaces/SP-001', role: 'owner', expectedStatus: 200 },
   { path: '/owner/spaces/add', role: 'owner', expectedStatus: 200 },
   { path: '/owner/spaces/SP-001/edit', role: 'owner', expectedStatus: 200 },
+  { path: '/owner/spaces/SP-001/document', role: 'owner', expectedStatus: 200 },
   { path: '/owner/calendar', role: 'owner', expectedStatus: 200 },
   { path: '/owner/today', role: 'owner', expectedStatus: 200 },
   { path: '/owner/incidents', role: 'owner', expectedStatus: 200 },
   { path: '/owner/history', role: 'owner', expectedStatus: 200 },
   { path: '/owner/earnings', role: 'owner', expectedStatus: 200 },
+  { path: '/owner/verification-document', role: 'owner', expectedStatus: 302 },
 
   // Admin Views
   { path: '/admin/overview', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings/SP-001', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings/SP-001/document', role: 'admin', expectedStatus: 200 },
   { path: '/admin/verify-owners', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/owners/USR-003/document', role: 'admin', expectedStatus: 302 },
   { path: '/admin/users', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users?q=Priya', role: 'admin', expectedStatus: 200 },
   { path: '/admin/disputes', role: 'admin', expectedStatus: 200 },
@@ -67,17 +78,37 @@ async function testAll() {
 
   let failures = [];
   let successCount = 0;
+  const sessions = {};
+
+  async function loginAs(role) {
+    const credentials = {
+      user: ['priya@demo.com', 'demo123'],
+      owner: ['rajesh@demo.com', 'demo123'],
+      admin: ['admin@demo.com', 'demo123']
+    }[role];
+    const page = await fetch(`http://localhost:${port}/login`);
+    const pageCookie = (page.headers.get('set-cookie') || '').split(';')[0];
+    const html = await page.text();
+    const csrfToken = (html.match(/name="_csrf" value="([^"]+)"/) || [])[1];
+    const login = await fetch(`http://localhost:${port}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', cookie: pageCookie },
+      body: new URLSearchParams({
+        email: credentials[0],
+        password: credentials[1],
+        _csrf: csrfToken
+      }).toString(),
+      redirect: 'manual'
+    });
+    return (login.headers.get('set-cookie') || pageCookie).split(';')[0];
+  }
 
   for (const item of routesToTest) {
-    const roleUser = item.role === 'admin' 
-      ? mockData.users.find(u => u.role === 'admin') 
-      : (item.role === 'owner' ? mockData.users.find(u => u.role === 'owner') : mockData.users[0]);
-
     // Set session cookie for the role being tested
     let cookie = '';
     if (item.role) {
-      const demoRes = await fetch(`http://localhost:${port}/demo/${item.role}`, { redirect: 'manual' });
-      cookie = demoRes.headers.get('set-cookie') || '';
+      if (!sessions[item.role]) sessions[item.role] = await loginAs(item.role);
+      cookie = sessions[item.role];
     }
 
     try {
@@ -113,4 +144,3 @@ async function testAll() {
 }
 
 testAll();
-

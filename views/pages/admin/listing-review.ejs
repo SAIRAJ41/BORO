@@ -1,0 +1,74 @@
+<div class="space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <a href="/admin/listings?status=<%= listing.listing_status %>" class="text-xs text-primary hover:underline">&larr; Back to listing queue</a>
+      <h1 class="text-2xl font-bold text-ink mt-2"><%= listing.name %></h1>
+      <p class="text-sm text-ink-muted"><%= helpers.formatSpaceType(listing.space_type) %> &bull; Submitted <%= helpers.formatDateTime(listing.submitted_at) %></p>
+    </div>
+    <span class="badge <%= listing.listing_status === 'approved' ? 'badge-success' : (listing.listing_status === 'rejected' ? 'badge-danger' : 'badge-warning') %> capitalize"><%= listing.listing_status %></span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card p-6 bg-surface border border-line space-y-4">
+        <h2 class="text-base font-bold text-ink">Property Information</h2>
+        <p class="text-sm text-ink-muted whitespace-pre-line"><%= listing.description %></p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div><span class="text-ink-muted block">Location</span><strong><%= listing.locality %>, <%= listing.city %></strong></div>
+          <div><span class="text-ink-muted block">Address</span><strong><%= listing.address %></strong></div>
+          <div><span class="text-ink-muted block">Capacity</span><strong><%= listing.capacity %></strong></div>
+          <div><span class="text-ink-muted block">Indoor / outdoor</span><strong><%= listing.indoor_outdoor %></strong></div>
+          <div><span class="text-ink-muted block">Hourly rate</span><strong><%= helpers.formatCurrency(listing.price_per_hour) %></strong></div>
+          <div><span class="text-ink-muted block">Deposit</span><strong><%= helpers.formatCurrency(listing.deposit_amount) %></strong></div>
+          <div><span class="text-ink-muted block">Submitted</span><strong><%= helpers.formatDateTime(listing.submitted_at) %></strong></div>
+          <div><span class="text-ink-muted block">Reviewed</span><strong><%= listing.reviewed_at ? helpers.formatDateTime(listing.reviewed_at) : 'Not reviewed' %></strong></div>
+        </div>
+      </div>
+
+      <div class="card p-6 bg-surface border border-line space-y-4">
+        <h2 class="text-base font-bold text-ink">Ownership Document</h2>
+        <% if (listing.ownership_document_present) { %>
+          <div class="flex items-center justify-between gap-4 p-3 rounded-xl bg-surface-tint border border-line text-xs">
+            <div><strong><%= listing.ownership_document_name || 'Ownership document' %></strong><div class="text-ink-muted"><%= listing.ownership_document_mime_type %> &bull; <%= listing.ownership_document_size %> bytes</div></div>
+            <a href="/admin/listings/<%= listing.id %>/document" target="_blank" rel="noopener" class="btn btn-secondary text-xs">Open Secure Document</a>
+          </div>
+        <% } else { %>
+          <p class="text-xs text-status-danger">No ownership document is attached. This listing cannot be approved.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="card p-6 bg-surface border border-line space-y-3">
+        <h2 class="text-base font-bold text-ink">Owner</h2>
+        <p class="text-sm font-semibold"><%= listing.owner.name %></p>
+        <p class="text-xs text-ink-muted"><%= listing.owner.email %></p>
+        <p class="text-xs text-ink-muted"><%= listing.owner.phone || 'Phone unavailable' %></p>
+      </div>
+
+      <% if (listing.listing_status === 'pending') { %>
+        <div class="card p-6 bg-surface border border-line space-y-3">
+          <% if (listing.ownership_document_present) { %>
+            <form action="/admin/listings/<%= listing.id %>/approve" method="POST">
+              <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+              <button type="submit" class="btn btn-primary w-full text-sm font-bold">Approve Listing</button>
+            </form>
+          <% } else { %>
+            <button type="button" class="btn btn-secondary w-full text-sm font-bold opacity-60 cursor-not-allowed" disabled title="An ownership document is required before approval">Approval unavailable: document required</button>
+          <% } %>
+          <form action="/admin/listings/<%= listing.id %>/reject" method="POST" class="space-y-2">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <label for="reason" class="text-xs font-medium text-ink">Rejection reason</label>
+            <textarea id="reason" name="reason" rows="4" minlength="10" required class="input w-full text-xs" placeholder="Explain what must be corrected..."></textarea>
+            <button type="submit" class="btn btn-secondary w-full text-sm text-status-danger">Reject Listing</button>
+          </form>
+        </div>
+      <% } else if (listing.listing_status === 'rejected') { %>
+        <div class="card p-6 bg-status-danger/10 border border-status-danger/30 space-y-2 text-xs">
+          <strong class="text-status-danger">Rejection reason</strong>
+          <p class="text-ink-muted"><%= listing.rejection_reason %></p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>

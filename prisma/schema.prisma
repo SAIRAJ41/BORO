@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @db.VarChar(36)
+  name         String   @db.VarChar(120)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255) @map("password_hash")
+  phone        String   @db.VarChar(32)
+  role         String   @db.VarChar(16)
+  score        Int      @default(100)
+  initials     String   @db.VarChar(4)
+  status       String   @default("active") @db.VarChar(20)
+  joinedAt     DateTime @default(now()) @db.Timestamptz @map("joined_at")
+  createdAt    DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt    DateTime @updatedAt @db.Timestamptz @map("updated_at")
+
+  verifications       OwnerVerification[] @relation("VerificationOwner")
+  verifiedDocuments   OwnerVerification[] @relation("VerifiedBy")
+  payoutMethod        PayoutMethod?
+  ownedSpaces         Space[]
+  reviewedSpaces       Space[] @relation("SpaceReviewer")
+  bookings            Booking[]
+  reportedConditions  ConditionReport[]
+  incidentsAsUser     Incident[] @relation("IncidentUser")
+  incidentsAsOwner    Incident[] @relation("IncidentOwner")
+  scoreEvents         ScoreEvent[]
+  disputes            Dispute[] @relation("DisputeUser")
+  resolvedDisputes    Dispute[] @relation("DisputeResolver")
+  ratings             Rating[]
+  notifications       Notification[]
+  waitlistEntries Waitlist[]
+
+  @@map("users")
+}
+
+model OwnerVerification {
+  id           String    @id @db.VarChar(36)
+  userId       String    @db.VarChar(36) @map("user_id")
+  organisation String?   @db.VarChar(200)
+  documentType String    @db.VarChar(100) @map("document_type")
+  documentUrl  String?   @db.VarChar(500) @map("document_url")
+  isVerified   Boolean   @default(false) @map("is_verified")
+  appliedAt    DateTime  @default(now()) @db.Timestamptz @map("applied_at")
+  verifiedAt   DateTime? @db.Timestamptz @map("verified_at")
+  verifiedBy   String?   @db.VarChar(36) @map("verified_by")
+
+  user      User  @relation("VerificationOwner", fields: [userId], references: [id], onDelete: Cascade)
+  verifier  User? @relation("VerifiedBy", fields: [verifiedBy], references: [id])
+
+  @@map("owner_verifications")
+}
+
+model PayoutMethod {
+  id                String   @id @db.VarChar(36)
+  ownerId           String   @unique @db.VarChar(36) @map("owner_id")
+  type              String   @db.VarChar(20)
+  maskedDetails     String   @db.VarChar(100) @map("masked_details")
+  accountNumberEnc  String?  @db.Text @map("account_number_enc")
+  ifscCode          String?  @db.VarChar(20) @map("ifsc_code")
+  upiId             String?  @db.VarChar(100) @map("upi_id")
+  createdAt         DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt         DateTime @updatedAt @db.Timestamptz @map("updated_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("payout_methods")
+}
+
+model Space {
+  id              String   @id @db.VarChar(36)
+  ownerId         String   @db.VarChar(36) @map("owner_id")
+  name            String   @db.VarChar(150)
+  description     String   @db.Text
+  spaceType       String   @db.VarChar(50) @map("space_type")
+  indoorOutdoor   String   @db.VarChar(20) @map("indoor_outdoor")
+  capacity        Int
+  sqft            Int
+  pricePerHour    Decimal  @db.Decimal(10, 2) @map("price_per_hour")
+  depositAmount   Decimal  @db.Decimal(10, 2) @map("deposit_amount")
+  locality        String   @db.VarChar(100)
+  city            String   @db.VarChar(100)
+  address         String   @db.Text
+  amenities       Json     @default("[]")
+  allowedPurposes Json     @default("[]") @map("allowed_purposes")
+  rules           String?  @db.Text
+  photos          Json     @default("[]")
+  active          Boolean  @default(true)
+  verified        Boolean  @default(true)
+  listingStatus   String   @default("pending") @db.VarChar(20) @map("listing_status")
+  submittedAt     DateTime @default(now()) @db.Timestamptz @map("submitted_at")
+  reviewedAt      DateTime? @db.Timestamptz @map("reviewed_at")
+  reviewedBy      String?  @db.VarChar(36) @map("reviewed_by")
+  rejectionReason String?  @db.Text @map("rejection_reason")
+  ownershipDocumentType String? @db.VarChar(100) @map("ownership_document_type")
+  ownershipDocumentUrl  String? @db.VarChar(500) @map("ownership_document_url")
+  ownershipDocumentPath String? @db.VarChar(500) @map("ownership_document_path")
+  ownershipDocumentName String? @db.VarChar(255) @map("ownership_document_name")
+  ownershipDocumentSize Int? @map("ownership_document_size")
+  ownershipDocumentMimeType String? @db.VarChar(100) @map("ownership_document_mime_type")
+  weatherDependent Boolean  @default(false) @map("weather_dependent")
+  createdAt       DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt       DateTime @updatedAt @db.Timestamptz @map("updated_at")
+
+  owner             User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewer          User?             @relation("SpaceReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  availabilitySlots AvailabilitySlot[]
+  bookings          Booking[]
+  conditionReports  ConditionReport[]
+  incidents         Incident[]
+  ratings           Rating[]
+  waitlistEntries Waitlist[]
+
+  @@index([listingStatus, active])
+  @@index([ownerId, listingStatus])
+  @@map("spaces")
+}
+
+model AvailabilitySlot {
+  id        String   @id @db.VarChar(36)
+  spaceId   String   @db.VarChar(36) @map("space_id")
+  slotDate  DateTime @db.Date @map("slot_date")
+  startTime String   @db.VarChar(20) @map("start_time")
+  endTime   String   @db.VarChar(20) @map("end_time")
+  isBooked  Boolean  @default(false) @map("is_booked")
+  status    String   @default("available") @db.VarChar(20)
+  waitlistEntries Waitlist[]
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, slotDate])
+  @@map("availability_slots")
+}
+
+model Booking {
+  id                 String    @id @db.VarChar(36)
+  ref                String    @unique @db.VarChar(20)
+  userId             String    @db.VarChar(36) @map("user_id")
+  spaceId            String    @db.VarChar(36) @map("space_id")
+  slotDate           DateTime  @db.Date @map("slot_date")
+  startTime          String    @db.VarChar(30) @map("start_time")
+  endTime            String    @db.VarChar(30) @map("end_time")
+  durationHours      Int       @map("duration_hours")
+  status             String    @db.VarChar(25)
+  purpose            String    @db.VarChar(100)
+  groupSize          Int       @map("group_size")
+  hourlyRate         Decimal   @db.Decimal(10, 2) @map("hourly_rate")
+  hourlyFee          Decimal   @db.Decimal(10, 2) @map("hourly_fee")
+  depositAmount      Decimal   @db.Decimal(10, 2) @map("deposit_amount")
+  depositStatus      String    @default("held") @db.VarChar(25) @map("deposit_status")
+  totalAmount        Decimal   @db.Decimal(10, 2) @map("total_amount")
+  totalPaid          Decimal   @db.Decimal(10, 2) @map("total_paid")
+  platformFee        Decimal   @db.Decimal(10, 2) @map("platform_fee")
+  netPayout          Decimal   @db.Decimal(10, 2) @map("net_payout")
+  paymentMethod      String    @db.VarChar(25) @map("payment_method")
+  paymentStatus      String    @db.VarChar(25) @map("payment_status")
+  paidAt             DateTime? @db.Timestamptz @map("paid_at")
+  decisionReason     String?   @db.Text @map("decision_reason")
+  pinCode            String?   @db.VarChar(10) @map("pin_code")
+  notes              String?   @db.Text
+  extensionHours     Int?      @map("extension_hours")
+  extensionStatus    String?   @db.VarChar(20) @map("extension_status")
+  cancellationDeadline DateTime? @db.Timestamptz @map("cancellation_deadline")
+  canCancel          Boolean   @default(true) @map("can_cancel")
+  cancelWarning      String?   @db.Text @map("cancel_warning")
+  cancelledAt        DateTime? @db.Timestamptz @map("cancelled_at")
+  cancelReason       String?   @db.Text @map("cancel_reason")
+  createdAt          DateTime  @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt          DateTime  @updatedAt @db.Timestamptz @map("updated_at")
+
+  user             User             @relation(fields: [userId], references: [id])
+  space            Space            @relation(fields: [spaceId], references: [id])
+  conditionReports ConditionReport[]
+  incidents        Incident[]
+  scoreEvents      ScoreEvent[]
+  disputes         Dispute[]
+  rating           Rating?
+
+  @@index([userId, slotDate])
+  @@index([spaceId, slotDate])
+  @@index([status])
+  @@map("bookings")
+}
+
+model Waitlist {
+  id        String   @id @db.VarChar(36)
+  spaceId   String   @db.VarChar(36) @map("space_id")
+  slotId    String   @db.VarChar(50) @map("slot_id")
+  slotDate  DateTime @db.Date @map("slot_date")
+  userId    String   @db.VarChar(36) @map("user_id")
+  position  Int
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  space Space           @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  slot  AvailabilitySlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, slotDate])
+  @@map("waitlist")
+}
+
+model ConditionReport {
+  id               String   @id @db.VarChar(36)
+  bookingId        String   @db.VarChar(36) @map("booking_id")
+  spaceId          String   @db.VarChar(36) @map("space_id")
+  type             String   @db.VarChar(30)
+  reportedBy       String   @db.VarChar(36) @map("reported_by")
+  checklist        Json     @default("{}") @db.JsonB
+  conditionNotes   String?  @db.Text @map("condition_notes")
+  photos           Json     @default("[]") @db.JsonB
+  verifiedByOwner  Boolean  @default(false) @map("verified_by_owner")
+  createdAt        DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  space    Space   @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  reporter User    @relation(fields: [reportedBy], references: [id])
+
+  @@map("condition_reports")
+}
+
+model Incident {
+  id             String   @id @db.VarChar(36)
+  bookingId      String   @db.VarChar(36) @map("booking_id")
+  spaceId        String   @db.VarChar(36) @map("space_id")
+  userId         String   @db.VarChar(36) @map("user_id")
+  ownerId        String   @db.VarChar(36) @map("owner_id")
+  reason         String   @db.Text
+  severity       String   @db.VarChar(20)
+  status         String   @db.VarChar(25)
+  depositHeld    Decimal  @default(0) @db.Decimal(10, 2) @map("deposit_held")
+  deductionTotal Decimal  @default(0) @db.Decimal(10, 2) @map("deduction_total")
+  refundAmount   Decimal  @default(0) @db.Decimal(10, 2) @map("refund_amount")
+  deductions     Json     @default("[]") @db.JsonB
+  photos         Json     @default("[]") @db.JsonB
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt      DateTime @updatedAt @db.Timestamptz @map("updated_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  space   Space   @relation(fields: [spaceId], references: [id])
+  user    User    @relation("IncidentUser", fields: [userId], references: [id])
+  owner   User    @relation("IncidentOwner", fields: [ownerId], references: [id])
+
+  @@map("incidents")
+}
+
+model ScoreEvent {
+  id        String   @id @db.VarChar(36)
+  userId    String   @db.VarChar(36) @map("user_id")
+  bookingId String?  @db.VarChar(36) @map("booking_id")
+  delta     Int
+  action    String   @db.VarChar(50)
+  reason    String   @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  disputes Dispute[]
+
+  @@map("score_events")
+}
+
+model Dispute {
+  id              String    @id @db.VarChar(36)
+  userId          String    @db.VarChar(36) @map("user_id")
+  scoreEventId    String    @db.VarChar(36) @map("score_event_id")
+  bookingId       String    @db.VarChar(36) @map("booking_id")
+  reason          String    @db.Text
+  status          String    @default("pending") @db.VarChar(25)
+  resolutionNotes String?   @db.Text @map("resolution_notes")
+  resolvedBy      String?   @db.VarChar(36) @map("resolved_by")
+  resolvedAt      DateTime? @db.Timestamptz @map("resolved_at")
+  createdAt       DateTime  @default(now()) @db.Timestamptz @map("created_at")
+
+  user       User      @relation("DisputeUser", fields: [userId], references: [id])
+  scoreEvent ScoreEvent @relation(fields: [scoreEventId], references: [id])
+  booking    Booking   @relation(fields: [bookingId], references: [id])
+  resolver   User?     @relation("DisputeResolver", fields: [resolvedBy], references: [id])
+
+  @@map("disputes")
+}
+
+model Rating {
+  id        String   @id @db.VarChar(36)
+  spaceId   String   @db.VarChar(36) @map("space_id")
+  bookingId String   @unique @db.VarChar(36) @map("booking_id")
+  userId    String   @db.VarChar(36) @map("user_id")
+  rating    Int
+  review    String?  @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  space   Space   @relation(fields: [spaceId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("ratings")
+}
+
+model Notification {
+  id        String   @id @db.VarChar(36)
+  userId    String   @db.VarChar(36) @map("user_id")
+  type      String   @db.VarChar(40)
+  title     String   @db.VarChar(150)
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  actionUrl String?  @db.VarChar(500) @map("action_url")
+  actions   Json     @default("[]") @db.JsonB
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @db.VarChar(36)
+  actor     String   @db.VarChar(36)
+  action    String   @db.VarChar(100)
+  target    String   @db.VarChar(150)
+  reason    String?  @db.Text
+  details   Json     @default("{}") @db.JsonB
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+
+  @@map("audit_log")
+}
+
+model Setting {
+  id                       Int      @id @default(1)
+  maxActiveBookingsPerUser Int      @default(2) @map("max_active_bookings_per_user")
+  gracePeriodMins          Int      @default(15) @map("grace_period_mins")
+  noShowWindowHours        Int      @default(2) @map("no_show_window_hours")
+  platformFeePercent       Decimal  @default(8) @db.Decimal(5, 2) @map("platform_fee_percent")
+  pointsCleanReturn        Int      @default(5) @map("points_clean_return")
+  pointsLateReturn         Int      @default(-10) @map("points_late_return")
+  pointsNoShow             Int      @default(-10) @map("points_no_show")
+  pointsDamage             Int      @default(-30) @map("points_damage")
+  pointsMin                Int      @default(0) @map("points_min")
+  pointsMax                Int      @default(120) @map("points_max")
+  updatedAt                DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  weeklySpaceBookingLimitPerUser Int @default(3) @map("weekly_space_booking_limit_per_user")
+
+  @@map("settings")
+}

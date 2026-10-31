@@ -1,14 +1,17 @@
 <%
   const sp = locals.space || {};
   const isOutdoor = sp.indoor_outdoor === 'outdoor' || sp.space_type === 'community_ground' || sp.space_type === 'school_playground';
+  const defaultImg = (locals.helpers && locals.helpers.getDefaultSpaceImage) ? locals.helpers.getDefaultSpaceImage(sp.space_type) : '/images/spaces/community-hall-1.jpg';
+  const spaceImg = (sp.photos && sp.photos[0] && sp.photos[0].url) ? sp.photos[0].url : defaultImg;
 %>
 <div class="bg-surface-card border border-line rounded-xl overflow-hidden hover:border-line-subtle hover:shadow-md transition-all flex flex-col justify-between">
   <!-- Image Container with badges -->
   <div class="relative h-48 bg-surface-high overflow-hidden">
     <img
-      src="<%= (sp.photos && sp.photos[0] && sp.photos[0].url) ? sp.photos[0].url : '/images/spaces/community-hall-1.jpg' %>"
+      src="<%= spaceImg %>"
       alt="<%= (sp.photos && sp.photos[0] && sp.photos[0].caption) ? sp.photos[0].caption : sp.name %>"
       class="w-full h-full object-cover"
+      onerror="this.onerror=null; this.src='<%= defaultImg %>'"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent"></div>
 
@@ -31,8 +34,8 @@
     </div>
 
     <!-- Area / Ward on Image Bottom-Left -->
-    <div class="absolute bottom-3 left-3 text-white text-xs font-medium">
-      <%= sp.area || sp.address %>
+    <div class="absolute bottom-3 left-3 text-white text-xs font-medium max-w-[55%] truncate" title="<%= sp.locality || sp.area || sp.address %>">
+      <%= sp.locality || sp.area || sp.address %>
     </div>
   </div>
 

@@ -16,6 +16,14 @@
       <span class="text-status-warning font-bold text-lg">⚠️</span>
       <div class="text-xs text-ink">
         <strong>Verification Pending:</strong> Your space owner account is pending administrative document review. Your spaces remain hidden from general search until verified.
+        <% if (owner.verificationStatus && owner.verificationStatus.document_available) { %>
+          <div class="mt-2"><a href="/owner/verification-document" target="_blank" rel="noopener" class="text-primary font-semibold hover:underline">Open your submitted document</a></div>
+        <% } %>
+        <form action="/owner/verification-document" method="POST" enctype="multipart/form-data" class="mt-3 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+          <input type="file" name="id_proof" accept=".pdf,.png,.jpg,.jpeg" required class="text-xs">
+          <button type="submit" class="btn btn-secondary text-xs">Submit identity document</button>
+        </form>
       </div>
     </div>
   <% } %>
@@ -26,9 +34,11 @@
       <% spaces.forEach(space => { %>
         <div class="card bg-surface border border-line overflow-hidden shadow-sm flex flex-col justify-between">
           <div class="relative h-44 bg-surface-tint">
-            <img src="<%= space.photos && space.photos.length > 0 ? space.photos[0] : '/images/spaces/community-hall-1.jpg' %>" 
+            <% const defaultOwnerImg = (helpers && helpers.getDefaultSpaceImage) ? helpers.getDefaultSpaceImage(space.space_type) : '/images/spaces/community-hall-1.jpg'; %>
+            <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : defaultOwnerImg %>"
                  alt="<%= space.name %>" 
-                 class="w-full h-full object-cover">
+                 class="w-full h-full object-cover"
+                 onerror="this.onerror=null; this.src='<%= defaultOwnerImg %>'">
             <div class="absolute top-3 left-3 flex gap-1.5">
               <span class="badge badge-info text-xs"><%= helpers.formatSpaceType(space.space_type) %></span>
               <span class="badge badge-secondary text-xs capitalize"><%= space.indoor_outdoor %></span>
@@ -39,10 +49,20 @@
             <div>
               <div class="flex justify-between items-start">
                 <h2 class="text-base font-bold text-ink"><%= space.name %></h2>
-                <span class="badge badge-success text-xs">Active</span>
+                <% const statusClass = space.listing_status === 'approved' ? 'badge-success' : (space.listing_status === 'rejected' ? 'badge-danger' : 'badge-warning'); %>
+                <span class="badge <%= statusClass %> text-xs capitalize"><%= space.listing_status || 'pending' %></span>
               </div>
               <p class="text-xs text-ink-muted mt-0.5"><%= space.locality %>, <%= space.city %></p>
             </div>
+
+            <% if (space.listing_status === 'rejected') { %>
+              <div class="rounded-xl bg-status-danger/10 border border-status-danger/30 p-3 text-xs">
+                <div class="font-bold text-status-danger">Changes required before resubmission</div>
+                <p class="text-ink-muted mt-1"><%= space.rejection_reason || 'The administrator requested changes to this listing.' %></p>
+              </div>
+            <% } else if (space.listing_status === 'pending') { %>
+              <p class="text-xs text-status-warning">Submitted for administrator review. It is not publicly bookable yet.</p>
+            <% } %>
 
             <!-- Specs Grid -->
             <div class="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-tint border border-line text-center text-xs">
@@ -72,8 +92,8 @@
 
             <!-- Action Controls -->
             <div class="pt-3 border-t border-line flex items-center justify-between">
-              <a href="/spaces/<%= space.id %>" class="text-xs text-primary font-medium hover:underline">
-                Public View &rarr;
+              <a href="/owner/spaces/<%= space.id %>" class="text-xs text-primary font-medium hover:underline">
+                View Listing &rarr;
               </a>
               <div class="flex gap-2">
                 <a href="/owner/spaces/<%= space.id %>/edit" class="btn btn-secondary text-xs px-3 py-1.5">

@@ -8,6 +8,7 @@
 
     <% if (notifications && notifications.length > 0) { %>
       <form action="/notifications/read-all" method="POST">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
         <button type="submit" class="btn btn-secondary text-xs">
           Mark All as Read
         </button>

@@ -60,17 +60,19 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                <% if (u.suspended) { %>
+                <% if (u.status === 'suspended' || u.suspended) { %>
                   <span class="badge badge-danger text-[10px]">Suspended</span>
+                <% } else if (u.status === 'rejected') { %>
+                  <span class="badge badge-danger text-[10px]">Rejected</span>
                 <% } else { %>
                   <span class="badge badge-success text-[10px]">Active</span>
                 <% } %>
               </td>
               <td class="px-4 py-3 text-right">
-                <% if (u.role !== 'admin') { %>
-                  <button onclick="window.openReasonDialog('/admin/users/<%= u.id %>/suspend', '<%= u.suspended ? 'Unsuspend Account' : 'Suspend Account' %>', 'Mandatory: Enter the administrative reason for account state change.')"
+                <% if (u.role !== 'admin' && u.status !== 'rejected') { %>
+                  <button onclick="window.openReasonDialog('/admin/users/<%= u.id %>/suspend', '<%= (u.status === 'suspended' || u.suspended) ? 'Unsuspend Account' : 'Suspend Account' %>', 'Mandatory: Enter the administrative reason for account state change.')"
                           class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
-                    <%= u.suspended ? 'Unsuspend' : 'Suspend' %>
+                    <%= (u.status === 'suspended' || u.suspended) ? 'Unsuspend' : 'Suspend' %>
                   </button>
                 <% } %>
               </td>

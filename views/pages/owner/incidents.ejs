@@ -1,3 +1,7 @@
+<%
+  const openIncidents = (incidents || []).filter(i => i.status === 'open' || i.status === 'reported');
+  const closedIncidents = (incidents || []).filter(i => i.status === 'resolved' || i.status === 'closed');
+%>
 <div class="space-y-6">
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -6,7 +10,7 @@
       <p class="text-sm text-ink-muted">Itemize repair costs, reconcile security deposits, and resolve property condition reports</p>
     </div>
     <div class="text-xs text-ink-muted bg-surface px-3 py-1.5 rounded-xl border border-line">
-      Open Incidents: <span class="font-bold text-status-danger">1</span>
+      Open Incidents: <span class="font-bold text-status-danger"><%= openIncidents.length %></span>
     </div>
   </div>
 
@@ -17,9 +21,6 @@
 
   <!-- Open Incidents -->
   <div class="space-y-6">
-    <% const openIncidents = (incidents || []).filter(i => i.status === 'open'); %>
-    <% const closedIncidents = (incidents || []).filter(i => i.status === 'resolved' || i.status === 'closed'); %>
-
     <% if (openIncidents.length > 0) { %>
       <div class="space-y-4">
         <h2 class="text-base font-bold text-ink">Action Required</h2>
@@ -87,12 +88,14 @@
             <!-- Action Controls -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
               <form action="/owner/incidents/<%= inc.id %>/waive" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <button type="submit" class="btn btn-secondary text-xs">
                   Waive Damages &amp; Refund Full Deposit
                 </button>
               </form>
 
               <form action="/owner/incidents/<%= inc.id %>/confirm" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <button type="submit" class="btn btn-primary text-xs font-bold">
                   Confirm Deductions &amp; Settle (Demo)
                 </button>

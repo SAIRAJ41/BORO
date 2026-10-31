@@ -7,9 +7,21 @@
     "start": "node app.js",
     "test": "node scripts/testRoutes.js && node scripts/testAuth.js",
     "test:auth": "node scripts/testAuth.js",
+    "test:security": "node scripts/testSecurity.js",
     "check-data": "node scripts/checkData.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "@supabase/supabase-js": "^2.109.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.9",
+    "express": "^4.21.2",
+    "multer": "^2.5.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15"
   }
 }

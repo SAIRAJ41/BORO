@@ -1,24 +1,51 @@
-/**
- * Notification Service (Stub)
- * Backend teammate: Implement push/SMS/in-app notifications delivery.
- */
+const prisma = require('../lib/prisma');
 
-// BACKEND TODO: getUserNotifications(userId, tab) -> { notifications: [...], unreadCount, alertSettings }
-exports.getUserNotifications = async (userId, tab = 'all') => {
-  throw new Error('Not implemented: backend database required');
+// GET /notifications
+exports.getUserNotifications = async (userId, filter = 'all') => {
+  const where = { userId };
+
+  if (filter === 'unread') {
+    where.read = false;
+  } else if (filter === 'read') {
+    where.read = true;
+  }
+
+  const notifications = await prisma.notification.findMany({
+    where,
+    orderBy: {
+      createdAt: 'desc'
+    }
+  });
+
+  return notifications.map(item => ({
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    message: item.message,
+    read: item.read,
+    created_at: item.createdAt,
+    actions: item.actions || []
+  }));
 };
 
-// BACKEND TODO: markRead(notifId) -> void
-exports.markRead = async (notifId) => {
-  throw new Error('Not implemented: backend database required');
+// POST /notifications/:id/read
+exports.markRead = async (notifId, userId) => {
+  const result = await prisma.notification.updateMany({
+    where: { id: notifId, userId },
+    data: { read: true }
+  });
+  if (result.count !== 1) throw new Error('Notification not found.');
 };
 
-// BACKEND TODO: markAllRead(userId) -> void
+// POST /notifications/read-all
 exports.markAllRead = async (userId) => {
-  throw new Error('Not implemented: backend database required');
-};
-
-// BACKEND TODO: create(userId, type, title, message, actions) -> { id }
-exports.create = async (userId, type, title, message, actions = []) => {
-  throw new Error('Not implemented: backend database required');
+  await prisma.notification.updateMany({
+    where: {
+      userId,
+      read: false
+    },
+    data: {
+      read: true
+    }
+  });
 };

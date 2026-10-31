@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
+const spaceService = require('../services/spaceService');
+const bookingService = require('../services/bookingService');
+const incidentService = require('../services/incidentService');
+const notificationService = require('../services/notificationService');
+const scoreService = require('../services/scoreService');
 
 // Helper to get active session user or null
 function getSessionUser(req) {
@@ -9,272 +13,331 @@ function getSessionUser(req) {
 }
 
 // GET / or /search - Space discovery
-router.get(['/', '/search'], (req, res) => {
+router.get(['/', '/search'], async (req, res, next) => {
   const { space_type, indoor_outdoor, capacity, price_max, purpose, q } = req.query;
 
-  // BACKEND: replace mockData.getSpaces() with spaceService.getSpaces(req.query)
-  let spaces = mockData.spaces.filter(s => s.active);
+  try {
+    const result = await spaceService.getSpaces({
+      space_type: space_type === 'all' ? undefined : space_type,
+      indoor_outdoor: indoor_outdoor === 'all' ? undefined : indoor_outdoor,
+      capacity_min: capacity,
+      price_max,
+      purpose: purpose === 'all' ? undefined : purpose,
+      search: q
+    });
 
-  if (space_type && space_type !== 'all') {
-    spaces = spaces.filter(s => s.space_type === space_type);
+    res.render('pages/user/search', {
+      title: 'Find Community Spaces - BORO',
+      spaces: result.spaces,
+      filters: req.query,
+      helpers,
+      activeNav: 'search'
+    });
+  } catch (error) {
+    next(error);
   }
-  if (indoor_outdoor && indoor_outdoor !== 'all') {
-    spaces = spaces.filter(s => s.indoor_outdoor === indoor_outdoor);
-  }
-  if (capacity) {
-    const minCap = parseInt(capacity);
-    if (!isNaN(minCap)) spaces = spaces.filter(s => s.capacity >= minCap);
-  }
-  if (price_max) {
-    const maxP = parseInt(price_max);
-    if (!isNaN(maxP)) spaces = spaces.filter(s => s.price_per_hour <= maxP);
-  }
-  if (purpose && purpose !== 'all') {
-    spaces = spaces.filter(s => s.allowed_purposes && s.allowed_purposes.includes(purpose));
-  }
-  if (q) {
-    const term = q.toLowerCase();
-    spaces = spaces.filter(s => s.name.toLowerCase().includes(term) || s.locality.toLowerCase().includes(term));
-  }
-
-  res.render('pages/user/search', {
-    title: 'Find Community Spaces - BORO',
-    spaces,
-    filters: req.query,
-    helpers,
-    activeNav: 'search'
-  });
 });
 
 // GET /spaces/:id - Space detail page
-router.get('/spaces/:id', (req, res) => {
+router.get('/spaces/:id', async (req, res, next) => {
   const spaceId = req.params.id;
   const user = getSessionUser(req);
 
-  // BACKEND: replace mockData.getSpaceById() with spaceService.getSpaceById(spaceId)
-  const space = mockData.getSpaceById(spaceId);
-  if (!space) {
-    return res.status(404).render('pages/errors/404', { title: 'Space Not Found' });
+  try {
+    const result = await spaceService.getSpaceById(spaceId);
+    if (!result) {
+      return res.status(404).render('pages/errors/404', { title: 'Space Not Found' });
+    }
+
+    const eligibility = await bookingService.getEligibility(
+      user && user.id,
+      result.space
+    );
+    const userScore = user ? user.score : 100;
+    res.render('pages/user/space-detail', {
+      title: `${result.space.name} - BORO`,
+      space: { ...result.space, availability_slots: result.availability_slots || [] },
+      owner: result.owner,
+      conditionReports: result.conditionReports,
+      eligibility: {
+        ...eligibility,
+        score: userScore,
+        tier: helpers.getScoreTier(userScore).tier,
+        isUnverifiedOwnerNotice: false
+      },
+      helpers,
+      activeNav: 'search'
+    });
+  } catch (error) {
+    next(error);
   }
-
-  // BACKEND: replace mockData.getOwnerById() with userService.getUserById(space.owner_id)
-  const owner = mockData.getUserById(space.owner_id) || { name: 'Community Caretaker', verified: true };
-
-  // BACKEND: replace mockData.getConditionReports() with incidentService.getReportsBySpace(spaceId)
-  const conditionReports = mockData.conditionReports.filter(c => c.space_id === spaceId);
-
-  // User eligibility calculation
-  const userActiveBookings = user ? mockData.bookings.filter(b => 
-    b.user_id === user.id && ['requested', 'approved', 'checked_in', 'overdue'].includes(b.status)
-  ).length : 0;
-
-  const userScore = user ? user.score : 100;
-  const eligibility = {
-    canBook: user ? userActiveBookings < 2 : true,
-    activeBookings: userActiveBookings,
-    maxActiveBookings: 2,
-    score: userScore,
-    tier: helpers.getScoreTier(userScore).tier,
-    isUnverifiedOwnerNotice: false
-  };
-
-  res.render('pages/user/space-detail', {
-    title: `${space.name} - BORO`,
-    space,
-    owner,
-    conditionReports,
-    eligibility,
-    helpers,
-    activeNav: 'search'
-  });
 });
 
 // POST /bookings - Submit a booking request with demo payment
-router.post('/bookings', (req, res) => {
-  // BACKEND TODO: validate slot availability, check active bookings count <= 2, verify purpose in allowed_purposes, record demo payment transaction, insert booking in 'requested' state, dispatch notification to owner
-  const { space_id, purpose, payment_method } = req.body;
-  req.flash('success', 'Payment successful (demo). Saving connects with the backend.');
+router.post('/bookings', async (req, res) => {
+  const currentUser = getSessionUser(req);
+  try {
+    await bookingService.create(
+      currentUser.id,
+      req.body.space_id,
+      req.body.slot_id,
+      req.body.purpose,
+      req.body.group_size || 1,
+      req.body.payment_method
+    );
+    req.flash('success', 'Booking request submitted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit booking request.');
+  }
   res.redirect('/my-bookings');
 });
 
 // POST /waitlist/:spaceId/:slotId - Join slot waitlist
-router.post('/waitlist/:spaceId/:slotId', (req, res) => {
-  // BACKEND TODO: append user to FIFO waitlist queue for this slot
-  req.flash('info', 'Not connected yet');
+router.post('/waitlist/:spaceId/:slotId', async (req, res) => {
+  try {
+    await bookingService.joinWaitlist(
+      getSessionUser(req).id,
+      req.params.spaceId,
+      req.params.slotId
+    );
+    req.flash('success', 'You joined the waitlist.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to join the waitlist.');
+  }
   res.redirect('/my-bookings?tab=waitlisted');
 });
 
 // POST /waitlist/:id/leave - Leave slot waitlist
-router.post('/waitlist/:id/leave', (req, res) => {
-  // BACKEND TODO: remove user from waitlist
-  req.flash('info', 'Not connected yet');
+router.post('/waitlist/:id/leave', async (req, res) => {
+  try {
+    await bookingService.leaveWaitlist(req.params.id, getSessionUser(req).id);
+    req.flash('success', 'You left the waitlist.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to leave the waitlist.');
+  }
   res.redirect('/my-bookings?tab=waitlisted');
 });
 
 // GET /bookings/:id/receipt - View booking receipt
-router.get('/bookings/:id/receipt', (req, res) => {
+router.get('/bookings/:id/receipt', async (req, res, next) => {
   const bookingId = req.params.id;
   const currentUser = getSessionUser(req);
 
-  // BACKEND: replace mockData.getBookingById() with bookingService.getBookingById(bookingId)
-  const booking = mockData.getBookingById(bookingId);
-  if (!booking) {
-    return res.status(404).render('pages/errors/404', { title: 'Booking Not Found' });
+  try {
+    const result = await bookingService.getBookingById(bookingId);
+    if (!result) return res.status(404).render('pages/errors/404', { title: 'Booking Not Found' });
+    const isBookingOwner = result.booking.userId === currentUser.id;
+    const isSpaceOwner = result.space && result.space.ownerId === currentUser.id;
+    if (!isBookingOwner && !isSpaceOwner && currentUser.role !== 'admin') {
+      return res.status(403).render('pages/errors/403', { title: 'Access Denied' });
+    }
+    res.render('pages/user/receipt', {
+      title: `Receipt for ${result.booking.id} - BORO`,
+      booking: { ...result.booking, space: result.space, payments: result.payments },
+      helpers,
+      activeNav: 'my-bookings'
+    });
+  } catch (error) {
+    next(error);
   }
-
-  // BACKEND: ownership and authorization check
-  const isBookingOwner = booking.user_id === currentUser.id;
-  const isSpaceOwner = booking.space && booking.space.owner_id === currentUser.id;
-  const isAdmin = currentUser.role === 'admin';
-
-  if (!isBookingOwner && !isSpaceOwner && !isAdmin) {
-    return res.status(403).render('pages/errors/403', { title: 'Access Denied' });
-  }
-
-  res.render('pages/user/receipt', {
-    title: `Receipt for ${booking.id} - BORO`,
-    booking,
-    helpers,
-    activeNav: 'my-bookings'
-  });
 });
 
 // GET /my-bookings - Active & upcoming bookings
-router.get('/my-bookings', (req, res) => {
+router.get('/my-bookings', async (req, res, next) => {
   const currentUser = getSessionUser(req);
   const activeTab = req.query.tab || 'upcoming';
 
-  // BACKEND: replace mockData.getBookingsByUser() with bookingService.getUserBookings(currentUser.id)
-  const allUserBookings = mockData.bookings.filter(b => b.user_id === currentUser.id);
-
-  const upcoming = allUserBookings.filter(b => ['requested', 'approved', 'checked_in', 'overdue'].includes(b.status));
-  const completed = allUserBookings.filter(b => ['completed', 'cancelled', 'closed'].includes(b.status));
-  const waitlisted = mockData.waitlist.filter(w => w.user_id === currentUser.id);
-
-  let displayedBookings = upcoming;
-  if (activeTab === 'all') displayedBookings = allUserBookings;
-  if (activeTab === 'completed') displayedBookings = completed;
-
-  const tabs = [
-    { id: 'upcoming', label: 'Upcoming / Active', count: upcoming.length, href: '/my-bookings?tab=upcoming' },
-    { id: 'waitlisted', label: 'Waitlist', count: waitlisted.length, href: '/my-bookings?tab=waitlisted' },
-    { id: 'completed', label: 'Past Bookings', count: completed.length, href: '/my-bookings?tab=completed' },
-    { id: 'all', label: 'All', count: allUserBookings.length, href: '/my-bookings?tab=all' }
-  ];
-
-  res.render('pages/user/my-bookings', {
-    title: 'My Bookings - BORO',
-    bookings: displayedBookings,
-    waitlist: waitlisted,
-    tabs,
-    activeTab,
-    helpers,
-    activeNav: 'my-bookings'
-  });
+  try {
+    const tab = activeTab === 'completed' ? 'past' : activeTab;
+    const [upcoming, completed, allUserBookings, waitlisted] = await Promise.all([
+      bookingService.getUserBookings(currentUser.id, 'upcoming'),
+      bookingService.getUserBookings(currentUser.id, 'past'),
+      bookingService.getUserBookings(currentUser.id, 'all'),
+      bookingService.getUserBookings(currentUser.id, 'waitlisted')
+    ]);
+    const bookings = tab === 'past'
+      ? completed
+      : tab === 'all'
+        ? allUserBookings
+        : tab === 'waitlisted'
+          ? waitlisted
+          : upcoming;
+    res.render('pages/user/my-bookings', {
+      title: 'My Bookings - BORO',
+      bookings,
+      waitlist: waitlisted,
+      tabs: [
+        { id: 'upcoming', label: 'Upcoming / Active', count: upcoming.length, href: '/my-bookings?tab=upcoming' },
+        { id: 'waitlisted', label: 'Waitlist', count: waitlisted.length, href: '/my-bookings?tab=waitlisted' },
+        { id: 'completed', label: 'Past Bookings', count: completed.length, href: '/my-bookings?tab=completed' },
+        { id: 'all', label: 'All', count: allUserBookings.length, href: '/my-bookings?tab=all' }
+      ],
+      activeTab,
+      helpers,
+      activeNav: 'my-bookings'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /bookings/:id/cancel - Cancel booking with reason
-router.post('/bookings/:id/cancel', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { reason } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/cancel', async (req, res) => {
+  try {
+    await bookingService.cancel(req.params.id, getSessionUser(req).id, req.body.reason);
+    req.flash('success', 'Booking cancelled.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to cancel booking.');
+  }
   res.redirect('/my-bookings');
 });
 
 // POST /bookings/:id/extend - Request extension
-router.post('/bookings/:id/extend', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { additional_hours } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/extend', async (req, res) => {
+  try {
+    await bookingService.requestExtension(
+      req.params.id,
+      getSessionUser(req).id,
+      req.body.additional_hours
+    );
+    req.flash('success', 'Extension request submitted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to request extension.');
+  }
   res.redirect('/my-bookings');
 });
 
+router.post('/bookings/:id/incident', async (req, res) => {
+  try {
+    await incidentService.report(
+      req.params.id,
+      getSessionUser(req).id,
+      getSessionUser(req).role,
+      req.body
+    );
+    req.flash('success', 'Incident report submitted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit incident report.');
+  }
+  res.redirect('/history');
+});
+
 // POST /bookings/:id/edit - Edit booking
-router.post('/bookings/:id/edit', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/edit', async (req, res) => {
+  try {
+    await bookingService.edit(req.params.id, getSessionUser(req).id, req.body);
+    req.flash('success', 'Booking updated.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update booking.');
+  }
   res.redirect('/my-bookings');
 });
 
 // GET /my-score - Reliability score view
-router.get('/my-score', (req, res) => {
+router.get('/my-score', async (req, res, next) => {
   const currentUser = getSessionUser(req);
 
-  // BACKEND: replace mockData.getUserScoreEvents() with scoreService.getUserScoreLedger(currentUser.id)
-  const scoreEvents = mockData.scoreEvents.filter(e => e.user_id === currentUser.id);
-
-  res.render('pages/user/my-score', {
-    title: 'My Reliability Score - BORO',
-    user: currentUser,
-    scoreEvents,
-    helpers,
-    activeNav: 'my-score'
-  });
+  try {
+    const score = await scoreService.getUserScore(currentUser.id);
+    const scoreEvents = await scoreService.getScoreAuditTrail(currentUser.id);
+    res.render('pages/user/my-score', {
+      title: 'My Reliability Score - BORO',
+      user: { ...currentUser, score: score.score },
+      scoreEvents,
+      helpers,
+      activeNav: 'my-score'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /disputes - Submit dispute
-router.post('/disputes', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { score_event_id, reason } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/disputes', async (req, res) => {
+  try {
+    await scoreService.fileDispute(
+      getSessionUser(req).id,
+      req.body.score_event_id,
+      req.body.reason
+    );
+    req.flash('success', 'Dispute submitted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit dispute.');
+  }
   res.redirect('/my-score');
 });
 
 // GET /history - Custodial history with 5-stage lifecycle
-router.get('/history', (req, res) => {
+router.get('/history', async (req, res, next) => {
   const currentUser = getSessionUser(req);
 
-  // BACKEND: replace mockData with bookingService.getCompletedBookings(currentUser.id)
-  const pastBookings = mockData.bookings.filter(b => 
-    b.user_id === currentUser.id && ['completed', 'cancelled', 'closed'].includes(b.status)
-  );
-
-  res.render('pages/user/history', {
-    title: 'Booking & Custody History - BORO',
-    bookings: pastBookings,
-    helpers,
-    activeNav: 'history'
-  });
+  try {
+    const bookings = await bookingService.getUserHistory(currentUser.id);
+    res.render('pages/user/history', {
+      title: 'Booking & Custody History - BORO',
+      bookings,
+      helpers,
+      activeNav: 'history'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /bookings/:id/rate - Rate space and owner
-router.post('/bookings/:id/rate', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/rate', async (req, res) => {
+  try {
+    await scoreService.rateBooking(
+      req.params.id,
+      getSessionUser(req).id,
+      req.body.rating,
+      req.body.review
+    );
+    req.flash('success', 'Rating submitted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit rating.');
+  }
   res.redirect('/history');
 });
 
 // GET /notifications - Notification center
-router.get('/notifications', (req, res) => {
+router.get('/notifications', async (req, res, next) => {
   const currentUser = getSessionUser(req);
   const filter = req.query.filter || 'all';
 
-  // BACKEND: replace mockData with notificationService.getNotifications(currentUser.id)
-  let notifications = mockData.notifications.filter(n => n.user_id === currentUser.id);
-  if (filter === 'unread') {
-    notifications = notifications.filter(n => !n.read);
+  try {
+    const notifications = await notificationService.getUserNotifications(currentUser.id, filter);
+    res.render('pages/user/notifications', {
+      title: 'Notifications - BORO',
+      notifications,
+      filter,
+      helpers,
+      activeNav: 'notifications'
+    });
+  } catch (error) {
+    next(error);
   }
-
-  res.render('pages/user/notifications', {
-    title: 'Notifications - BORO',
-    notifications,
-    filter,
-    helpers,
-    activeNav: 'notifications'
-  });
 });
 
 // POST /notifications/:id/read - Mark notification read
-router.post('/notifications/:id/read', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/notifications/:id/read', async (req, res) => {
+  try {
+    await notificationService.markRead(req.params.id, getSessionUser(req).id);
+    req.flash('success', 'Notification marked as read.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update notification.');
+  }
   res.redirect('/notifications');
 });
 
 // POST /notifications/read-all - Mark all read
-router.post('/notifications/read-all', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/notifications/read-all', async (req, res) => {
+  try {
+    await notificationService.markAllRead(getSessionUser(req).id);
+    req.flash('success', 'All notifications marked as read.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update notifications.');
+  }
   res.redirect('/notifications');
 });
 

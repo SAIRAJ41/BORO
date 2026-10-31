@@ -1,0 +1,48 @@
+<div class="space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-ink">Listing Review Queue</h1>
+      <p class="text-sm text-ink-muted">Review submitted property details and ownership documents before publication.</p>
+    </div>
+    <div class="flex gap-2 text-xs">
+      <% ['pending', 'approved', 'rejected'].forEach(filter => { %>
+        <a href="/admin/listings?status=<%= filter %>" class="btn <%= status === filter ? 'btn-primary' : 'btn-secondary' %> text-xs capitalize"><%= filter %></a>
+      <% }); %>
+    </div>
+  </div>
+
+  <% if (listings && listings.length > 0) { %>
+    <div class="space-y-4">
+      <% listings.forEach(listing => { %>
+        <div class="card p-5 bg-surface border border-line shadow-sm">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-bold text-ink"><%= listing.name %></h2>
+                <span class="badge <%= listing.listing_status === 'approved' ? 'badge-success' : (listing.listing_status === 'rejected' ? 'badge-danger' : 'badge-warning') %> text-xs capitalize"><%= listing.listing_status %></span>
+              </div>
+              <p class="text-xs text-ink-muted mt-1"><%= listing.owner.name %> &bull; <%= listing.locality %>, <%= listing.city %> &bull; <%= helpers.formatSpaceType(listing.space_type) %></p>
+            </div>
+            <div class="text-xs text-ink-muted">
+              Submitted <%= helpers.formatDateTime(listing.submitted_at) %>
+            </div>
+            <a href="/admin/listings/<%= listing.id %>" class="btn btn-secondary text-xs">Review Listing &rarr;</a>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-line text-xs">
+            <div><span class="text-ink-muted block">Capacity</span><strong><%= listing.capacity %></strong></div>
+            <div><span class="text-ink-muted block">Rate / hour</span><strong><%= helpers.formatCurrency(listing.price_per_hour) %></strong></div>
+            <div><span class="text-ink-muted block">Document</span><strong><%= listing.ownership_document_present ? 'Available' : 'Missing' %></strong></div>
+            <div><span class="text-ink-muted block">Reviewed</span><strong><%= listing.reviewed_at ? helpers.formatDate(listing.reviewed_at) : 'Pending' %></strong></div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../../partials/EmptyState', {
+      title: `No ${status} listings`,
+      description: 'There are no listings in this review state.',
+      actionText: 'View Pending',
+      actionUrl: '/admin/listings?status=pending'
+    }) %>
+  <% } %>
+</div>

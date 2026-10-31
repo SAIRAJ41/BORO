@@ -42,6 +42,7 @@
 
           <!-- Resolution Action Form -->
           <form action="/admin/disputes/<%= d.id %>/resolve" method="POST" class="pt-2 flex flex-col sm:flex-row items-end gap-3">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
             <div class="flex-1 w-full space-y-1">
               <label for="resolution" class="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Resolution Decision</label>
               <select id="resolution" name="resolution" class="input w-full text-xs">

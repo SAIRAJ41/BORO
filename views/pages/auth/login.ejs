@@ -130,12 +130,14 @@
               </div>
             </div>
           </div>
-          <a
-            href="/demo/user"
+          <form action="/demo/user" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <button type="submit"
             class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
           >
             Continue as User
-          </a>
+            </button>
+          </form>
         </div>
 
         <!-- 2. Owner Card -->
@@ -155,12 +157,14 @@
               </div>
             </div>
           </div>
-          <a
-            href="/demo/owner"
+          <form action="/demo/owner" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <button type="submit"
             class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
           >
             Continue as Owner
-          </a>
+            </button>
+          </form>
         </div>
 
         <!-- 3. Admin Card -->
@@ -180,12 +184,14 @@
               </div>
             </div>
           </div>
-          <a
-            href="/demo/admin"
+          <form action="/demo/admin" method="POST">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <button type="submit"
             class="text-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface-tint hover:bg-primary hover:text-white border border-line transition shrink-0"
           >
             Continue as Admin
-          </a>
+            </button>
+          </form>
         </div>
       </div>
     </div>

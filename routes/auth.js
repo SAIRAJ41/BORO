@@ -4,6 +4,9 @@ const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
 const userService = require('../services/userService');
 const { isAuthenticated } = require('../middleware/auth');
+const { rateLimit } = require('../middleware/rateLimit');
+const { validateToken } = require('../middleware/csrf');
+const ownershipDocumentService = require('../services/ownershipDocumentService');
 
 // GET /login - Login view with optional Quick Demo accounts panel
 router.get('/login', (req, res) => {
@@ -19,8 +22,11 @@ router.get('/login', (req, res) => {
 
 // POST /login - Process authentication
 // BACKEND: add rate limiting here (e.g. express-rate-limit 5 attempts / 15 minutes)
-// BACKEND: replace userService.authenticate with database query and bcrypt.compare
-router.post('/login', async (req, res) => {
+router.post('/login', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many sign-in attempts. Please try again later.'
+}), async (req, res) => {
   const { email, password } = req.body;
 
   // 1. Validate fields (non-empty, email format)
@@ -31,19 +37,21 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // 2. Call userService.authenticate
-    // BACKEND: replace mock lookup with database query and bcrypt.compare
+    // 2. Authenticate against the database-backed user service.
     const user = await userService.authenticate(email, password);
 
-    // If credentials are invalid
     if (!user) {
       req.flash('error', 'Invalid email or password');
       return res.redirect('/login');
     }
 
-    // If account is suspended
     if (user.status === 'suspended') {
       req.flash('error', 'Account suspended, contact admin');
+      return res.redirect('/login');
+    }
+
+    if (user.status !== 'active') {
+      req.flash('error', 'This account cannot sign in.');
       return res.redirect('/login');
     }
 
@@ -95,18 +103,6 @@ router.post('/logout', (req, res) => {
   }
 });
 
-// Also support GET /logout for convenience
-router.get('/logout', (req, res) => {
-  if (req.session.destroy) {
-    req.session.destroy(() => {
-      res.redirect('/login');
-    });
-  } else {
-    req.session.user = null;
-    res.redirect('/login');
-  }
-});
-
 // GET /signup - Registration view
 router.get('/signup', (req, res) => {
   res.render('pages/auth/signup', {
@@ -118,7 +114,22 @@ router.get('/signup', (req, res) => {
 });
 
 // POST /signup - Process registration
-router.post('/signup', async (req, res) => {
+const signupUpload = ownershipDocumentService.createUploadMiddleware('id_proof');
+
+router.post('/signup', rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: 'Too many registration attempts. Please try again later.'
+}), (req, res, next) => {
+  signupUpload(req, res, error => {
+    if (error) {
+      req.flash('error', error.message || 'Invalid identity document.');
+      return res.redirect('/signup');
+    }
+    next();
+  });
+}, async (req, res) => {
+  if (!validateToken(req, res)) return;
   // BACKEND: validate with schema validator (e.g. zod/joi), hash password with bcrypt, insert into DB
   const { name, email, phone, password, confirm_password, role, organisation } = req.body;
 
@@ -132,8 +143,21 @@ router.post('/signup', async (req, res) => {
     return res.redirect('/signup');
   }
 
+  if (!['user', 'owner'].includes(role)) {
+    req.flash('error', 'Invalid account role.');
+    return res.redirect('/signup');
+  }
+
   try {
-    await userService.create({ name, email, phone, password, role, organisation });
+    await userService.create({
+      name,
+      email,
+      phone,
+      password,
+      role,
+      organisation,
+      documentFile: req.file
+    });
 
     if (role === 'owner') {
       req.flash('info', 'Pending admin verification');
@@ -148,29 +172,38 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// GET /demo/:role - Instant role switcher (sets session through userService.getDemoUser)
-router.get('/demo/:role', async (req, res) => {
-  // BACKEND: remove demo fast-login endpoint in production (guarded by USE_MOCK)
+// POST /demo/:role - Development-only demo login shortcut.
+router.post('/demo/:role', async (req, res) => {
+  if (!mockData.USE_MOCK || process.env.NODE_ENV === 'production') {
+    return res.sendStatus(404);
+  }
   const role = req.params.role;
 
   try {
     const demoUser = await userService.getDemoUser(role);
+    if (!demoUser || demoUser.status !== 'active') {
+      req.flash('error', 'This demo account is not active.');
+      return res.redirect('/login');
+    }
 
-    // Set session through the same canonical shape as normal login
-    req.session.user = {
-      id: demoUser.id,
-      name: demoUser.name,
-      email: demoUser.email,
-      role: demoUser.role,
-      initials: demoUser.initials,
-      status: demoUser.status
+    const setupSession = () => {
+      req.session.user = {
+        id: demoUser.id,
+        name: demoUser.name,
+        email: demoUser.email,
+        role: demoUser.role,
+        initials: demoUser.initials,
+        status: demoUser.status
+      };
+
+      req.flash('success', `Signed in as ${demoUser.name} (${demoUser.role})`);
+
+      if (demoUser.role === 'admin') return res.redirect('/admin/overview');
+      if (demoUser.role === 'owner') return res.redirect('/owner/requests');
+      return res.redirect('/search');
     };
-
-    req.flash('success', `Signed in as ${demoUser.name} (${demoUser.role})`);
-
-    if (demoUser.role === 'admin') return res.redirect('/admin/overview');
-    if (demoUser.role === 'owner') return res.redirect('/owner/requests');
-    return res.redirect('/search');
+    if (req.session.regenerate) req.session.regenerate(setupSession);
+    else setupSession();
   } catch (err) {
     req.flash('error', 'Unable to sign in as demo user.');
     res.redirect('/login');
@@ -178,29 +211,53 @@ router.get('/demo/:role', async (req, res) => {
 });
 
 // GET /profile - User Profile & Verification
-router.get('/profile', isAuthenticated, (req, res) => {
+router.get('/profile', isAuthenticated, async (req, res, next) => {
   const currentUser = req.session.user;
-  
-  // BACKEND: replace mockData.getUserById() with userService.getUserById(currentUser.id)
-  const user = mockData.getUserById(currentUser.id) || currentUser;
-  const userScoreEvents = mockData.scoreEvents.filter(e => e.user_id === user.id);
-  const userBookings = mockData.bookings.filter(b => b.user_id === user.id);
 
-  res.render('pages/user/profile', {
-    title: 'My Profile & Verification - BORO',
-    user,
-    scoreEvents: userScoreEvents,
-    activeBookingsCount: user.active_bookings_count || 1,
-    totalBookingsCount: userBookings.length,
-    helpers,
-    activeNav: 'profile'
-  });
+  try {
+    const profile = await userService.getProfile(currentUser.id);
+    if (!profile) {
+      return res.status(404).render('pages/errors/404', {
+        title: 'Profile Not Found'
+      });
+    }
+
+    res.render('pages/user/profile', {
+      title: 'My Profile & Verification - BORO',
+      user: profile.user,
+      scoreEvents: profile.scoreEvents,
+      activeBookingsCount: profile.user.active_bookings_count,
+      totalBookingsCount: profile.totalBookingsCount,
+      helpers,
+      activeNav: 'profile'
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /profile - Update editable fields on the authenticated user's own profile.
+router.post('/profile', isAuthenticated, async (req, res, next) => {
+  try {
+    const user = await userService.updateProfile(req.session.user.id, {
+      name: req.body.name,
+      phone: req.body.phone
+    });
+    req.session.user = user;
+    req.flash('success', 'Profile updated.');
+    res.redirect('/profile');
+  } catch (err) {
+    req.flash('error', err.message || 'Unable to update profile.');
+    res.redirect('/profile');
+  }
 });
 
 // POST /profile/verify - Submit verification documents
 router.post('/profile/verify', isAuthenticated, (req, res) => {
-  // BACKEND TODO: save uploaded identity document and flag verificationStatus.pending
-  req.flash('info', 'Not connected yet');
+  req.flash(
+    'error',
+    'Resident identity documents are not available. The current schema only stores OwnerVerification records for space owners, and no general identity-document model exists.'
+  );
   res.redirect('/profile');
 });
 

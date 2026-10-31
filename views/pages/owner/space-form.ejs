@@ -11,7 +11,8 @@
   </div>
 
   <!-- Form -->
-  <form action="<%= isEdit ? ('/owner/spaces/' + space.id) : '/owner/spaces' %>" method="POST" class="space-y-6">
+  <form action="<%= isEdit ? ('/owner/spaces/' + space.id) : '/owner/spaces' %>" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
     <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
       <h2 class="text-base font-bold text-ink">Basic Space Information</h2>
 
@@ -112,8 +113,17 @@
 
       <div class="pt-4 border-t border-line">
         <label for="rules" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">House Rules (One per line)</label>
-        <textarea id="rules" name="rules" rows="3" class="input w-full text-sm" placeholder="No loud music past 10 PM&#10;Leave premises broom-clean&#10;Turn off floodlights before locking"><%= isEdit && space && space.rules ? space.rules.join('\n') : '' %></textarea>
+        <textarea id="rules" name="rules" rows="3" class="input w-full text-sm" placeholder="No loud music past 10 PM&#10;Leave premises broom-clean&#10;Turn off floodlights before locking"><%= isEdit && space && space.rules ? (Array.isArray(space.rules) ? space.rules.join('\n') : space.rules) : '' %></textarea>
       </div>
+    </div>
+
+    <div class="card p-6 bg-surface border border-line shadow-sm space-y-3">
+      <h2 class="text-base font-bold text-ink">Ownership Document</h2>
+      <p class="text-xs text-ink-muted">Upload a PDF, JPEG, or PNG ownership document (maximum 10 MB). It is reviewed privately by administrators.</p>
+      <input type="file" id="ownership_document" name="ownership_document" accept=".pdf,.jpg,.jpeg,.png" <%= !isEdit ? 'required' : '' %> class="input w-full text-sm">
+      <% if (isEdit && space && space.ownership_document_present) { %>
+        <p class="text-xs text-status-success">A document is already stored. Select a replacement only if needed.</p>
+      <% } %>
     </div>
 
     <!-- Submit Button -->

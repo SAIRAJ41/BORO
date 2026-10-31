@@ -29,9 +29,11 @@
 
       <div class="flex gap-2">
         <form action="/owner/bookings/<%= extBooking.id %>/reject-extension" method="POST">
+          <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
           <button type="submit" class="btn btn-secondary text-xs">Decline</button>
         </form>
         <form action="/owner/bookings/<%= extBooking.id %>/approve-extension" method="POST">
+          <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
           <button type="submit" class="btn btn-primary text-xs">Approve (+₹300)</button>
         </form>
       </div>
@@ -59,7 +61,7 @@
                   <span class="font-mono text-xs text-ink-muted"><%= b.id %></span>
                   <%- include('../../partials/StatusBadge', { status: b.status }) %>
                   <% if (isOverdue) { %>
-                    <span class="badge badge-danger text-[10px]">Overdue by 35 mins</span>
+                    <span class="badge badge-danger text-[10px]">Overdue</span>
                   <% } %>
                 </div>
                 <h3 class="text-base font-bold text-ink"><%= b.space ? b.space.name : 'Community Space' %></h3>
@@ -74,6 +76,7 @@
                 <div class="font-bold text-sm font-mono text-ink"><%= helpers.formatCurrency(b.deposit_amount) %></div>
                 <% if (b.payment_status === 'pending' || b.payment_method === 'pay_at_venue') { %>
                   <form action="/owner/bookings/<%= b.id %>/mark-paid" method="POST" class="mt-1">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <button type="submit" class="btn btn-secondary text-[11px] py-1 px-2.5">
                       Mark Venue Payment Received
                     </button>
@@ -93,17 +96,18 @@
 
             <!-- Condition Inspection Checklist Form -->
             <form action="/owner/return/<%= b.id %>" method="POST" class="space-y-4">
+              <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="is_late" value="<%= isOverdue ? 'true' : 'false' %>">
-              
-              <%- include('../../partials/ConditionForm', { 
+
+              <%- include('../../partials/ConditionForm', {
                 spaceType: b.space ? b.space.space_type : 'community_hall',
-                stage: 'closing',
+                mode: 'return',
                 indoorOutdoor: b.space ? b.space.indoor_outdoor : 'indoor'
               }) %>
 
               <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
                 <div class="flex items-center gap-2">
-                  <button type="button" 
+                  <button type="button"
                           onclick="window.location.href='/owner/incidents'"
                           class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
                     🚩 Flag Incident / Damage
@@ -158,18 +162,20 @@
 
             <!-- Check-in Inspection Checklist -->
             <form action="/owner/checkin/<%= b.id %>" method="POST" class="space-y-4">
-              <%- include('../../partials/ConditionForm', { 
+              <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+              <%- include('../../partials/ConditionForm', {
                 spaceType: b.space ? b.space.space_type : 'community_hall',
-                stage: 'opening',
+                mode: 'checkin',
                 indoorOutdoor: b.space ? b.space.indoor_outdoor : 'indoor'
               }) %>
 
               <div class="flex justify-between items-center pt-3 border-t border-line">
-                <form action="/owner/today/<%= b.id %>/no-show" method="POST">
-                  <button type="submit" class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
-                    Mark No-Show
-                  </button>
-                </form>
+                <button type="submit"
+                        formaction="/owner/today/<%= b.id %>/no-show"
+                        formmethod="POST"
+                        class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
+                  Mark No-Show
+                </button>
 
                 <button type="submit" class="btn btn-primary text-xs font-bold">
                   Confirm Handover &amp; Check-In
