@@ -4,6 +4,7 @@ const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
 const userService = require('../services/userService');
 const { isAuthenticated } = require('../middleware/auth');
+const { rateLimit } = require('../middleware/rateLimit');
 
 // GET /login - Login view with optional Quick Demo accounts panel
 router.get('/login', (req, res) => {
@@ -19,7 +20,11 @@ router.get('/login', (req, res) => {
 
 // POST /login - Process authentication
 // BACKEND: add rate limiting here (e.g. express-rate-limit 5 attempts / 15 minutes)
-router.post('/login', async (req, res) => {
+router.post('/login', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many sign-in attempts. Please try again later.'
+}), async (req, res) => {
   const { email, password } = req.body;
 
   // 1. Validate fields (non-empty, email format)
@@ -93,18 +98,6 @@ router.post('/logout', (req, res) => {
   }
 });
 
-// Also support GET /logout for convenience
-router.get('/logout', (req, res) => {
-  if (req.session.destroy) {
-    req.session.destroy(() => {
-      res.redirect('/login');
-    });
-  } else {
-    req.session.user = null;
-    res.redirect('/login');
-  }
-});
-
 // GET /signup - Registration view
 router.get('/signup', (req, res) => {
   res.render('pages/auth/signup', {
@@ -116,7 +109,11 @@ router.get('/signup', (req, res) => {
 });
 
 // POST /signup - Process registration
-router.post('/signup', async (req, res) => {
+router.post('/signup', rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: 'Too many registration attempts. Please try again later.'
+}), async (req, res) => {
   // BACKEND: validate with schema validator (e.g. zod/joi), hash password with bcrypt, insert into DB
   const { name, email, phone, password, confirm_password, role, organisation } = req.body;
 
@@ -127,6 +124,11 @@ router.post('/signup', async (req, res) => {
 
   if (password !== confirm_password) {
     req.flash('error', 'Passwords do not match.');
+    return res.redirect('/signup');
+  }
+
+  if (!['user', 'owner'].includes(role)) {
+    req.flash('error', 'Invalid account role.');
     return res.redirect('/signup');
   }
 
@@ -146,29 +148,34 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// GET /demo/:role - Instant role switcher (sets session through userService.getDemoUser)
-router.get('/demo/:role', async (req, res) => {
-  // BACKEND: remove demo fast-login endpoint in production (guarded by USE_MOCK)
+// POST /demo/:role - Development-only demo login shortcut.
+router.post('/demo/:role', async (req, res) => {
+  if (!mockData.USE_MOCK || process.env.NODE_ENV === 'production') {
+    return res.sendStatus(404);
+  }
   const role = req.params.role;
 
   try {
     const demoUser = await userService.getDemoUser(role);
 
-    // Set session through the same canonical shape as normal login
-    req.session.user = {
-      id: demoUser.id,
-      name: demoUser.name,
-      email: demoUser.email,
-      role: demoUser.role,
-      initials: demoUser.initials,
-      status: demoUser.status
+    const setupSession = () => {
+      req.session.user = {
+        id: demoUser.id,
+        name: demoUser.name,
+        email: demoUser.email,
+        role: demoUser.role,
+        initials: demoUser.initials,
+        status: demoUser.status
+      };
+
+      req.flash('success', `Signed in as ${demoUser.name} (${demoUser.role})`);
+
+      if (demoUser.role === 'admin') return res.redirect('/admin/overview');
+      if (demoUser.role === 'owner') return res.redirect('/owner/requests');
+      return res.redirect('/search');
     };
-
-    req.flash('success', `Signed in as ${demoUser.name} (${demoUser.role})`);
-
-    if (demoUser.role === 'admin') return res.redirect('/admin/overview');
-    if (demoUser.role === 'owner') return res.redirect('/owner/requests');
-    return res.redirect('/search');
+    if (req.session.regenerate) req.session.regenerate(setupSession);
+    else setupSession();
   } catch (err) {
     req.flash('error', 'Unable to sign in as demo user.');
     res.redirect('/login');

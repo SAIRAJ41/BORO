@@ -1,8 +1,115 @@
 const prisma = require('../lib/prisma');
 const crypto = require('crypto');
 
+exports.report = async (bookingId, actorId, actorRole, data = {}) => {
+  const reason = String(data.reason || data.description || '').trim();
+  if (!reason) throw new Error('Incident reason is required.');
+  if (!['user', 'owner'].includes(actorRole)) {
+    throw new Error('Incident reporter is unauthorized.');
+  }
+
+  return prisma.$transaction(async tx => {
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: { space: true }
+    });
+    if (!booking) throw new Error('Booking not found.');
+
+    const authorized = actorRole === 'owner'
+      ? booking.space.ownerId === actorId
+      : booking.userId === actorId;
+    if (!authorized) throw new Error('Booking not found or unauthorized.');
+    if (!['approved', 'checked_in', 'overdue', 'returned', 'closed', 'damaged'].includes(booking.status)) {
+      throw new Error('This booking cannot receive an incident report.');
+    }
+
+    const existing = await tx.incident.findFirst({
+      where: { bookingId, status: 'pending' }
+    });
+    if (existing) throw new Error('An incident report is already pending for this booking.');
+
+    const id = `INC-${crypto.randomUUID()}`;
+    await tx.incident.create({
+      data: {
+        id,
+        bookingId,
+        spaceId: booking.spaceId,
+        userId: booking.userId,
+        ownerId: booking.space.ownerId,
+        reason,
+        severity: data.severity || 'moderate',
+        status: 'pending',
+        depositHeld: Number(booking.depositAmount),
+        deductions: Array.isArray(data.deductions) ? data.deductions : [],
+        photos: Array.isArray(data.photos) ? data.photos : [],
+        notes: data.notes || null
+      }
+    });
+    await tx.auditLog.create({
+      data: {
+        id: `AUD-${crypto.randomUUID()}`,
+        actor: actorId,
+        action: 'incident_reported',
+        target: `incident:${id}`,
+        reason,
+        details: { bookingId, actorRole }
+      }
+    });
+    await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomUUID()}`,
+        userId: actorRole === 'owner' ? booking.userId : booking.space.ownerId,
+        type: 'incident_reported',
+        title: 'Incident reported',
+        message: reason,
+        actionUrl: actorRole === 'owner' ? '/history' : '/owner/incidents',
+        actions: []
+      }
+    });
+    return { id };
+  }, { isolationLevel: 'Serializable' });
+};
+
+// GET /owner/incidents
+exports.getOwnerIncidents = async ownerId => {
+  const incidents = await prisma.incident.findMany({
+    where: { ownerId },
+    include: {
+      booking: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          initials: true,
+          score: true
+        }
+      },
+      space: true
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return incidents.map(incident => ({
+    ...incident,
+    booking_id: incident.bookingId,
+    space_name: incident.space?.name || 'Community Space',
+    user_name: incident.user?.name || 'Resident',
+    created_at: incident.createdAt,
+    description: incident.reason,
+    deposit_held: Number(incident.depositHeld),
+    deduction_total: Number(incident.deductionTotal),
+    refund_amount: Number(incident.refundAmount),
+    resolution_notes: incident.notes,
+    status: incident.status === 'pending' ? 'open' : (
+      ['confirmed', 'waived'].includes(incident.status)
+        ? 'resolved'
+        : incident.status
+    )
+  }));
+};
+
 // POST /owner/today/:id/flag
-exports.createFromReturn = async (bookingId, data = {}) => {
+exports.createFromReturn = async (bookingId, ownerId, data = {}) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -15,8 +122,11 @@ exports.createFromReturn = async (bookingId, data = {}) => {
     }
   });
 
-  if (!booking) {
+  if (!booking || booking.space.ownerId !== ownerId) {
     throw new Error('Booking not found.');
+  }
+  if (!['checked_in', 'overdue', 'returned', 'damaged'].includes(booking.status)) {
+    throw new Error('This booking cannot receive a return incident.');
   }
 
   const id = `INC-${crypto.randomUUID()}`;
@@ -34,6 +144,13 @@ exports.createFromReturn = async (bookingId, data = {}) => {
   const refundAmount = Math.max(0, depositHeld - deductionTotal);
 
   await prisma.$transaction(async tx => {
+    const existing = await tx.incident.findFirst({
+      where: { bookingId, status: 'pending' }
+    });
+    if (existing) {
+      throw new Error('An incident report is already pending for this booking.');
+    }
+
     await tx.incident.create({
       data: {
         id,
@@ -71,13 +188,24 @@ exports.createFromReturn = async (bookingId, data = {}) => {
         details: { bookingId }
       }
     });
-  });
+    await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomUUID()}`,
+        userId: booking.userId,
+        type: 'incident_reported',
+        title: 'Incident reported',
+        message: data.reason || data.description || 'Damage reported during return inspection.',
+        actionUrl: `/bookings/${bookingId}/receipt`,
+        actions: []
+      }
+    });
+  }, { isolationLevel: 'Serializable' });
 
   return { id };
 };
 
 // POST /owner/incidents/:id/confirm
-exports.confirm = async (incidentId, deductions = [], reason) => {
+exports.confirm = async (incidentId, ownerId, deductions = [], reason) => {
   if (!reason || !reason.trim()) {
     throw new Error('Confirmation reason is required.');
   }
@@ -87,7 +215,7 @@ exports.confirm = async (incidentId, deductions = [], reason) => {
       where: { id: incidentId }
     });
 
-    if (!incident) {
+    if (!incident || incident.ownerId !== ownerId) {
       throw new Error('Incident not found.');
     }
 
@@ -171,10 +299,22 @@ exports.confirm = async (incidentId, deductions = [], reason) => {
       }
     });
 
+    await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomUUID()}`,
+        userId: incident.userId,
+        type: 'incident_confirmed',
+        title: 'Incident confirmed',
+        message: reason.trim(),
+        actionUrl: `/bookings/${incident.bookingId}/receipt`,
+        actions: []
+      }
+    });
+
     await tx.auditLog.create({
       data: {
         id: `AUD-${crypto.randomUUID()}`,
-        actor: incident.ownerId,
+        actor: ownerId,
         action: 'incident_confirmed',
         target: `incident:${incidentId}`,
         reason: reason.trim(),
@@ -189,7 +329,7 @@ exports.confirm = async (incidentId, deductions = [], reason) => {
 };
 
 // POST /owner/incidents/:id/waive
-exports.waive = async (incidentId, reason) => {
+exports.waive = async (incidentId, ownerId, reason) => {
   if (!reason || !reason.trim()) {
     throw new Error('Waiver reason is required.');
   }
@@ -199,7 +339,7 @@ exports.waive = async (incidentId, reason) => {
       where: { id: incidentId }
     });
 
-    if (!incident) {
+    if (!incident || incident.ownerId !== ownerId) {
       throw new Error('Incident not found.');
     }
 
@@ -224,10 +364,22 @@ exports.waive = async (incidentId, reason) => {
       }
     });
 
+    await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomUUID()}`,
+        userId: incident.userId,
+        type: 'incident_waived',
+        title: 'Incident waived',
+        message: reason.trim(),
+        actionUrl: `/bookings/${incident.bookingId}/receipt`,
+        actions: []
+      }
+    });
+
     await tx.auditLog.create({
       data: {
         id: `AUD-${crypto.randomUUID()}`,
-        actor: incident.ownerId,
+        actor: ownerId,
         action: 'incident_waived',
         target: `incident:${incidentId}`,
         reason: reason.trim(),

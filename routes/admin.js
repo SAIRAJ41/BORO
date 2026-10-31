@@ -3,6 +3,7 @@ const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
 const spaceService = require('../services/spaceService');
+const scoreService = require('../services/scoreService');
 
 // Helper to ensure admin context
 function getAdminUser(req) {
@@ -169,26 +170,34 @@ router.post('/users/:id/suspend', (req, res) => {
 });
 
 // GET /admin/disputes - Open score disputes queue
-router.get('/disputes', (req, res) => {
-  const admin = getAdminUser(req);
-
-  // BACKEND: replace mockData with scoreService.getOpenDisputes()
-  const disputes = mockData.disputes;
-
-  res.render('pages/admin/disputes', {
-    title: 'Score Disputes Resolution - BORO Admin',
-    admin,
-    disputes,
-    helpers,
-    activeNav: 'admin-disputes'
-  });
+router.get('/disputes', async (req, res, next) => {
+  try {
+    const disputes = await scoreService.getDisputes();
+    res.render('pages/admin/disputes', {
+      title: 'Score Disputes Resolution - BORO Admin',
+      admin: getAdminUser(req),
+      disputes,
+      helpers,
+      activeNav: 'admin-disputes'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /admin/disputes/:id/resolve - Resolve score dispute
-router.post('/disputes/:id/resolve', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { resolution, points_delta, reason } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/disputes/:id/resolve', async (req, res) => {
+  try {
+    await scoreService.resolveDispute(
+      req.params.id,
+      req.body.resolution,
+      req.body.reason,
+      req.session.user.id
+    );
+    req.flash('success', 'Dispute resolved.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to resolve dispute.');
+  }
   res.redirect('/admin/disputes');
 });
 

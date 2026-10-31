@@ -111,7 +111,7 @@ exports.getDisputes = async () => {
 };
 
 // POST /admin/disputes/:id/resolve
-exports.resolveDispute = async (disputeId, decision, reason) => {
+exports.resolveDispute = async (disputeId, decision, reason, adminId = null) => {
   if (!reason || !reason.trim()) {
     throw new Error('Resolution reason is required.');
   }
@@ -180,8 +180,65 @@ exports.resolveDispute = async (disputeId, decision, reason) => {
       data: {
         status: decision === 'accept' ? 'resolved' : 'rejected',
         resolutionNotes: reason.trim(),
+        resolvedBy: adminId,
         resolvedAt: new Date()
       }
     });
+
+    await tx.auditLog.create({
+      data: {
+        id: `AUD-${crypto.randomUUID()}`,
+        actor: adminId || 'system',
+        action: 'resolve_score_dispute',
+        target: `dispute:${disputeId}`,
+        reason: reason.trim(),
+        details: { decision }
+      }
+    });
+  });
+};
+
+exports.rateBooking = async (bookingId, userId, rating, review = null) => {
+  const value = Number(rating);
+  if (!Number.isInteger(value) || value < 1 || value > 5) {
+    throw new Error('Rating must be an integer from 1 to 5.');
+  }
+
+  return prisma.$transaction(async tx => {
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: { space: true }
+    });
+    if (!booking || booking.userId !== userId) {
+      throw new Error('Booking not found.');
+    }
+    if (!['returned', 'closed'].includes(booking.status)) {
+      throw new Error('Only completed bookings can be rated.');
+    }
+
+    const existing = await tx.rating.findUnique({ where: { bookingId } });
+    if (existing) throw new Error('This booking has already been rated.');
+
+    const entry = await tx.rating.create({
+      data: {
+        id: `RAT-${crypto.randomUUID()}`,
+        bookingId,
+        userId,
+        spaceId: booking.spaceId,
+        rating: value,
+        review: review ? String(review).trim() : null
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        id: `AUD-${crypto.randomUUID()}`,
+        actor: userId,
+        action: 'booking_rated',
+        target: `booking:${bookingId}`,
+        details: { rating: value }
+      }
+    });
+    return entry;
   });
 };

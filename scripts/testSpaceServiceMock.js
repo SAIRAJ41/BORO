@@ -63,6 +63,12 @@ const spaceServiceMock = {
       .map(toSpace);
   },
 
+  async getOwnerSpaceById(id, ownerId) {
+    const space = mockData.getSpaceById(id);
+    if (!space || space.owner_id !== ownerId) return null;
+    return toSpace(space);
+  },
+
   async create() {
     return { id: 'SP-TEST-PENDING' };
   },

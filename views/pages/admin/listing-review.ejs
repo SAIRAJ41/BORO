@@ -50,12 +50,14 @@
         <div class="card p-6 bg-surface border border-line space-y-3">
           <% if (listing.ownership_document_present) { %>
             <form action="/admin/listings/<%= listing.id %>/approve" method="POST">
+              <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <button type="submit" class="btn btn-primary w-full text-sm font-bold">Approve Listing</button>
             </form>
           <% } else { %>
             <button type="button" class="btn btn-secondary w-full text-sm font-bold opacity-60 cursor-not-allowed" disabled title="An ownership document is required before approval">Approval unavailable: document required</button>
           <% } %>
           <form action="/admin/listings/<%= listing.id %>/reject" method="POST" class="space-y-2">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
             <label for="reason" class="text-xs font-medium text-ink">Rejection reason</label>
             <textarea id="reason" name="reason" rows="4" minlength="10" required class="input w-full text-xs" placeholder="Explain what must be corrected..."></textarea>
             <button type="submit" class="btn btn-secondary w-full text-sm text-status-danger">Reject Listing</button>

@@ -26,7 +26,7 @@
       <% spaces.forEach(space => { %>
         <div class="card bg-surface border border-line overflow-hidden shadow-sm flex flex-col justify-between">
           <div class="relative h-44 bg-surface-tint">
-            <img src="<%= space.photos && space.photos.length > 0 ? space.photos[0] : '/images/spaces/community-hall-1.jpg' %>" 
+            <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : '/images/spaces/community-hall-1.jpg' %>"
                  alt="<%= space.name %>" 
                  class="w-full h-full object-cover">
             <div class="absolute top-3 left-3 flex gap-1.5">
@@ -82,8 +82,8 @@
 
             <!-- Action Controls -->
             <div class="pt-3 border-t border-line flex items-center justify-between">
-              <a href="/spaces/<%= space.id %>" class="text-xs text-primary font-medium hover:underline">
-                Public View &rarr;
+              <a href="/owner/spaces/<%= space.id %>" class="text-xs text-primary font-medium hover:underline">
+                View Listing &rarr;
               </a>
               <div class="flex gap-2">
                 <a href="/owner/spaces/<%= space.id %>/edit" class="btn btn-secondary text-xs px-3 py-1.5">

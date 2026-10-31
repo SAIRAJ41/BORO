@@ -3,7 +3,11 @@ const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
 const spaceService = require('../services/spaceService');
+const bookingService = require('../services/bookingService');
+const incidentService = require('../services/incidentService');
 const ownershipDocumentService = require('../services/ownershipDocumentService');
+const propertyPhotoService = require('../services/propertyPhotoService');
+const { validateToken } = require('../middleware/csrf');
 
 // Helper to get active session user or Rajesh Kumar (owner)
 function getOwnerUser(req) {
@@ -14,66 +18,69 @@ function getOwnerUser(req) {
 }
 
 // Compute pending request count for all owner views and sidebars
-router.use((req, res, next) => {
+router.use(async (req, res, next) => {
   const owner = getOwnerUser(req);
-  const ownerSpaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-  const ownerSpaceIds = ownerSpaces.map(s => s.id);
-  res.locals.pendingRequestsCount = mockData.bookings.filter(b => ownerSpaceIds.includes(b.space_id) && b.status === 'requested').length;
-  next();
+
+  try {
+    const requests = await bookingService.getOwnerRequests(owner.id);
+    res.locals.pendingRequestsCount = requests.length;
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET /owner/requests - Incoming booking requests
-router.get('/requests', (req, res) => {
+router.get('/requests', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with spaceService.getOwnerRequests(owner.id)
-  const ownerSpaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-  const ownerSpaceIds = ownerSpaces.map(s => s.id);
-  
-  // Requests for owner's spaces
-  const requests = mockData.bookings
-    .filter(b => ownerSpaceIds.includes(b.space_id) && b.status === 'requested')
-    .map(b => {
-      const requester = mockData.getUserById(b.user_id) || { name: 'Community Member', score: 90 };
-      const space = mockData.getSpaceById(b.space_id);
-      return {
-        ...b,
-        user: requester,
-        space: space
-      };
+  try {
+    const requests = await bookingService.getOwnerRequests(owner.id);
+    res.render('pages/owner/requests', {
+      title: 'Booking Requests - BORO Owner',
+      owner,
+      requests,
+      helpers,
+      activeNav: 'owner-requests'
     });
-
-  res.render('pages/owner/requests', {
-    title: 'Booking Requests - BORO Owner',
-    owner,
-    requests,
-    helpers,
-    activeNav: 'owner-requests'
-  });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/requests/:id/approve - Approve booking request
-router.post('/requests/:id/approve', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { reason } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/requests/:id/approve', async (req, res) => {
+  const owner = getOwnerUser(req);
+
+  try {
+    await bookingService.approve(req.params.id, owner.id, req.body.reason);
+    req.flash('success', 'Booking request approved.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to approve booking request.');
+  }
   res.redirect('/owner/requests');
 });
 
 // POST /owner/requests/:id/reject - Reject booking request
-router.post('/requests/:id/reject', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { reason } = req.body;
-  req.flash('info', 'Not connected yet');
+router.post('/requests/:id/reject', async (req, res) => {
+  const owner = getOwnerUser(req);
+
+  try {
+    await bookingService.reject(req.params.id, owner.id, req.body.reason);
+    req.flash('success', 'Booking request rejected.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to reject booking request.');
+  }
   res.redirect('/owner/requests');
 });
 
 // POST /owner/requests/:id/waitlist - Move request to waitlist
 router.post('/requests/:id/waitlist', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  const { reason } = req.body;
-  req.flash('info', 'Not connected yet');
-  res.redirect('/owner/requests');
+  const owner = getOwnerUser(req);
+  bookingService.waitlist(req.params.id, owner.id, req.body.reason)
+    .then(() => req.flash('success', 'Booking moved to the waitlist.'))
+    .catch(error => req.flash('error', error.message || 'Unable to move booking to the waitlist.'))
+    .finally(() => res.redirect('/owner/requests'));
 });
 
 // GET /owner/my-spaces - Manage owner's spaces
@@ -115,6 +122,7 @@ function handleDocumentUpload(req, res, next) {
       req.flash('error', error.message || 'Invalid ownership document.');
       return res.redirect('/owner/my-spaces');
     }
+    if (!validateToken(req, res)) return;
     next();
   });
 }
@@ -129,6 +137,30 @@ router.post('/spaces', handleDocumentUpload, async (req, res) => {
     req.flash('error', error.message || 'Unable to submit space.');
   }
   res.redirect('/owner/my-spaces');
+});
+
+// GET /owner/spaces/:id - Private owner listing detail
+router.get('/spaces/:id', async (req, res, next) => {
+  const owner = getOwnerUser(req);
+
+  try {
+    const space = await spaceService.getOwnerSpaceById(req.params.id, owner.id);
+    if (!space) {
+      return res.status(404).render('pages/errors/404', {
+        title: 'Space Not Found'
+      });
+    }
+
+    res.render('pages/owner/space-detail', {
+      title: `${space.name} - Owner Listing`,
+      owner,
+      space,
+      helpers,
+      activeNav: 'owner-spaces'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET /owner/spaces/:id/edit - Edit space form
@@ -168,6 +200,58 @@ router.post('/spaces/:id', handleDocumentUpload, async (req, res) => {
       ...req.body,
       documentFile: req.file
     });
+
+    function handlePhotoUpload(req, res, next) {
+      propertyPhotoService.uploadMiddleware(req, res, error => {
+        if (error) {
+          req.flash('error', error.message || 'Invalid property photo.');
+          return res.redirect(`/owner/spaces/${req.params.id}`);
+        }
+        if (!validateToken(req, res)) return;
+        next();
+      });
+    }
+
+    router.post('/spaces/:id/photos', handlePhotoUpload, async (req, res) => {
+      const owner = getOwnerUser(req);
+      try {
+        await propertyPhotoService.add(req.params.id, owner.id, req.files);
+        req.flash('success', 'Property photos uploaded.');
+      } catch (error) {
+        req.flash('error', error.message || 'Unable to upload property photos.');
+      }
+      res.redirect(`/owner/spaces/${req.params.id}`);
+    });
+
+    router.post('/spaces/:id/photos/:photoId/replace', handlePhotoUpload, async (req, res) => {
+      const owner = getOwnerUser(req);
+      try {
+        if (!req.files || req.files.length !== 1) {
+          throw new Error('Select exactly one replacement photo.');
+        }
+        await propertyPhotoService.replace(
+          req.params.id,
+          owner.id,
+          req.params.photoId,
+          req.files[0]
+        );
+        req.flash('success', 'Property photo replaced.');
+      } catch (error) {
+        req.flash('error', error.message || 'Unable to replace property photo.');
+      }
+      res.redirect(`/owner/spaces/${req.params.id}`);
+    });
+
+    router.post('/spaces/:id/photos/:photoId/delete', async (req, res) => {
+      const owner = getOwnerUser(req);
+      try {
+        await propertyPhotoService.remove(req.params.id, owner.id, req.params.photoId);
+        req.flash('success', 'Property photo deleted.');
+      } catch (error) {
+        req.flash('error', error.message || 'Unable to delete property photo.');
+      }
+      res.redirect(`/owner/spaces/${req.params.id}`);
+    });
     req.flash('success', 'Space updated.');
   } catch (error) {
     req.flash('error', error.message || 'Unable to update space.');
@@ -184,195 +268,300 @@ router.get('/spaces/:id/document', async (req, res, next) => {
     if (error.message.includes('not authorized')) {
       return res.status(403).render('pages/errors/403');
     }
+    if (error.message.includes('not available')) {
+      return res.status(404).render('pages/errors/404', {
+        title: 'Ownership Document Not Found'
+      });
+    }
     next(error);
   }
 });
 
 // GET /owner/calendar - Weekly slot schedule & conflicts
-router.get('/calendar', (req, res) => {
+router.get('/calendar', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with bookingService.getOwnerCalendar(owner.id)
-  const ownerSpaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-  const ownerSpaceIds = ownerSpaces.map(s => s.id);
+  try {
+    const calendar = await bookingService.getOwnerCalendar(owner.id);
+    const availability = await bookingService.getOwnerAvailability(owner.id);
+    const spaces = (await spaceService.getOwnerSpaces(owner.id))
+      .filter(space => space.active && space.listing_status === 'approved');
+    const bookings = Object.values(calendar.bookingsByDay || {}).flat();
 
-  const bookings = mockData.bookings.filter(b => ownerSpaceIds.includes(b.space_id));
+    res.render('pages/owner/calendar', {
+      title: 'Space Calendar & Conflict Manager - BORO Owner',
+      owner,
+      spaces,
+      availability,
+      bookings,
+      conflicts: [],
+      helpers,
+      activeNav: 'owner-calendar'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-  // Identify overlapping conflicts (e.g. BK-1009 and BK-1011)
-  const conflicts = [
-    {
-      slot_desc: 'Tomorrow 10:00 AM - 01:00 PM',
-      space_name: 'Shanti Niketan Community Hall',
-      bookings: [
-        mockData.getBookingById('BK-1009'),
-        mockData.getBookingById('BK-1011')
-      ].filter(Boolean)
-    }
-  ];
+// POST /owner/availability - Create an availability slot
+router.post('/availability', async (req, res) => {
+  const owner = getOwnerUser(req);
 
-  res.render('pages/owner/calendar', {
-    title: 'Space Calendar & Conflict Manager - BORO Owner',
-    owner,
-    spaces: ownerSpaces,
-    bookings,
-    conflicts,
-    helpers,
-    activeNav: 'owner-calendar'
-  });
+  try {
+    await bookingService.createAvailabilitySlot(owner.id, req.body);
+    req.flash('success', 'Availability slot created.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to create availability slot.');
+  }
+  res.redirect('/owner/calendar');
+});
+
+// POST /owner/availability/:id - Update an availability slot
+router.post('/availability/:id', async (req, res) => {
+  const owner = getOwnerUser(req);
+
+  try {
+    await bookingService.updateAvailabilitySlot(req.params.id, owner.id, req.body);
+    req.flash('success', 'Availability slot updated.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update availability slot.');
+  }
+  res.redirect('/owner/calendar');
+});
+
+// POST /owner/availability/:id/delete - Delete an availability slot
+router.post('/availability/:id/delete', async (req, res) => {
+  const owner = getOwnerUser(req);
+
+  try {
+    await bookingService.deleteAvailabilitySlot(
+      req.params.id,
+      owner.id,
+      req.body.reason
+    );
+    req.flash('success', 'Availability slot deleted.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to delete availability slot.');
+  }
+  res.redirect('/owner/calendar');
 });
 
 // GET /owner/today - Operational check-ins and returns
-router.get('/today', (req, res) => {
+router.get('/today', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with bookingService.getTodayOperations(owner.id)
-  const ownerSpaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-  const ownerSpaceIds = ownerSpaces.map(s => s.id);
-
-  const checkinsDue = mockData.bookings.filter(b => 
-    ownerSpaceIds.includes(b.space_id) && b.status === 'approved'
-  );
-
-  const returnsDue = mockData.bookings.filter(b => 
-    ownerSpaceIds.includes(b.space_id) && ['checked_in', 'overdue'].includes(b.status)
-  );
-
-  res.render('pages/owner/today', {
-    title: "Today's Check-ins & Returns - BORO Owner",
-    owner,
-    checkinsDue,
-    returnsDue,
-    helpers,
-    activeNav: 'owner-today'
-  });
+  try {
+    const operations = await bookingService.getOwnerToday(owner.id);
+    res.render('pages/owner/today', {
+      title: "Today's Check-ins & Returns - BORO Owner",
+      owner,
+      checkinsDue: operations.checkins,
+      returnsDue: operations.returns,
+      helpers,
+      activeNav: 'owner-today'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/checkin/:id - Complete check-in
-router.post('/owner/checkin/:id', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/checkin/:id', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.checkin(
+      req.params.id,
+      owner.id,
+      req.body,
+      req.body.condition_notes
+    );
+    req.flash('success', 'Check-in completed.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to complete check-in.');
+  }
   res.redirect('/owner/today');
 });
 
 // POST /owner/return/:id - Complete return
-router.post('/owner/return/:id', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/return/:id', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.return(
+      req.params.id,
+      owner.id,
+      req.body,
+      req.body.condition_notes
+    );
+    req.flash('success', 'Return completed.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to complete return.');
+  }
   res.redirect('/owner/today');
 });
 
 // POST /owner/today/:id/flag - Flag incident
-router.post('/owner/today/:id/flag', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/today/:id/flag', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await incidentService.createFromReturn(req.params.id, owner.id, req.body);
+    req.flash('success', 'Incident reported.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to report incident.');
+  }
   res.redirect('/owner/incidents');
 });
 
 // POST /owner/today/:id/no-show - Mark no-show
-router.post('/owner/today/:id/no-show', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/today/:id/no-show', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.markNoShow(req.params.id, owner.id, req.body.reason);
+    req.flash('success', 'Booking marked as no-show.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to mark no-show.');
+  }
   res.redirect('/owner/today');
 });
 
 // POST /owner/bookings/:id/mark-paid - Mark payment received (Pay at venue)
-router.post('/owner/bookings/:id/mark-paid', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/mark-paid', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.markPaymentReceived(req.params.id, owner.id);
+    req.flash('success', 'Payment marked as received.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to mark payment received.');
+  }
   res.redirect('/owner/today');
 });
 
 // POST /owner/bookings/:id/approve-extension - Approve time extension
-router.post('/owner/bookings/:id/approve-extension', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/approve-extension', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.approveExtension(req.params.id, owner.id);
+    req.flash('success', 'Extension approved.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to approve extension.');
+  }
   res.redirect('/owner/today');
 });
 
 // POST /owner/bookings/:id/reject-extension - Reject time extension
-router.post('/owner/bookings/:id/reject-extension', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/bookings/:id/reject-extension', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await bookingService.rejectExtension(req.params.id, owner.id, req.body.reason || 'Extension not approved.');
+    req.flash('success', 'Extension rejected.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to reject extension.');
+  }
   res.redirect('/owner/today');
 });
 
 // GET /owner/incidents - Damage reports and deposit deductions
-router.get('/incidents', (req, res) => {
+router.get('/incidents', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with incidentService.getIncidentsByOwner(owner.id)
-  const incidents = mockData.incidents;
-
-  res.render('pages/owner/incidents', {
-    title: 'Incidents & Deposit Deductions - BORO Owner',
-    owner,
-    incidents,
-    helpers,
-    activeNav: 'owner-incidents'
-  });
+  try {
+    const incidents = await incidentService.getOwnerIncidents(owner.id);
+    res.render('pages/owner/incidents', {
+      title: 'Incidents & Deposit Deductions - BORO Owner',
+      owner,
+      incidents,
+      helpers,
+      activeNav: 'owner-incidents'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/incidents/:id/confirm - Confirm deposit deduction
-router.post('/owner/incidents/:id/confirm', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/incidents/:id/confirm', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await incidentService.confirm(
+      req.params.id,
+      owner.id,
+      req.body.deductions || [],
+      req.body.reason || 'Deposit deduction confirmed.'
+    );
+    req.flash('success', 'Incident confirmed and settled.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to confirm incident.');
+  }
   res.redirect('/owner/incidents');
 });
 
 // POST /owner/incidents/:id/waive - Waive incident damages
-router.post('/owner/incidents/:id/waive', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/incidents/:id/waive', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await incidentService.waive(
+      req.params.id,
+      owner.id,
+      req.body.reason || 'Incident waived by owner.'
+    );
+    req.flash('success', 'Incident waived and deposit refunded.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to waive incident.');
+  }
   res.redirect('/owner/incidents');
 });
 
 // GET /owner/history - Custodial archives
-router.get('/history', (req, res) => {
+router.get('/history', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with bookingService.getOwnerCompletedBookings(owner.id)
-  const ownerSpaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-  const ownerSpaceIds = ownerSpaces.map(s => s.id);
-
-  const pastBookings = mockData.bookings.filter(b => 
-    ownerSpaceIds.includes(b.space_id) && ['completed', 'cancelled', 'closed'].includes(b.status)
-  );
-
-  res.render('pages/owner/history', {
-    title: 'Past Bookings & Custody Archives - BORO Owner',
-    owner,
-    bookings: pastBookings,
-    helpers,
-    activeNav: 'owner-history'
-  });
+  try {
+    const bookings = await bookingService.getOwnerHistory(owner.id);
+    res.render('pages/owner/history', {
+      title: 'Past Bookings & Custody Archives - BORO Owner',
+      owner,
+      bookings,
+      helpers,
+      activeNav: 'owner-history'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET /owner/earnings - Revenue KPIs & Payout ledger
-router.get('/earnings', (req, res) => {
+router.get('/earnings', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with settingsService.getOwnerEarnings(owner.id)
-  const earnings = {
-    gross: 18400,
-    netPayout: 17480,
-    platformFee: 920,
-    completedBookings: 8,
-    utilizationRate: '78%'
-  };
+  try {
+    const result = await bookingService.getOwnerEarnings(owner.id);
+    const earnings = {
+      gross: result.grossEarnings,
+      netPayout: result.totalEarnings,
+      platformFee: result.platformFees,
+      completedBookings: result.completedBookings,
+      utilizationRate: result.utilizationRate
+    };
+    const payouts = result.payoutHistory.length > 0
+      ? result.payoutHistory
+      : result.ledger.map(item => ({
+        id: item.ref,
+        date: item.date,
+        amount: item.net_payout,
+        method: item.payment_status || 'Recorded booking payment',
+        status: 'earned'
+      }));
 
-  const payouts = [
-    { id: 'PAY-801', date: new Date().toISOString(), amount: 7200, method: 'UPI (rajesh@oksbi)', status: 'paid' },
-    { id: 'PAY-792', date: new Date(Date.now() - 7 * 86400000).toISOString(), amount: 10280, method: 'UPI (rajesh@oksbi)', status: 'paid' }
-  ];
-
-  res.render('pages/owner/earnings', {
-    title: 'Earnings & Payouts - BORO Owner',
-    owner,
-    earnings,
-    payouts,
-    helpers,
-    activeNav: 'owner-earnings'
-  });
+    res.render('pages/owner/earnings', {
+      title: 'Earnings & Payouts - BORO Owner',
+      owner,
+      earnings,
+      payouts,
+      helpers,
+      activeNav: 'owner-earnings'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/payout-method - Set payout method

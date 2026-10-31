@@ -11,6 +11,7 @@
   </div>
 
   <form action="/admin/settings" method="POST" class="space-y-6">
+    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
     <!-- Booking & Capacity Limits -->
     <div class="card p-6 bg-surface border border-line shadow-sm space-y-4">
       <div class="flex items-center gap-3">
@@ -107,4 +108,3 @@
     </div>
   </form>
 </div>
-

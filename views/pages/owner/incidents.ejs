@@ -87,12 +87,14 @@
             <!-- Action Controls -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
               <form action="/owner/incidents/<%= inc.id %>/waive" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <button type="submit" class="btn btn-secondary text-xs">
                   Waive Damages &amp; Refund Full Deposit
                 </button>
               </form>
 
               <form action="/owner/incidents/<%= inc.id %>/confirm" method="POST">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <button type="submit" class="btn btn-primary text-xs font-bold">
                   Confirm Deductions &amp; Settle (Demo)
                 </button>

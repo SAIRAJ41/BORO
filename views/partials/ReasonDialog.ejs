@@ -23,6 +23,7 @@
 
     <!-- Modal Form -->
     <form id="<%= dId %>-form" action="<%= postUrl %>" method="POST" class="p-5 space-y-4">
+      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
       <div>
         <label for="<%= dId %>-reason" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
           Mandatory Reason / Audit Directive <span class="text-status-danger">*</span>

@@ -29,11 +29,12 @@ exports.getUserNotifications = async (userId, filter = 'all') => {
 };
 
 // POST /notifications/:id/read
-exports.markRead = async (notifId) => {
-  await prisma.notification.update({
-    where: { id: notifId },
+exports.markRead = async (notifId, userId) => {
+  const result = await prisma.notification.updateMany({
+    where: { id: notifId, userId },
     data: { read: true }
   });
+  if (result.count !== 1) throw new Error('Notification not found.');
 };
 
 // POST /notifications/read-all

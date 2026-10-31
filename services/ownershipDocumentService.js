@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const multer = require('multer');
-const { createClient } = require('@supabase/supabase-js');
+const storageClient = require('../lib/supabaseStorage');
 
 const BUCKET = 'ownership-documents';
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -61,14 +61,7 @@ function validateFile(file) {
 }
 
 function getClient() {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Error('Supabase Storage is not configured on the server.');
-  }
-  return createClient(url, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
+  return storageClient.getClient();
 }
 
 function getPath(spaceId, extension) {

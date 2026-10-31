@@ -1,9 +1,10 @@
 const prisma = require('../lib/prisma');
 const crypto = require('crypto');
 const ownershipDocumentService = require('./ownershipDocumentService');
+const propertyPhotoService = require('./propertyPhotoService');
 
 // Convert Prisma space fields to the field names used by the frontend.
-function normalizeSpace(space) {
+async function normalizeSpace(space) {
   if (!space) return null;
 
   const ratings = space.ratings || [];
@@ -25,7 +26,7 @@ function normalizeSpace(space) {
     deposit_amount: Number(space.depositAmount),
     facilities: space.amenities || [],
     allowed_purposes: space.allowedPurposes || [],
-    photos: space.photos || [],
+    photos: await propertyPhotoService.resolvePhotos(space.photos),
     listing_status: space.listingStatus,
     submitted_at: space.submittedAt,
     reviewed_at: space.reviewedAt,
@@ -68,6 +69,65 @@ function normalizeSpaceInput(data) {
       : [],
     rules: data.rules || null
   };
+}
+
+const MATERIAL_FIELD_INPUTS = {
+  name: 'name',
+  description: 'description',
+  address: 'address',
+  locality: 'locality',
+  city: 'city',
+  spaceType: 'space_type',
+  indoorOutdoor: 'indoor_outdoor',
+  capacity: 'capacity',
+  sqft: 'sqft',
+  pricePerHour: 'price_per_hour',
+  depositAmount: 'deposit_amount',
+  allowedPurposes: 'allowed_purposes',
+  amenities: 'facilities',
+  rules: 'rules'
+};
+
+function valuesEqual(left, right) {
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return JSON.stringify(left || []) === JSON.stringify(right || []);
+  }
+  if (
+    left !== null &&
+    left !== undefined &&
+    right !== null &&
+    right !== undefined &&
+    (typeof left === 'number' || typeof right === 'number') &&
+    Number.isFinite(Number(left)) &&
+    Number.isFinite(Number(right))
+  ) {
+    return Number(left) === Number(right);
+  }
+  return left === right;
+}
+
+function getChangedMaterialFields(data, spaceData, existing) {
+  const alwaysSubmittedFields = new Set([
+    'allowedPurposes',
+    'amenities',
+    'rules'
+  ]);
+
+  return Object.entries(MATERIAL_FIELD_INPUTS)
+    .filter(([field, inputName]) =>
+      alwaysSubmittedFields.has(field) ||
+      Object.prototype.hasOwnProperty.call(data, inputName)
+    )
+    .filter(([field]) => !valuesEqual(existing[field], spaceData[field]))
+    .map(([field]) => field);
+}
+
+function materialFieldsMatch(left, right, data) {
+  return Object.entries(MATERIAL_FIELD_INPUTS)
+    .filter(([, inputName]) =>
+      Object.prototype.hasOwnProperty.call(data, inputName)
+    )
+    .every(([field]) => valuesEqual(left[field], right[field]));
 }
 
 // Record space actions in the audit log.
@@ -175,7 +235,7 @@ exports.getSpaces = async (filters = {}, page = 1, limit = 12) => {
   ]);
 
   return {
-    spaces: records.map(normalizeSpace),
+    spaces: await Promise.all(records.map(normalizeSpace)),
     total,
     totalPages: Math.ceil(total / limit)
   };
@@ -281,6 +341,18 @@ exports.getSpaceById = async (id, { publicOnly = true } = {}) => {
 
   if (!record) return null;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const availabilitySlots = await prisma.availabilitySlot.findMany({
+    where: {
+      spaceId: id,
+      isBooked: false,
+      status: 'available',
+      slotDate: { gte: today }
+    },
+    orderBy: [{ slotDate: 'asc' }, { startTime: 'asc' }]
+  });
+
   const conditionReports = record.conditionReports.map(report => ({
     id: report.id,
     date: report.createdAt,
@@ -293,7 +365,8 @@ exports.getSpaceById = async (id, { publicOnly = true } = {}) => {
   }));
 
   return {
-    space: normalizeSpace(record),
+    space: await normalizeSpace(record),
+    availability_slots: availabilitySlots,
     owner: record.owner,
     conditionReports,
     eligibility: null
@@ -314,8 +387,8 @@ exports.getOwnerSpaces = async (ownerId) => {
     }
   });
 
-  return records.map(record => ({
-    ...normalizeSpace(record),
+  return Promise.all(records.map(async record => ({
+    ...(await normalizeSpace(record)),
     active: record.active,
     listing_status: record.listingStatus,
     submitted_at: record.submittedAt,
@@ -326,7 +399,34 @@ exports.getOwnerSpaces = async (ownerId) => {
     ownership_document_size: record.ownershipDocumentSize,
     ownership_document_mime_type: record.ownershipDocumentMimeType,
     ownership_document_present: Boolean(record.ownershipDocumentPath)
-  }));
+  })));
+};
+
+// GET /owner/spaces/:id
+exports.getOwnerSpaceById = async (spaceId, ownerId) => {
+  const record = await prisma.space.findFirst({
+    where: { id: spaceId, ownerId },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      },
+      ratings: {
+        select: { rating: true }
+      }
+    }
+  });
+
+  if (!record) return null;
+
+  return {
+    ...(await normalizeSpace(record)),
+    owner: record.owner
+  };
 };
 
 // Get condition history for a space.
@@ -421,7 +521,27 @@ exports.update = async (spaceId, ownerId, data) => {
       id: true,
       ownerId: true,
       listingStatus: true,
-      ownershipDocumentPath: true
+      active: true,
+      submittedAt: true,
+      reviewedAt: true,
+      reviewedBy: true,
+      rejectionReason: true,
+      ownershipDocumentPath: true,
+      updatedAt: true,
+      name: true,
+      description: true,
+      address: true,
+      locality: true,
+      city: true,
+      spaceType: true,
+      indoorOutdoor: true,
+      capacity: true,
+      sqft: true,
+      pricePerHour: true,
+      depositAmount: true,
+      allowedPurposes: true,
+      amenities: true,
+      rules: true
     }
   });
 
@@ -438,6 +558,12 @@ exports.update = async (spaceId, ownerId, data) => {
   if (resubmitting && !data.documentFile) {
     throw new Error('A replacement ownership document is required before resubmission.');
   }
+  const changedMaterialFields = getChangedMaterialFields(
+    data,
+    spaceData,
+    existing
+  );
+  const materialChange = changedMaterialFields.length > 0 || Boolean(data.documentFile);
 
   const document = data.documentFile
     ? await ownershipDocumentService.replaceForListing(
@@ -449,38 +575,106 @@ exports.update = async (spaceId, ownerId, data) => {
 
   try {
     await prisma.$transaction(async tx => {
-      await tx.space.update({
+      const current = await tx.space.findUnique({
         where: { id: spaceId },
-        data: {
-          ...spaceData,
-          ...(document
-            ? {
-                ownershipDocumentType: data.ownership_document_type || document.mimeType,
-                ownershipDocumentPath: document.path,
-                ownershipDocumentName: document.name,
-                ownershipDocumentSize: document.size,
-                ownershipDocumentMimeType: document.mimeType
-              }
-            : {}),
-          ...(resubmitting
-            ? {
-                active: false,
-                listingStatus: 'pending',
-                submittedAt: new Date(),
-                reviewedAt: null,
-                reviewedBy: null,
-                rejectionReason: null
-              }
-            : {})
+        select: {
+          ownerId: true,
+          listingStatus: true,
+          active: true,
+          submittedAt: true,
+          reviewedAt: true,
+          reviewedBy: true,
+          rejectionReason: true,
+          ownershipDocumentPath: true,
+          updatedAt: true,
+          name: true,
+          description: true,
+          address: true,
+          locality: true,
+          city: true,
+          spaceType: true,
+          indoorOutdoor: true,
+          capacity: true,
+          sqft: true,
+          pricePerHour: true,
+          depositAmount: true,
+          allowedPurposes: true,
+          amenities: true,
+          rules: true
         }
       });
+
+      if (
+        !current ||
+        current.ownerId !== existing.ownerId ||
+        current.listingStatus !== existing.listingStatus ||
+        current.active !== existing.active ||
+        current.submittedAt?.getTime() !== existing.submittedAt?.getTime() ||
+        current.reviewedAt?.getTime() !== existing.reviewedAt?.getTime() ||
+        current.reviewedBy !== existing.reviewedBy ||
+        current.rejectionReason !== existing.rejectionReason ||
+        current.ownershipDocumentPath !== existing.ownershipDocumentPath ||
+        current.updatedAt?.getTime() !== existing.updatedAt?.getTime() ||
+        !materialFieldsMatch(current, existing, data)
+      ) {
+        throw new Error('The listing changed while you were editing it. Please reload and try again.');
+      }
+
+      const lifecycleReset = resubmitting ||
+        (existing.listingStatus === 'approved' && materialChange);
+      const updateData = {
+        ...spaceData,
+        ...(document
+          ? {
+              ownershipDocumentType: data.ownership_document_type || document.mimeType,
+              ownershipDocumentPath: document.path,
+              ownershipDocumentName: document.name,
+              ownershipDocumentSize: document.size,
+              ownershipDocumentMimeType: document.mimeType
+            }
+          : {}),
+        ...(lifecycleReset
+          ? {
+              active: false,
+              listingStatus: 'pending',
+              submittedAt: new Date(),
+              reviewedAt: null,
+              reviewedBy: null,
+              rejectionReason: null
+            }
+          : {})
+      };
+
+      const updated = await tx.space.updateMany({
+        where: {
+          id: spaceId,
+          ownerId: existing.ownerId,
+          listingStatus: existing.listingStatus,
+          active: existing.active,
+          submittedAt: existing.submittedAt,
+          reviewedAt: existing.reviewedAt,
+          reviewedBy: existing.reviewedBy,
+          rejectionReason: existing.rejectionReason,
+          ownershipDocumentPath: existing.ownershipDocumentPath,
+          updatedAt: existing.updatedAt
+        },
+        data: updateData
+      });
+
+      if (updated.count !== 1) {
+        throw new Error('The listing changed while you were editing it. Please reload and try again.');
+      }
 
       await writeAudit(
         tx,
         ownerId,
-        'update_space',
+        lifecycleReset ? 'resubmit_listing' : 'update_space',
         spaceId,
-        { updatedFields: Object.keys(data).filter(key => key !== 'documentFile') }
+        {
+          updatedFields: Object.keys(data).filter(key => key !== 'documentFile'),
+          previousStatus: existing.listingStatus,
+          listingStatus: lifecycleReset ? 'pending' : existing.listingStatus
+        }
       );
     });
     if (document && document.previousPath) {
@@ -539,10 +733,10 @@ exports.getListings = async (status) => {
     orderBy: { submittedAt: 'asc' }
   });
 
-  return records.map(record => ({
-    ...normalizeSpace(record),
+  return Promise.all(records.map(async record => ({
+    ...(await normalizeSpace(record)),
     owner: record.owner
-  }));
+  })));
 };
 
 exports.getPendingListings = async () => exports.getListings('pending');
@@ -565,7 +759,7 @@ exports.getListingById = async (spaceId) => {
   if (!record) return null;
 
   return {
-    ...normalizeSpace(record),
+    ...(await normalizeSpace(record)),
     owner: record.owner
   };
 };

@@ -18,6 +18,14 @@ function startOfWeek(value = new Date()) {
 }
 
 function addHours(value, hours) {
+  if (typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)) {
+    const [hour, minute] = value.split(':').map(Number);
+    const totalMinutes = hour * 60 + minute + hours * 60;
+    if (totalMinutes >= 24 * 60) {
+      throw new Error('An extension cannot continue past midnight.');
+    }
+    return `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
+  }
   const date = new Date(value);
   date.setTime(date.getTime() + hours * 60 * 60 * 1000);
   return date;
@@ -30,6 +38,291 @@ function timeDifferenceHours(start, end) {
 function sameTime(a, b) {
   return new Date(a).getTime() === new Date(b).getTime();
 }
+
+function parseSlotInput(data) {
+  const dateValue = String(data.slotDate || data.slot_date || '').trim();
+  const startTime = String(data.startTime || data.start_time || '').trim();
+  const endTime = String(data.endTime || data.end_time || '').trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    throw new Error('A valid slot date is required.');
+  }
+
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const slotDate = new Date(Date.UTC(year, month - 1, day));
+  if (dateValueFromDate(slotDate) !== dateValue) {
+    throw new Error('A valid slot date is required.');
+  }
+
+  const now = new Date();
+  const todayKey = localDateKey(now);
+  if (dateValue < todayKey) {
+    throw new Error('Availability slots cannot be in the past.');
+  }
+
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(startTime) ||
+      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(endTime)) {
+    throw new Error('Slot times must use HH:MM format.');
+  }
+
+  if (startTime >= endTime) {
+    throw new Error('Slot start time must be before its end time.');
+  }
+
+  if (dateValue === todayKey &&
+      endTime <= `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`) {
+    throw new Error('Availability slots cannot end in the past.');
+  }
+
+  return { slotDate, startTime, endTime };
+}
+
+function slotOverlaps(startTime, endTime, otherStart, otherEnd) {
+  return startTime < otherEnd && endTime > otherStart;
+}
+
+async function assertSlotSpace(tx, spaceId, ownerId) {
+  const space = await tx.space.findUnique({ where: { id: spaceId } });
+  if (!space || space.ownerId !== ownerId) {
+    throw new Error('Space not found or unauthorized.');
+  }
+  if (!space.active || space.listingStatus !== 'approved') {
+    throw new Error('Availability can only be managed for an approved active listing.');
+  }
+  return space;
+}
+
+async function assertNoSlotOverlap(tx, spaceId, slotDate, startTime, endTime, excludeId = null) {
+  const existing = await tx.availabilitySlot.findMany({
+    where: {
+      spaceId,
+      slotDate,
+      ...(excludeId ? { id: { not: excludeId } } : {})
+    }
+  });
+
+  if (existing.some(slot =>
+    slotOverlaps(startTime, endTime, slot.startTime, slot.endTime)
+  )) {
+    throw new Error('This slot overlaps an existing availability slot.');
+  }
+}
+
+async function findReservedBooking(tx, spaceId, slotDate, startTime, endTime) {
+  const bookings = await tx.booking.findMany({
+    where: {
+      spaceId,
+      slotDate,
+      status: { notIn: ['cancelled', 'rejected', 'waitlisted'] }
+    }
+  });
+
+  return bookings.find(booking =>
+    slotOverlaps(startTime, endTime, booking.startTime, booking.endTime)
+  );
+}
+
+// GET /owner/calendar availability
+exports.getOwnerAvailability = async ownerId => {
+  return prisma.availabilitySlot.findMany({
+    where: {
+      space: {
+        ownerId,
+        active: true,
+        listingStatus: 'approved'
+      }
+    },
+    include: { space: true },
+    orderBy: [
+      { slotDate: 'asc' },
+      { startTime: 'asc' }
+    ]
+  });
+};
+
+// POST /owner/availability
+exports.createAvailabilitySlot = async (ownerId, data) => {
+  const { slotDate, startTime, endTime } = parseSlotInput(data);
+  const spaceId = String(data.spaceId || data.space_id || '').trim();
+  if (!spaceId) throw new Error('A space is required.');
+
+  return prisma.$transaction(async tx => {
+    await assertSlotSpace(tx, spaceId, ownerId);
+    await assertNoSlotOverlap(tx, spaceId, slotDate, startTime, endTime);
+
+    const reserved = await findReservedBooking(tx, spaceId, slotDate, startTime, endTime);
+    if (reserved) {
+      throw new Error('This slot conflicts with an existing booking.');
+    }
+
+    const slot = await tx.availabilitySlot.create({
+      data: {
+        id: makeId('SLOT'),
+        spaceId,
+        slotDate,
+        startTime,
+        endTime,
+        isBooked: false,
+        status: 'available'
+      }
+    });
+
+    await writeAudit(
+      tx,
+      ownerId,
+      'create_availability_slot',
+      `availability_slot:${slot.id}`,
+      data.reason?.trim() || null,
+      { spaceId, slotDate: dateValue(slotDate), startTime, endTime }
+    );
+    return slot;
+  }, { isolationLevel: 'Serializable' });
+};
+
+function dateValue(value) {
+  return dateValueFromDate(value);
+}
+
+function dateValueFromDate(value) {
+  return value.toISOString().slice(0, 10);
+}
+
+function localDateKey(value) {
+  return [
+    value.getFullYear(),
+    String(value.getMonth() + 1).padStart(2, '0'),
+    String(value.getDate()).padStart(2, '0')
+  ].join('-');
+}
+
+// POST /owner/availability/:id
+exports.updateAvailabilitySlot = async (slotId, ownerId, data) => {
+  const { slotDate, startTime, endTime } = parseSlotInput(data);
+
+  return prisma.$transaction(async tx => {
+    const slot = await tx.availabilitySlot.findUnique({
+      where: { id: slotId },
+      include: { space: true }
+    });
+    if (!slot || slot.space.ownerId !== ownerId) {
+      throw new Error('Availability slot not found or unauthorized.');
+    }
+    if (!slot.space.active || slot.space.listingStatus !== 'approved') {
+      throw new Error('Availability can only be managed for an approved active listing.');
+    }
+    if (slot.isBooked || slot.status !== 'available') {
+      throw new Error('Booked slots cannot be modified.');
+    }
+
+    const reserved = await findReservedBooking(
+      tx,
+      slot.spaceId,
+      slot.slotDate,
+      slot.startTime,
+      slot.endTime
+    );
+    if (reserved) {
+      throw new Error('A booking already reserves this slot.');
+    }
+
+    await assertNoSlotOverlap(tx, slot.spaceId, slotDate, startTime, endTime, slotId);
+    const newReservation = await findReservedBooking(
+      tx,
+      slot.spaceId,
+      slotDate,
+      startTime,
+      endTime
+    );
+    if (newReservation) {
+      throw new Error('This slot conflicts with an existing booking.');
+    }
+
+    const updatedCount = await tx.availabilitySlot.updateMany({
+      where: {
+        id: slotId,
+        spaceId: slot.spaceId,
+        slotDate: slot.slotDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        isBooked: false,
+        status: 'available'
+      },
+      data: { slotDate, startTime, endTime }
+    });
+    if (updatedCount.count !== 1) {
+      throw new Error('Availability slot changed; reload and retry.');
+    }
+
+    const updated = {
+      ...slot,
+      slotDate,
+      startTime,
+      endTime
+    };
+    await writeAudit(
+      tx,
+      ownerId,
+      'update_availability_slot',
+      `availability_slot:${slotId}`,
+      data.reason?.trim() || null,
+      { spaceId: slot.spaceId, slotDate: dateValue(slotDate), startTime, endTime }
+    );
+    return updated;
+  }, { isolationLevel: 'Serializable' });
+};
+
+// POST /owner/availability/:id/delete
+exports.deleteAvailabilitySlot = async (slotId, ownerId, reason = null) => {
+  return prisma.$transaction(async tx => {
+    const slot = await tx.availabilitySlot.findUnique({
+      where: { id: slotId },
+      include: { space: true }
+    });
+    if (!slot || slot.space.ownerId !== ownerId) {
+      throw new Error('Availability slot not found or unauthorized.');
+    }
+    if (!slot.space.active || slot.space.listingStatus !== 'approved') {
+      throw new Error('Availability can only be managed for an approved active listing.');
+    }
+    if (slot.isBooked || slot.status !== 'available') {
+      throw new Error('Booked slots cannot be deleted.');
+    }
+
+    const reserved = await findReservedBooking(
+      tx,
+      slot.spaceId,
+      slot.slotDate,
+      slot.startTime,
+      slot.endTime
+    );
+    if (reserved) {
+      throw new Error('A booking already reserves this slot.');
+    }
+
+    const deletedCount = await tx.availabilitySlot.deleteMany({
+      where: {
+        id: slotId,
+        spaceId: slot.spaceId,
+        slotDate: slot.slotDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        isBooked: false,
+        status: 'available'
+      }
+    });
+    if (deletedCount.count !== 1) {
+      throw new Error('Availability slot changed; reload and retry.');
+    }
+    await writeAudit(
+      tx,
+      ownerId,
+      'delete_availability_slot',
+      `availability_slot:${slotId}`,
+      reason?.trim() || null,
+      { spaceId: slot.spaceId, slotDate: dateValue(slot.slotDate) }
+    );
+  }, { isolationLevel: 'Serializable' });
+};
 
 function normalizeBooking(booking) {
   if (!booking) return null;
@@ -287,13 +580,21 @@ exports.create = async (
     });
 
     // Reserve the exact slot while its booking request is pending.
-    await tx.availabilitySlot.update({
-      where: { id: slotId },
+    const reservedSlot = await tx.availabilitySlot.updateMany({
+      where: {
+        id: slotId,
+        spaceId,
+        isBooked: false,
+        status: 'available'
+      },
       data: {
         isBooked: true,
         status: 'booked'
       }
     });
+    if (reservedSlot.count !== 1) {
+      throw new Error('This slot is no longer available.');
+    }
 
     await notify(
       tx,
@@ -477,7 +778,7 @@ exports.getUserBookings = async (
 
   if (tab === 'past') {
     where.status = { in: [...COMPLETED_STATUSES, 'cancelled', 'rejected'] };
-  } else {
+  } else if (tab !== 'all') {
     where.status = { in: ACTIVE_STATUSES };
   }
 
@@ -619,31 +920,48 @@ exports.requestExtension = async (
     throw new Error('Extension must be 1 or 2 hours.');
   }
 
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { space: true }
-  });
-
-  if (!booking || booking.userId !== userId) {
-    throw new Error('Booking not found.');
-  }
-
-  if (booking.status !== 'checked_in') {
-    throw new Error('An extension can only be requested during a session.');
-  }
-
-  if (booking.extensionStatus === 'requested') {
-    throw new Error('An extension request is already pending.');
-  }
-
   await prisma.$transaction(async tx => {
-    await tx.booking.update({
+    const booking = await tx.booking.findUnique({
       where: { id: bookingId },
+      include: { space: true }
+    });
+
+    if (!booking || booking.userId !== userId) {
+      throw new Error('Booking not found.');
+    }
+
+    if (booking.status !== 'checked_in') {
+      throw new Error('An extension can only be requested during a session.');
+    }
+
+    if (booking.extensionStatus === 'requested') {
+      throw new Error('An extension request is already pending.');
+    }
+
+    const updated = await tx.booking.updateMany({
+      where: {
+        id: bookingId,
+        userId,
+        status: 'checked_in',
+        extensionStatus: { not: 'requested' }
+      },
       data: {
         extensionHours: additionalHours,
         extensionStatus: 'requested'
       }
     });
+    if (updated.count !== 1) {
+      throw new Error('Booking changed; reload and retry.');
+    }
+
+    await writeAudit(
+      tx,
+      userId,
+      'request_extension',
+      `booking:${bookingId}`,
+      null,
+      { additionalHours }
+    );
 
     await notify(
       tx,
@@ -975,6 +1293,7 @@ exports.leaveWaitlist = async (waitlistId, userId) => {
 // The service signature follows database.md.
 exports.checkin = async (
   bookingId,
+  ownerId,
   conditionData = {},
   conditionNotes = null
 ) => {
@@ -984,12 +1303,19 @@ exports.checkin = async (
       include: { space: true }
     });
 
-    if (!booking) {
+    if (!booking || booking.space.ownerId !== ownerId) {
       throw new Error('Booking not found.');
     }
 
     if (booking.status !== 'approved') {
       throw new Error('This booking cannot be checked in.');
+    }
+
+    const existing = await tx.conditionReport.findFirst({
+      where: { bookingId, type: 'checkin' }
+    });
+    if (existing) {
+      throw new Error('This booking has already been checked in.');
     }
 
     await tx.conditionReport.create({
@@ -1005,16 +1331,30 @@ exports.checkin = async (
       }
     });
 
-    await tx.booking.update({
-      where: { id: bookingId },
+    const updated = await tx.booking.updateMany({
+      where: { id: bookingId, spaceId: booking.spaceId, status: 'approved' },
       data: { status: 'checked_in' }
     });
+    if (updated.count !== 1) {
+      throw new Error('Booking changed; reload and retry.');
+    }
+
+    await writeAudit(tx, ownerId, 'booking_checkin', `booking:${bookingId}`);
+    await notify(
+      tx,
+      booking.userId,
+      'booking_checked_in',
+      'Check-in completed',
+      `Check-in for ${booking.space.name} has been recorded.`,
+      `/bookings/${bookingId}/receipt`
+    );
   });
 };
 
 // POST /owner/return/:id
 exports.return = async (
   bookingId,
+  ownerId,
   conditionData = {},
   conditionNotes = null
 ) => {
@@ -1024,25 +1364,42 @@ exports.return = async (
       include: { space: true }
     });
 
-    if (!booking) {
+    if (!booking || booking.space.ownerId !== ownerId) {
       throw new Error('Booking not found.');
     }
 
     if (!['checked_in', 'overdue'].includes(booking.status)) {
       throw new Error('This booking cannot be returned.');
     }
+    const existing = await tx.conditionReport.findFirst({
+      where: { bookingId, type: 'checkout' }
+    });
+    if (existing) {
+      throw new Error('This booking has already been returned.');
+    }
 
-    const requiredChecks = [
+    const checklist = Array.isArray(conditionData.checklist)
+      ? conditionData.checklist
+      : [];
+    const checklistBySpace = {
+      community_ground: ['item_litter', 'item_posts', 'item_surface', 'item_gate'],
+      school_playground: ['item_litter', 'item_posts', 'item_surface', 'item_gate'],
+      storeroom: ['item_arranged', 'item_shelves', 'item_lock'],
+      community_hall: ['item_clean', 'item_furniture', 'item_lights', 'item_doors'],
+      small_room: ['item_clean', 'item_furniture', 'item_lights', 'item_doors']
+    };
+    const requiredChecks = checklistBySpace[booking.space.spaceType] || [
       'cleanliness_verified',
       'sound_system_working',
       'lights_fans_functional',
       'furniture_arranged',
       'waste_disposed'
     ];
-
-    const clean = requiredChecks.every(
-      key => conditionData[key] === true || conditionData[key] === 'true'
-    );
+    const clean = checklist.length > 0
+      ? requiredChecks.every(key => checklist.includes(key))
+      : requiredChecks.every(
+        key => conditionData[key] === true || conditionData[key] === 'true'
+      );
 
     await tx.conditionReport.create({
       data: {
@@ -1058,13 +1415,20 @@ exports.return = async (
       }
     });
 
-    await tx.booking.update({
-      where: { id: bookingId },
+    const updated = await tx.booking.updateMany({
+      where: {
+        id: bookingId,
+        spaceId: booking.spaceId,
+        status: { in: ['checked_in', 'overdue'] }
+      },
       data: {
         status: clean ? 'returned' : 'damaged',
         depositStatus: clean ? 'refunded' : 'held'
       }
     });
+    if (updated.count !== 1) {
+      throw new Error('Booking changed; reload and retry.');
+    }
 
     if (clean) {
       const settings = await tx.setting.findUnique({
@@ -1076,7 +1440,12 @@ exports.return = async (
         select: { score: true }
       });
 
-      const bonus = settings?.pointsCleanReturn ?? 5;
+      const late = booking.status === 'overdue' ||
+        conditionData.is_late === true ||
+        conditionData.is_late === 'true';
+      const bonus = late
+        ? (settings?.pointsLateReturn ?? -10)
+        : (settings?.pointsCleanReturn ?? 5);
       const minScore = settings?.pointsMin ?? 0;
       const maxScore = settings?.pointsMax ?? 120;
 
@@ -1099,19 +1468,39 @@ exports.return = async (
             userId: booking.userId,
             bookingId,
             delta: actualDelta,
-            action: 'clean_return',
-            reason: 'Clean return confirmed by owner.'
+            action: late ? 'late_return' : 'clean_return',
+            reason: late
+              ? 'Late return confirmed by owner.'
+              : 'Clean return confirmed by owner.'
           }
         });
       }
     }
+
+    await writeAudit(
+      tx,
+      ownerId,
+      clean ? 'booking_returned' : 'booking_return_flagged',
+      `booking:${bookingId}`,
+      conditionNotes
+    );
+    await notify(
+      tx,
+      booking.userId,
+      clean ? 'booking_returned' : 'booking_return_flagged',
+      clean ? 'Return completed' : 'Return requires review',
+      clean
+        ? `Your return for ${booking.space.name} was completed.`
+        : `The return for ${booking.space.name} requires incident review.`,
+      `/bookings/${bookingId}/receipt`
+    );
 
     return { clean };
   });
 };
 
 // POST /owner/today/:id/no-show
-exports.markNoShow = async (bookingId, reason) => {
+exports.markNoShow = async (bookingId, ownerId, reason) => {
   if (!reason || !reason.trim()) {
     throw new Error('No-show reason is required.');
   }
@@ -1122,7 +1511,7 @@ exports.markNoShow = async (bookingId, reason) => {
       include: { space: true }
     });
 
-    if (!booking) {
+    if (!booking || booking.space.ownerId !== ownerId) {
       throw new Error('Booking not found.');
     }
 
@@ -1150,8 +1539,8 @@ exports.markNoShow = async (bookingId, reason) => {
 
     const actualDelta = newScore - user.score;
 
-    await tx.booking.update({
-      where: { id: bookingId },
+    const updated = await tx.booking.updateMany({
+      where: { id: bookingId, spaceId: booking.spaceId, status: 'approved' },
       data: {
         status: 'cancelled',
         cancelReason: reason.trim(),
@@ -1159,6 +1548,9 @@ exports.markNoShow = async (bookingId, reason) => {
         canCancel: false
       }
     });
+    if (updated.count !== 1) {
+      throw new Error('Booking changed; reload and retry.');
+    }
 
     if (actualDelta !== 0) {
       await tx.user.update({
@@ -1180,10 +1572,18 @@ exports.markNoShow = async (bookingId, reason) => {
 
     await writeAudit(
       tx,
-      booking.space.ownerId,
+      ownerId,
       'mark_no_show',
       `booking:${bookingId}`,
       reason.trim()
+    );
+    await notify(
+      tx,
+      booking.userId,
+      'booking_no_show',
+      'Booking marked as no-show',
+      reason.trim(),
+      '/history'
     );
   });
 };
@@ -1243,6 +1643,9 @@ exports.approveExtension = async (bookingId, ownerId) => {
     if (booking.extensionStatus !== 'requested') {
       throw new Error('No extension request is pending.');
     }
+    if (!['checked_in'].includes(booking.status)) {
+      throw new Error('This booking cannot be extended in its current state.');
+    }
 
     const extraHours = Number(booking.extensionHours || 0);
 
@@ -1277,8 +1680,13 @@ exports.approveExtension = async (bookingId, ownerId) => {
     const feePercent = toNumber(settings?.platformFeePercent ?? 8);
     const newPlatformFee = newHourlyFee * feePercent / 100;
 
-    await tx.booking.update({
-      where: { id: bookingId },
+    const updated = await tx.booking.updateMany({
+      where: {
+        id: bookingId,
+        spaceId: booking.spaceId,
+        extensionStatus: 'requested',
+        status: 'checked_in'
+      },
       data: {
         endTime: newEndTime,
         durationHours: booking.durationHours + extraHours,
@@ -1289,6 +1697,18 @@ exports.approveExtension = async (bookingId, ownerId) => {
         extensionStatus: 'approved'
       }
     });
+    if (updated.count !== 1) {
+      throw new Error('Booking changed; reload and retry.');
+    }
+
+    await writeAudit(
+      tx,
+      ownerId,
+      'approve_extension',
+      `booking:${bookingId}`,
+      null,
+      { additionalHours: extraHours }
+    );
 
     await notify(
       tx,
@@ -1336,6 +1756,14 @@ exports.rejectExtension = async (bookingId, ownerId, reason) => {
       reason.trim()
     );
 
+    await writeAudit(
+      tx,
+      ownerId,
+      'reject_extension',
+      `booking:${bookingId}`,
+      reason.trim()
+    );
+
     await notify(
       tx,
       booking.userId,
@@ -1368,12 +1796,9 @@ exports.getOwnerRequests = async ownerId => {
   });
 
   return bookings.map(booking => ({
-    id: booking.id,
+    ...normalizeBooking(booking),
     user: booking.user,
-    space: booking.space,
-    total_amount: toNumber(booking.totalAmount),
-    payment_status: booking.paymentStatus,
-    payment_method: booking.paymentMethod
+    space: booking.space
   }));
 };
 
@@ -1451,11 +1876,20 @@ exports.getOwnerToday = async ownerId => {
     orderBy: { startTime: 'asc' }
   });
 
-  const normalized = bookings.map(booking => ({
-    ...normalizeBooking(booking),
-    space: booking.space,
+  const normalized = bookings.map(booking => {
+    const normalizedBooking = normalizeBooking(booking);
+    return {
+    ...normalizedBooking,
+    access_pin: normalizedBooking.pin_code,
+    extension_requested: booking.extensionStatus === 'requested',
+    space: {
+      ...booking.space,
+      space_type: booking.space.spaceType,
+      indoor_outdoor: booking.space.indoorOutdoor
+    },
     user: booking.user
-  }));
+    };
+  });
 
   return {
     checkins: normalized.filter(item => item.status === 'approved'),
@@ -1476,7 +1910,7 @@ exports.getOwnerHistory = async (ownerId, page = 1, limit = 10) => {
   const bookings = await prisma.booking.findMany({
     where: {
       space: { ownerId },
-      status: { in: COMPLETED_STATUSES }
+      status: { in: [...COMPLETED_STATUSES, 'cancelled', 'rejected'] }
     },
     include: {
       space: true,
@@ -1490,10 +1924,17 @@ exports.getOwnerHistory = async (ownerId, page = 1, limit = 10) => {
   return bookings.map(booking => ({
     id: booking.id,
     ref: booking.ref,
-    space: booking.space,
+    space: {
+      ...booking.space,
+      space_type: booking.space.spaceType,
+      indoor_outdoor: booking.space.indoorOutdoor
+    },
     user: booking.user,
     slot_date: booking.slotDate,
+    start_time: booking.startTime,
+    end_time: booking.endTime,
     duration_hours: booking.durationHours,
+    hourly_fee_total: toNumber(booking.netPayout),
     net_payout: toNumber(booking.netPayout)
   }));
 };
@@ -1525,32 +1966,32 @@ exports.getOwnerEarnings = async ownerId => {
     0
   );
 
+  const [totalSlots, bookedSlots] = await Promise.all([
+    prisma.availabilitySlot.count({
+      where: { space: { ownerId } }
+    }),
+    prisma.availabilitySlot.count({
+      where: {
+        space: { ownerId },
+        isBooked: true
+      }
+    })
+  ]);
+
+  const utilizationRate = totalSlots > 0
+    ? `${Math.round((bookedSlots / totalSlots) * 100)}%`
+    : 'N/A';
+
   // The current Prisma schema has no payout transaction/history model.
   // These are completed earnings not yet represented by a payout record.
   return {
     totalEarnings,
     pendingPayouts: totalEarnings,
+    grossEarnings: ledger.reduce((total, item) => total + item.gross, 0),
+    platformFees: ledger.reduce((total, item) => total + item.platform_fee, 0),
+    completedBookings: ledger.length,
+    utilizationRate,
     payoutHistory: [],
     ledger
   };
-};
-
-// GET /owner/incidents
-exports.getOwnerIncidents = async ownerId => {
-  return prisma.incident.findMany({
-    where: { ownerId },
-    include: {
-      booking: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          initials: true,
-          score: true
-        }
-      },
-      space: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
 };

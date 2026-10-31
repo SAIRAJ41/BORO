@@ -74,6 +74,7 @@
       <p class="text-xs text-ink-muted">Earnings are disbursed directly to your verified bank account or UPI ID.</p>
 
       <form action="/owner/payout-method" method="POST" class="space-y-4">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
         <div>
           <label for="payout_type" class="block text-xs font-medium text-ink uppercase tracking-wider mb-1.5">Payout Channel</label>
           <select id="payout_type" name="payout_type" class="input w-full text-xs">

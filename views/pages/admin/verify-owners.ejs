@@ -57,6 +57,7 @@
             </button>
 
             <form action="/admin/owners/<%= owner.id %>/verify" method="POST">
+              <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <button type="submit" class="btn btn-primary text-xs font-bold">
                 Approve Verification &amp; Activate Space
               </button>

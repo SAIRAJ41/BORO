@@ -9,10 +9,15 @@
  */
 exports.attachUser = (req, res, next) => {
   // BACKEND: replace with persistent session / JWT store check
-  res.locals.currentUser = req.session && req.session.user ? req.session.user : null;
-
-  // BACKEND: wire a real CSRF check
-  res.locals.csrfToken = 'demo-csrf-token-xyz';
+  const user = req.session && req.session.user;
+  if (user && user.status === 'suspended') {
+    if (req.session.destroy) {
+      return req.session.destroy(() => res.redirect('/login'));
+    }
+    req.session.user = null;
+    return res.redirect('/login');
+  }
+  res.locals.currentUser = user || null;
 
   next();
 };

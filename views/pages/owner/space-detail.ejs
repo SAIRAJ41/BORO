@@ -1,0 +1,102 @@
+<div class="max-w-4xl mx-auto space-y-6 py-4">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line">
+    <div>
+      <a href="/owner/my-spaces" class="text-xs text-primary hover:underline">&larr; Back to my listings</a>
+      <h1 class="text-2xl font-bold text-ink mt-2"><%= space.name %></h1>
+      <p class="text-sm text-ink-muted"><%= helpers.formatSpaceType(space.space_type) %> &bull; <%= space.locality %>, <%= space.city %></p>
+    </div>
+    <div class="flex items-center gap-2">
+      <% const statusClass = space.listing_status === 'approved' ? 'badge-success' : (space.listing_status === 'rejected' ? 'badge-danger' : 'badge-warning'); %>
+      <span class="badge <%= statusClass %> capitalize"><%= space.listing_status %></span>
+      <a href="/owner/spaces/<%= space.id %>/edit" class="btn btn-secondary text-xs">Edit Listing</a>
+    </div>
+  </div>
+
+  <% if (space.listing_status === 'rejected') { %>
+    <div class="card p-4 bg-status-danger/10 border border-status-danger/30 space-y-1">
+      <strong class="text-sm text-status-danger">Changes required before resubmission</strong>
+      <p class="text-xs text-ink-muted"><%= space.rejection_reason || 'The administrator requested changes to this listing.' %></p>
+    </div>
+  <% } else if (space.listing_status === 'pending') { %>
+    <div class="card p-4 bg-status-warning/10 border border-status-warning/30">
+      <p class="text-xs text-ink-muted">This listing is pending administrator review and is not publicly bookable.</p>
+    </div>
+  <% } %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card p-6 bg-surface border border-line space-y-4">
+        <h2 class="text-base font-bold text-ink">Property Details</h2>
+        <p class="text-sm text-ink-muted whitespace-pre-line"><%= space.description || 'No description provided.' %></p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div><span class="text-ink-muted block">Location</span><strong><%= space.locality %>, <%= space.city %></strong></div>
+          <div><span class="text-ink-muted block">Address</span><strong><%= space.address %></strong></div>
+          <div><span class="text-ink-muted block">Capacity</span><strong><%= space.capacity %></strong></div>
+          <div><span class="text-ink-muted block">Area</span><strong><%= space.sqft %> sq ft</strong></div>
+          <div><span class="text-ink-muted block">Environment</span><strong><%= space.indoor_outdoor %></strong></div>
+          <div><span class="text-ink-muted block">Hourly rate</span><strong><%= helpers.formatCurrency(space.price_per_hour) %></strong></div>
+          <div><span class="text-ink-muted block">Deposit</span><strong><%= helpers.formatCurrency(space.deposit_amount) %></strong></div>
+          <div><span class="text-ink-muted block">Purposes</span><strong><%= (space.allowed_purposes || []).join(', ') || 'Not specified' %></strong></div>
+        </div>
+
+        <div class="card p-6 bg-surface border border-line space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-ink">Property Photos</h2>
+            <p class="text-xs text-ink-muted">JPEG, PNG, or WebP; up to 12 photos per listing.</p>
+          </div>
+          <form action="/owner/spaces/<%= space.id %>/photos" method="POST" enctype="multipart/form-data" class="space-y-2">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple required class="input w-full text-xs">
+            <button type="submit" class="btn btn-primary text-xs">Upload Photos</button>
+          </form>
+          <% if (space.photos && space.photos.length > 0) { %>
+            <div class="grid grid-cols-2 gap-3">
+              <% space.photos.forEach(photo => { %>
+                <div class="space-y-2">
+                  <img src="<%= photo.url || photo %>" alt="<%= photo.name || space.name %>" class="h-32 w-full object-cover rounded-xl border border-line">
+                  <% if (photo.id) { %>
+                    <form action="/owner/spaces/<%= space.id %>/photos/<%= photo.id %>/delete" method="POST">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <button type="submit" class="btn btn-ghost text-xs text-status-danger">Delete</button>
+                    </form>
+                    <form action="/owner/spaces/<%= space.id %>/photos/<%= photo.id %>/replace" method="POST" enctype="multipart/form-data" class="space-y-1">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" required class="input w-full text-xs">
+                      <button type="submit" class="btn btn-secondary text-xs">Replace</button>
+                    </form>
+                  <% } %>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-xs text-ink-muted">No property photos uploaded yet.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card p-6 bg-surface border border-line space-y-4">
+        <h2 class="text-base font-bold text-ink">Review Timeline</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div><span class="text-ink-muted block">Submitted</span><strong><%= space.submitted_at ? helpers.formatDateTime(space.submitted_at) : 'Not available' %></strong></div>
+          <div><span class="text-ink-muted block">Reviewed</span><strong><%= space.reviewed_at ? helpers.formatDateTime(space.reviewed_at) : 'Not reviewed' %></strong></div>
+          <div><span class="text-ink-muted block">Review status</span><strong class="capitalize"><%= space.listing_status %></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="card p-6 bg-surface border border-line space-y-3">
+        <h2 class="text-base font-bold text-ink">Ownership Document</h2>
+        <% if (space.ownership_document_present) { %>
+          <p class="text-xs text-ink"><strong><%= space.ownership_document_name || 'Ownership document' %></strong></p>
+          <p class="text-xs text-ink-muted"><%= space.ownership_document_mime_type || space.ownership_document_type || 'Document' %> &bull; <%= space.ownership_document_size || 'Unknown' %> bytes</p>
+          <a href="/owner/spaces/<%= space.id %>/document" target="_blank" rel="noopener" class="btn btn-secondary w-full text-xs">Open Secure Document</a>
+          <p class="text-[11px] text-ink-muted">Access uses a short-lived private signed URL.</p>
+        <% } else { %>
+          <p class="text-xs text-status-warning">No ownership document is attached.</p>
+          <a href="/owner/spaces/<%= space.id %>/edit" class="text-xs text-primary hover:underline">Add a document in Edit Listing</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

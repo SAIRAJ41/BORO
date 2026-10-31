@@ -10,6 +10,7 @@ const sessionMiddleware = require('./lib/sessionMiddleware');
 const helpers = require('./lib/helpers');
 const mockData = require('./data/mock');
 const { attachUser, isAuthenticated, requireRole } = require('./middleware/auth');
+const { csrfProtection } = require('./middleware/csrf');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -18,21 +19,34 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.disable('x-powered-by');
 
 // Setup View Engine
 app.engine('ejs', expressEjsEngine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
 // Body Parser Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use(express.json({ limit: '100kb' }));
 
 // Serve Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Session & Flash Middleware
 app.use(sessionMiddleware());
+app.use(csrfProtection);
 
 // Attach Session User to res.locals.currentUser
 app.use(attachUser);
@@ -80,9 +94,6 @@ app.use((req, res, next) => {
     res.locals.unreadNotificationsCount = 0;
   }
 
-  // BACKEND: wire a real CSRF check
-  res.locals.csrfToken = 'demo-csrf-token-placeholder-xyz';
-
   res.locals.activeRoute = getActiveRoute(req.path);
   res.locals.helpers = helpers;
   res.locals.title = 'BORO';
@@ -116,8 +127,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('BORO Server Error:', err);
   res.status(500).render('pages/errors/500', {
-    title: '500 - Server Error',
-    error: err
+    title: '500 - Server Error'
   });
 });
 

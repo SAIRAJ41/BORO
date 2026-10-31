@@ -7,6 +7,7 @@
     "start": "node app.js",
     "test": "node scripts/testRoutes.js && node scripts/testAuth.js",
     "test:auth": "node scripts/testAuth.js",
+    "test:security": "node scripts/testSecurity.js",
     "check-data": "node scripts/checkData.js"
   },
   "dependencies": {
