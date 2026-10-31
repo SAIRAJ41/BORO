@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
+const spaceService = require('../services/spaceService');
 
 // Helper to ensure admin context
 function getAdminUser(req) {
@@ -10,6 +11,40 @@ function getAdminUser(req) {
   }
   return mockData.users.find(u => u.id === 'USR-099'); // Amit Sharma (admin)
 }
+
+// GET /admin/listings - Listing approval queue
+router.get('/listings', async (req, res, next) => {
+  try {
+    const listings = await spaceService.getPendingListings();
+    res.json({ listings });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/listings/:id/approve', async (req, res) => {
+  try {
+    await spaceService.approveListing(req.params.id, req.session.user.id);
+    req.flash('success', 'Listing approved.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to approve listing.');
+  }
+  res.redirect('/admin/listings');
+});
+
+router.post('/listings/:id/reject', async (req, res) => {
+  try {
+    await spaceService.rejectListing(
+      req.params.id,
+      req.session.user.id,
+      req.body.reason
+    );
+    req.flash('success', 'Listing rejected.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to reject listing.');
+  }
+  res.redirect('/admin/listings');
+});
 
 // GET /admin/overview - Admin system dashboard
 router.get('/overview', (req, res) => {

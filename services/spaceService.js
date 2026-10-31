@@ -21,6 +21,13 @@ function normalizeSpace(space) {
     facilities: space.amenities || [],
     allowed_purposes: space.allowedPurposes || [],
     photos: space.photos || [],
+    listing_status: space.listingStatus,
+    submitted_at: space.submittedAt,
+    reviewed_at: space.reviewedAt,
+    reviewed_by: space.reviewedBy,
+    rejection_reason: space.rejectionReason,
+    ownership_document_type: space.ownershipDocumentType,
+    ownership_document_url: space.ownershipDocumentUrl,
     rating: ratings.length
       ? Number((ratingTotal / ratings.length).toFixed(1))
       : 0,
@@ -73,7 +80,7 @@ exports.getSpaces = async (filters = {}, page = 1, limit = 12) => {
   page = Math.max(1, Number(page) || 1);
   limit = Math.max(1, Number(limit) || 12);
 
-  const where = { active: true };
+  const where = { active: true, listingStatus: 'approved' };
 
   if (filters.space_type) {
     where.spaceType = filters.space_type;
@@ -167,53 +174,102 @@ exports.getSpaces = async (filters = {}, page = 1, limit = 12) => {
 };
 
 // GET /spaces/:id
-exports.getSpaceById = async (id) => {
-  const record = await prisma.space.findUnique({
-    where: { id },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          initials: true,
-          phone: true,
-          verifications: {
-            select: {
-              isVerified: true
-            }
-          }
-        }
-      },
-      ratings: {
+exports.getSpaceById = async (id, { publicOnly = true } = {}) => {
+  const query = publicOnly
+    ? prisma.space.findFirst({
+        where: { id, active: true, listingStatus: 'approved' },
         include: {
-          user: {
+          owner: {
             select: {
               id: true,
               name: true,
-              initials: true
+              initials: true,
+              phone: true,
+              verifications: {
+                select: {
+                  isVerified: true
+                }
+              }
+            }
+          },
+          ratings: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  initials: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          conditionReports: {
+            include: {
+              reporter: {
+                select: {
+                  id: true,
+                  name: true,
+                  role: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
             }
           }
-        },
-        orderBy: {
-          createdAt: 'desc'
         }
-      },
-      conditionReports: {
+      })
+    : prisma.space.findUnique({
+        where: { id },
         include: {
-          reporter: {
+          owner: {
             select: {
               id: true,
               name: true,
-              role: true
+              initials: true,
+              phone: true,
+              verifications: {
+                select: {
+                  isVerified: true
+                }
+              }
+            }
+          },
+          ratings: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  initials: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          conditionReports: {
+            include: {
+              reporter: {
+                select: {
+                  id: true,
+                  name: true,
+                  role: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
             }
           }
-        },
-        orderBy: {
-          createdAt: 'desc'
         }
-      }
-    }
-  });
+      });
+
+  const record = await query;
 
   if (!record) return null;
 
@@ -252,7 +308,13 @@ exports.getOwnerSpaces = async (ownerId) => {
 
   return records.map(record => ({
     ...normalizeSpace(record),
-    active: record.active
+    active: record.active,
+    listing_status: record.listingStatus,
+    submitted_at: record.submittedAt,
+    reviewed_at: record.reviewedAt,
+    rejection_reason: record.rejectionReason,
+    ownership_document_type: record.ownershipDocumentType,
+    ownership_document_url: record.ownershipDocumentUrl
   }));
 };
 
@@ -306,6 +368,11 @@ exports.create = async (ownerId, data) => {
       data: {
         id,
         ownerId,
+        active: false,
+        listingStatus: 'pending',
+        submittedAt: new Date(),
+        ownershipDocumentType: data.ownership_document_type || null,
+        ownershipDocumentUrl: data.ownership_document_url || null,
         ...spaceData
       }
     });
@@ -328,7 +395,8 @@ exports.update = async (spaceId, ownerId, data) => {
     where: { id: spaceId },
     select: {
       id: true,
-      ownerId: true
+      ownerId: true,
+      listingStatus: true
     }
   });
 
@@ -341,11 +409,24 @@ exports.update = async (spaceId, ownerId, data) => {
   }
 
   const spaceData = normalizeSpaceInput(data);
+  const resubmitting = existing.listingStatus === 'rejected';
 
   await prisma.$transaction(async tx => {
     await tx.space.update({
       where: { id: spaceId },
-      data: spaceData
+      data: {
+        ...spaceData,
+        ...(resubmitting
+          ? {
+              active: false,
+              listingStatus: 'pending',
+              submittedAt: new Date(),
+              reviewedAt: null,
+              reviewedBy: null,
+              rejectionReason: null
+            }
+          : {})
+      }
     });
 
     await writeAudit(
@@ -355,6 +436,89 @@ exports.update = async (spaceId, ownerId, data) => {
       spaceId,
       { updatedFields: Object.keys(data) }
     );
+  });
+};
+
+// GET /admin/listings
+exports.getPendingListings = async () => {
+  const records = await prisma.space.findMany({
+    where: { listingStatus: 'pending' },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    },
+    orderBy: { submittedAt: 'asc' }
+  });
+
+  return records.map(record => ({
+    ...normalizeSpace(record),
+    owner: record.owner
+  }));
+};
+
+// POST /admin/listings/:id/approve
+exports.approveListing = async (spaceId, adminId) => {
+  const existing = await prisma.space.findUnique({
+    where: { id: spaceId },
+    select: { id: true, listingStatus: true }
+  });
+
+  if (!existing) throw new Error('Listing not found.');
+  if (existing.listingStatus !== 'pending') {
+    throw new Error('Only pending listings can be approved.');
+  }
+
+  await prisma.$transaction(async tx => {
+    await tx.space.update({
+      where: { id: spaceId },
+      data: {
+        listingStatus: 'approved',
+        active: true,
+        reviewedAt: new Date(),
+        reviewedBy: adminId,
+        rejectionReason: null
+      }
+    });
+
+    await writeAudit(tx, adminId, 'approve_listing', spaceId);
+  });
+};
+
+// POST /admin/listings/:id/reject
+exports.rejectListing = async (spaceId, adminId, reason) => {
+  const normalizedReason = String(reason || '').trim();
+  if (!normalizedReason) throw new Error('Rejection reason is required.');
+
+  const existing = await prisma.space.findUnique({
+    where: { id: spaceId },
+    select: { id: true, listingStatus: true }
+  });
+
+  if (!existing) throw new Error('Listing not found.');
+  if (existing.listingStatus !== 'pending') {
+    throw new Error('Only pending listings can be rejected.');
+  }
+
+  await prisma.$transaction(async tx => {
+    await tx.space.update({
+      where: { id: spaceId },
+      data: {
+        listingStatus: 'rejected',
+        active: false,
+        reviewedAt: new Date(),
+        reviewedBy: adminId,
+        rejectionReason: normalizedReason
+      }
+    });
+
+    await writeAudit(tx, adminId, 'reject_listing', spaceId, {
+      reason: normalizedReason
+    });
   });
 };
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
+const spaceService = require('../services/spaceService');
 
 // Helper to get active session user or Rajesh Kumar (owner)
 function getOwnerUser(req) {
@@ -75,19 +76,21 @@ router.post('/requests/:id/waitlist', (req, res) => {
 });
 
 // GET /owner/my-spaces - Manage owner's spaces
-router.get('/my-spaces', (req, res) => {
+router.get('/my-spaces', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND: replace mockData with spaceService.getSpacesByOwner(owner.id)
-  const spaces = mockData.spaces.filter(s => s.owner_id === owner.id);
-
-  res.render('pages/owner/my-spaces', {
-    title: 'My Listed Spaces - BORO Owner',
-    owner,
-    spaces,
-    helpers,
-    activeNav: 'owner-spaces'
-  });
+  try {
+    const spaces = await spaceService.getOwnerSpaces(owner.id);
+    res.render('pages/owner/my-spaces', {
+      title: 'My Listed Spaces - BORO Owner',
+      owner,
+      spaces,
+      helpers,
+      activeNav: 'owner-spaces'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET /owner/spaces/add - Add new space form
@@ -105,42 +108,56 @@ router.get('/spaces/add', (req, res) => {
 });
 
 // POST /owner/spaces - Create new space
-router.post('/spaces', (req, res) => {
+router.post('/spaces', async (req, res) => {
   const owner = getOwnerUser(req);
 
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+  try {
+    await spaceService.create(owner.id, req.body);
+    req.flash('success', 'Space submitted for admin review.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to submit space.');
+  }
   res.redirect('/owner/my-spaces');
 });
 
 // GET /owner/spaces/:id/edit - Edit space form
-router.get('/spaces/:id/edit', (req, res) => {
+router.get('/spaces/:id/edit', async (req, res, next) => {
   const owner = getOwnerUser(req);
   const spaceId = req.params.id;
 
   // BACKEND: replace mockData with spaceService.getSpaceById(spaceId)
-  const space = mockData.getSpaceById(spaceId);
-  if (!space) return res.status(404).render('pages/errors/404');
+  try {
+    const result = await spaceService.getSpaceById(spaceId, { publicOnly: false });
+    const space = result && result.space;
+    if (!space) return res.status(404).render('pages/errors/404');
 
   // Verify ownership
-  if (space.owner_id !== owner.id && owner.role !== 'admin') {
-    return res.status(403).render('pages/errors/403');
-  }
+    if (space.owner_id !== owner.id && owner.role !== 'admin') {
+      return res.status(403).render('pages/errors/403');
+    }
 
-  res.render('pages/owner/space-form', {
+    res.render('pages/owner/space-form', {
     title: `Edit ${space.name} - BORO Owner`,
     owner,
     space,
     isEdit: true,
     helpers,
     activeNav: 'owner-spaces'
-  });
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/spaces/:id - Update space
-router.post('/spaces/:id', (req, res) => {
-  // BACKEND TODO: implement action, write audit log entry with reason
-  req.flash('info', 'Not connected yet');
+router.post('/spaces/:id', async (req, res) => {
+  const owner = getOwnerUser(req);
+  try {
+    await spaceService.update(req.params.id, owner.id, req.body);
+    req.flash('success', 'Space updated.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to update space.');
+  }
   res.redirect('/owner/my-spaces');
 });
 

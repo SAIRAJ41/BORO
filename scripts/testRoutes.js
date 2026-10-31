@@ -5,6 +5,8 @@
 
 const http = require('http');
 require('./testUserServiceMock');
+require('./testSpaceServiceMock');
+require('./testBookingServiceMock');
 const app = require('../app');
 
 const routesToTest = [
@@ -47,6 +49,7 @@ const routesToTest = [
 
   // Admin Views
   { path: '/admin/overview', role: 'admin', expectedStatus: 200 },
+  { path: '/admin/listings', role: 'admin', expectedStatus: 200 },
   { path: '/admin/verify-owners', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users', role: 'admin', expectedStatus: 200 },
   { path: '/admin/users?q=Priya', role: 'admin', expectedStatus: 200 },

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const mockData = require('../data/mock');
 const helpers = require('../lib/helpers');
+const spaceService = require('../services/spaceService');
+const bookingService = require('../services/bookingService');
 
 // Helper to get active session user or null
 function getSessionUser(req) {
@@ -9,84 +11,64 @@ function getSessionUser(req) {
 }
 
 // GET / or /search - Space discovery
-router.get(['/', '/search'], (req, res) => {
+router.get(['/', '/search'], async (req, res, next) => {
   const { space_type, indoor_outdoor, capacity, price_max, purpose, q } = req.query;
 
-  // BACKEND: replace mockData.getSpaces() with spaceService.getSpaces(req.query)
-  let spaces = mockData.spaces.filter(s => s.active);
+  try {
+    const result = await spaceService.getSpaces({
+      space_type: space_type === 'all' ? undefined : space_type,
+      indoor_outdoor: indoor_outdoor === 'all' ? undefined : indoor_outdoor,
+      capacity_min: capacity,
+      price_max,
+      purpose: purpose === 'all' ? undefined : purpose,
+      search: q
+    });
 
-  if (space_type && space_type !== 'all') {
-    spaces = spaces.filter(s => s.space_type === space_type);
+    res.render('pages/user/search', {
+      title: 'Find Community Spaces - BORO',
+      spaces: result.spaces,
+      filters: req.query,
+      helpers,
+      activeNav: 'search'
+    });
+  } catch (error) {
+    next(error);
   }
-  if (indoor_outdoor && indoor_outdoor !== 'all') {
-    spaces = spaces.filter(s => s.indoor_outdoor === indoor_outdoor);
-  }
-  if (capacity) {
-    const minCap = parseInt(capacity);
-    if (!isNaN(minCap)) spaces = spaces.filter(s => s.capacity >= minCap);
-  }
-  if (price_max) {
-    const maxP = parseInt(price_max);
-    if (!isNaN(maxP)) spaces = spaces.filter(s => s.price_per_hour <= maxP);
-  }
-  if (purpose && purpose !== 'all') {
-    spaces = spaces.filter(s => s.allowed_purposes && s.allowed_purposes.includes(purpose));
-  }
-  if (q) {
-    const term = q.toLowerCase();
-    spaces = spaces.filter(s => s.name.toLowerCase().includes(term) || s.locality.toLowerCase().includes(term));
-  }
-
-  res.render('pages/user/search', {
-    title: 'Find Community Spaces - BORO',
-    spaces,
-    filters: req.query,
-    helpers,
-    activeNav: 'search'
-  });
 });
 
 // GET /spaces/:id - Space detail page
-router.get('/spaces/:id', (req, res) => {
+router.get('/spaces/:id', async (req, res, next) => {
   const spaceId = req.params.id;
   const user = getSessionUser(req);
 
-  // BACKEND: replace mockData.getSpaceById() with spaceService.getSpaceById(spaceId)
-  const space = mockData.getSpaceById(spaceId);
-  if (!space) {
-    return res.status(404).render('pages/errors/404', { title: 'Space Not Found' });
+  try {
+    const result = await spaceService.getSpaceById(spaceId);
+    if (!result) {
+      return res.status(404).render('pages/errors/404', { title: 'Space Not Found' });
+    }
+
+    const eligibility = await bookingService.getEligibility(
+      user && user.id,
+      result.space
+    );
+    const userScore = user ? user.score : 100;
+    res.render('pages/user/space-detail', {
+      title: `${result.space.name} - BORO`,
+      space: result.space,
+      owner: result.owner,
+      conditionReports: result.conditionReports,
+      eligibility: {
+        ...eligibility,
+        score: userScore,
+        tier: helpers.getScoreTier(userScore).tier,
+        isUnverifiedOwnerNotice: false
+      },
+      helpers,
+      activeNav: 'search'
+    });
+  } catch (error) {
+    next(error);
   }
-
-  // BACKEND: replace mockData.getOwnerById() with userService.getUserById(space.owner_id)
-  const owner = mockData.getUserById(space.owner_id) || { name: 'Community Caretaker', verified: true };
-
-  // BACKEND: replace mockData.getConditionReports() with incidentService.getReportsBySpace(spaceId)
-  const conditionReports = mockData.conditionReports.filter(c => c.space_id === spaceId);
-
-  // User eligibility calculation
-  const userActiveBookings = user ? mockData.bookings.filter(b => 
-    b.user_id === user.id && ['requested', 'approved', 'checked_in', 'overdue'].includes(b.status)
-  ).length : 0;
-
-  const userScore = user ? user.score : 100;
-  const eligibility = {
-    canBook: user ? userActiveBookings < 2 : true,
-    activeBookings: userActiveBookings,
-    maxActiveBookings: 2,
-    score: userScore,
-    tier: helpers.getScoreTier(userScore).tier,
-    isUnverifiedOwnerNotice: false
-  };
-
-  res.render('pages/user/space-detail', {
-    title: `${space.name} - BORO`,
-    space,
-    owner,
-    conditionReports,
-    eligibility,
-    helpers,
-    activeNav: 'search'
-  });
 });
 
 // POST /bookings - Submit a booking request with demo payment

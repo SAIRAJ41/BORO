@@ -9,6 +9,8 @@
 
 const http = require('http');
 require('./testUserServiceMock');
+require('./testSpaceServiceMock');
+require('./testBookingServiceMock');
 const app = require('../app');
 
 async function runAuthTests() {

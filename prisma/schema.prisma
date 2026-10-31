@@ -25,6 +25,7 @@ model User {
   verifiedDocuments   OwnerVerification[] @relation("VerifiedBy")
   payoutMethod        PayoutMethod?
   ownedSpaces         Space[]
+  reviewedSpaces       Space[] @relation("SpaceReviewer")
   bookings            Booking[]
   reportedConditions  ConditionReport[]
   incidentsAsUser     Incident[] @relation("IncidentUser")
@@ -92,11 +93,19 @@ model Space {
   photos          Json     @default("[]")
   active          Boolean  @default(true)
   verified        Boolean  @default(true)
-  weatherDependent Boolean @default(false) @map("weather_dependent")
+  listingStatus   String   @default("pending") @db.VarChar(20) @map("listing_status")
+  submittedAt     DateTime @default(now()) @db.Timestamptz @map("submitted_at")
+  reviewedAt      DateTime? @db.Timestamptz @map("reviewed_at")
+  reviewedBy      String?  @db.VarChar(36) @map("reviewed_by")
+  rejectionReason String?  @db.Text @map("rejection_reason")
+  ownershipDocumentType String? @db.VarChar(100) @map("ownership_document_type")
+  ownershipDocumentUrl  String? @db.VarChar(500) @map("ownership_document_url")
+  weatherDependent Boolean  @default(false) @map("weather_dependent")
   createdAt       DateTime @default(now()) @db.Timestamptz @map("created_at")
   updatedAt       DateTime @updatedAt @db.Timestamptz @map("updated_at")
 
   owner             User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewer          User?             @relation("SpaceReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   availabilitySlots AvailabilitySlot[]
   bookings          Booking[]
   conditionReports  ConditionReport[]
@@ -104,6 +113,8 @@ model Space {
   ratings           Rating[]
   waitlistEntries Waitlist[]
 
+  @@index([listingStatus, active])
+  @@index([ownerId, listingStatus])
   @@map("spaces")
 }
 

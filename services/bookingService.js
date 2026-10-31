@@ -145,7 +145,7 @@ exports.create = async (
       throw new Error('Your account is not active.');
     }
 
-    if (!space || !space.active) {
+    if (!space || !space.active || space.listingStatus !== 'approved') {
       throw new Error('This space is unavailable.');
     }
 
@@ -319,6 +319,48 @@ exports.create = async (
       status: booking.status
     };
   });
+};
+
+// Calculate the booking eligibility shown on the public space detail page.
+exports.getEligibility = async (userId, space) => {
+  const settings = await prisma.setting.findUnique({
+    where: { id: 1 },
+    select: { maxActiveBookingsPerUser: true }
+  });
+  const maxActiveBookings = settings?.maxActiveBookingsPerUser ?? 2;
+
+  if (!userId) {
+    return {
+      canBook: false,
+      activeBookings: 0,
+      maxActiveBookings
+    };
+  }
+
+  const [user, activeBookings] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { status: true }
+    }),
+    prisma.booking.count({
+      where: {
+        userId,
+        status: { in: ACTIVE_STATUSES }
+      }
+    })
+  ]);
+
+  return {
+    canBook: Boolean(
+      user &&
+      user.status === 'active' &&
+      space.active &&
+      space.listingStatus === 'approved' &&
+      activeBookings < maxActiveBookings
+    ),
+    activeBookings,
+    maxActiveBookings
+  };
 };
 
 // POST /bookings/:id/edit
