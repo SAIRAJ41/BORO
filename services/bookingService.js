@@ -5,8 +5,11 @@ const crypto = require('crypto');
 const ACTIVE_STATUSES = ['requested', 'approved', 'checked_in', 'overdue'];
 const COMPLETED_STATUSES = ['returned', 'closed'];
 
-const makeId = prefix =>
-  `${prefix}-${crypto.randomBytes(16).toString('hex')}`;
+const makeId = (prefix, maxLen = 36) => {
+  const cleanPrefix = String(prefix || 'ID').toUpperCase();
+  const hexBytes = Math.max(1, Math.floor((maxLen - 1 - cleanPrefix.length) / 2));
+  return `${cleanPrefix}-${crypto.randomBytes(hexBytes).toString('hex')}`;
+};
 
 const toNumber = value => Number(value || 0);
 
@@ -1006,6 +1009,11 @@ exports.approve = async (bookingId, ownerId, reason = null) => {
     }
 
     const pinCode = String(crypto.randomInt(1000, 10000));
+    const dateStr = dateValueFromDate(new Date(booking.slotDate));
+    const [h, m] = String(booking.startTime || '00:00').split(':').map(Number);
+    const slotStart = new Date(`${dateStr}T00:00:00Z`);
+    slotStart.setUTCHours(h, m, 0, 0);
+    const cancellationDeadline = new Date(slotStart.getTime() - 2 * 60 * 60 * 1000);
 
     await tx.booking.update({
       where: { id: bookingId },
@@ -1014,10 +1022,7 @@ exports.approve = async (bookingId, ownerId, reason = null) => {
         pinCode,
         decisionReason: reason?.trim() || null,
         canCancel: true,
-        cancellationDeadline: addHours(
-          booking.startTime,
-          -2
-        )
+        cancellationDeadline
       }
     });
 
@@ -1132,10 +1137,20 @@ exports.waitlist = async (bookingId, ownerId, reason) => {
       throw new Error('This booking request is no longer pending.');
     }
 
-    const slot = await findAvailabilitySlot(tx, booking);
+    let slot = await findAvailabilitySlot(tx, booking);
 
     if (!slot) {
-      throw new Error('Availability slot not found.');
+      slot = await tx.availabilitySlot.create({
+        data: {
+          id: makeId('SLOT'),
+          spaceId: booking.spaceId,
+          slotDate: booking.slotDate,
+          startTime: booking.startTime,
+          endTime: booking.endTime,
+          isBooked: false,
+          status: 'available'
+        }
+      });
     }
 
     const last = await tx.waitlist.findFirst({
@@ -1786,6 +1801,7 @@ exports.getOwnerRequests = async ownerId => {
         select: {
           id: true,
           name: true,
+          email: true,
           initials: true,
           score: true
         }

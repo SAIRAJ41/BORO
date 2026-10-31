@@ -8,7 +8,7 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-xl font-bold text-ink"><%= user.name %></h1>
-          <%- include('../../partials/VerifiedBadge', { verified: user.verified, label: user.verified ? 'Verified Resident' : 'Unverified' }) %>
+          <%- include('../../partials/VerifiedBadge', { verified: user.verified, label: user.role === 'owner' ? (user.verified ? 'Verified Owner Partner' : 'Pending Owner Review') : (user.verified ? 'Verified Resident' : 'Unverified Resident') }) %>
         </div>
         <p class="text-sm text-ink-muted"><%= user.email %> &bull; <%= user.phone || '+91 98765 43210' %></p>
         <div class="mt-1 flex items-center gap-2 text-xs text-ink-muted">
@@ -33,42 +33,77 @@
     <!-- Verification Details & Document Submission -->
     <div class="md:col-span-2 space-y-6">
       <div class="card p-6 bg-surface border border-line">
-        <h2 class="text-base font-semibold text-ink mb-1">Identity & Trust Verification</h2>
-        <p class="text-xs text-ink-muted mb-4">Verified profiles receive faster booking decisions and higher trust among space owners.</p>
+        <h2 class="text-base font-semibold text-ink mb-1">
+          <%= user.role === 'owner' ? 'Owner Partner Accreditation' : 'Identity & Trust Verification' %>
+        </h2>
+        <p class="text-xs text-ink-muted mb-4">
+          <%= user.role === 'owner'
+            ? 'Verified space partners can list and manage community spaces. Accreditation is reviewed by trust administrators.'
+            : 'Verified profiles receive faster booking decisions and higher trust among space owners.' %>
+        </p>
 
-        <div class="space-y-3 mb-6">
-          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-tint border border-line">
-            <div class="flex items-center gap-3">
-              <span class="text-status-success font-bold">&check;</span>
-              <div>
-                <div class="text-sm font-medium text-ink">Government ID Verification</div>
-                <div class="text-xs text-ink-muted">Aadhaar / Voter ID proof on file</div>
+        <% if (user.role === 'owner') { %>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-tint border border-line">
+              <div class="flex items-center gap-3">
+                <span class="<%= user.verified ? 'text-status-success font-bold' : 'text-status-warning font-bold' %>">
+                  <%= user.verified ? '✓' : '⏳' %>
+                </span>
+                <div>
+                  <div class="text-sm font-medium text-ink">Owner Accreditation Status</div>
+                  <div class="text-xs text-ink-muted"><%= user.verified ? 'Accredited community partner' : 'Administrative identity review in progress' %></div>
+                </div>
               </div>
+              <span class="badge <%= user.verified ? 'badge-success' : 'badge-warning' %> text-xs">
+                <%= user.verified ? 'Verified' : 'Pending' %>
+              </span>
             </div>
-            <span class="badge badge-success text-xs">Verified</span>
           </div>
 
-          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-tint border border-line">
-            <div class="flex items-center gap-3">
-              <span class="text-status-success font-bold">&check;</span>
-              <div>
-                <div class="text-sm font-medium text-ink">Address / Ward Proof</div>
-                <div class="text-xs text-ink-muted">Proof of local ward residency</div>
+          <form action="/owner/verification-document" method="POST" enctype="multipart/form-data" class="p-4 rounded-xl border border-dashed border-line bg-surface-tint">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <div class="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Submit Owner Verification Document</div>
+            <p class="text-xs text-ink-muted mb-3">Upload your government ID or custodian authorization document (PDF, PNG, JPG, max 10 MB).</p>
+            <div class="flex flex-wrap items-center gap-3">
+              <input type="file" name="id_proof" accept=".pdf,.png,.jpg,.jpeg" required class="text-xs text-ink">
+              <button type="submit" class="btn btn-primary text-xs font-semibold">Upload ID Proof</button>
+            </div>
+          </form>
+        <% } else { %>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-tint border border-line">
+              <div class="flex items-center gap-3">
+                <span class="text-status-success font-bold">&check;</span>
+                <div>
+                  <div class="text-sm font-medium text-ink">Government ID Verification</div>
+                  <div class="text-xs text-ink-muted">Aadhaar / Voter ID proof on file</div>
+                </div>
               </div>
+              <span class="badge badge-success text-xs">Verified</span>
             </div>
-            <span class="badge badge-success text-xs">Verified</span>
-          </div>
-        </div>
 
-        <form action="/profile/verify" method="POST" class="p-4 rounded-xl border border-dashed border-line bg-surface-tint">
-          <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-          <div class="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Resident identity documents</div>
-          <p class="text-xs text-ink-muted mb-3">General resident identity documents are blocked until a dedicated identity-document model exists. Owner verification uses the separate OwnerVerification records and private ownership-documents bucket.</p>
-          <div class="flex items-center gap-3">
-            <input type="file" class="text-xs text-ink-muted" disabled>
-            <button type="submit" class="btn btn-secondary text-xs">Request unavailable</button>
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-tint border border-line">
+              <div class="flex items-center gap-3">
+                <span class="text-status-success font-bold">&check;</span>
+                <div>
+                  <div class="text-sm font-medium text-ink">Address / Ward Proof</div>
+                  <div class="text-xs text-ink-muted">Proof of local ward residency</div>
+                </div>
+              </div>
+              <span class="badge badge-success text-xs">Verified</span>
+            </div>
           </div>
-        </form>
+
+          <form action="/profile/verify" method="POST" class="p-4 rounded-xl border border-dashed border-line bg-surface-tint">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <div class="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Resident identity documents</div>
+            <p class="text-xs text-ink-muted mb-3">Your resident identity is already active and verified in good standing.</p>
+            <div class="flex items-center gap-3">
+              <input type="file" class="text-xs text-ink-muted" disabled>
+              <button type="submit" class="btn btn-secondary text-xs" disabled>Verified on file</button>
+            </div>
+          </form>
+        <% } %>
       </div>
 
       <!-- Score History Ledger -->

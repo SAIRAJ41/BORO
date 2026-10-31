@@ -68,7 +68,7 @@ exports.fileDispute = async (userId, auditEntryId, reason) => {
     throw new Error('A dispute already exists for this score entry.');
   }
 
-  const id = `DISP-${crypto.randomUUID()}`;
+  const id = `DISP-${crypto.randomBytes(15).toString('hex')}`;
 
   await prisma.dispute.create({
     data: {
@@ -164,7 +164,7 @@ exports.resolveDispute = async (disputeId, decision, reason, adminId = null) => 
 
         await tx.scoreEvent.create({
           data: {
-            id: `SCR-${crypto.randomUUID()}`,
+            id: `SCR-${crypto.randomBytes(16).toString('hex')}`,
             userId: dispute.userId,
             bookingId: dispute.bookingId,
             delta: actualDelta,
@@ -187,7 +187,7 @@ exports.resolveDispute = async (disputeId, decision, reason, adminId = null) => 
 
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: adminId || 'system',
         action: 'resolve_score_dispute',
         target: `dispute:${disputeId}`,
@@ -221,7 +221,7 @@ exports.rateBooking = async (bookingId, userId, rating, review = null) => {
 
     const entry = await tx.rating.create({
       data: {
-        id: `RAT-${crypto.randomUUID()}`,
+        id: `RAT-${crypto.randomBytes(16).toString('hex')}`,
         bookingId,
         userId,
         spaceId: booking.spaceId,
@@ -232,7 +232,7 @@ exports.rateBooking = async (bookingId, userId, rating, review = null) => {
 
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: userId,
         action: 'booking_rated',
         target: `booking:${bookingId}`,

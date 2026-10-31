@@ -28,7 +28,7 @@ exports.report = async (bookingId, actorId, actorRole, data = {}) => {
     });
     if (existing) throw new Error('An incident report is already pending for this booking.');
 
-    const id = `INC-${crypto.randomUUID()}`;
+    const id = `INC-${crypto.randomBytes(16).toString('hex')}`;
     await tx.incident.create({
       data: {
         id,
@@ -47,7 +47,7 @@ exports.report = async (bookingId, actorId, actorRole, data = {}) => {
     });
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: actorId,
         action: 'incident_reported',
         target: `incident:${id}`,
@@ -57,7 +57,7 @@ exports.report = async (bookingId, actorId, actorRole, data = {}) => {
     });
     await tx.notification.create({
       data: {
-        id: `NTF-${crypto.randomUUID()}`,
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
         userId: actorRole === 'owner' ? booking.userId : booking.space.ownerId,
         type: 'incident_reported',
         title: 'Incident reported',
@@ -129,7 +129,7 @@ exports.createFromReturn = async (bookingId, ownerId, data = {}) => {
     throw new Error('This booking cannot receive a return incident.');
   }
 
-  const id = `INC-${crypto.randomUUID()}`;
+  const id = `INC-${crypto.randomBytes(16).toString('hex')}`;
 
   const depositHeld = Number(booking.depositAmount);
   const deductions = Array.isArray(data.deductions)
@@ -180,7 +180,7 @@ exports.createFromReturn = async (bookingId, ownerId, data = {}) => {
 
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: booking.space.ownerId,
         action: 'incident_created',
         target: `incident:${id}`,
@@ -190,7 +190,7 @@ exports.createFromReturn = async (bookingId, ownerId, data = {}) => {
     });
     await tx.notification.create({
       data: {
-        id: `NTF-${crypto.randomUUID()}`,
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
         userId: booking.userId,
         type: 'incident_reported',
         title: 'Incident reported',
@@ -282,7 +282,7 @@ exports.confirm = async (incidentId, ownerId, deductions = [], reason) => {
 
       await tx.scoreEvent.create({
         data: {
-          id: `SCR-${crypto.randomUUID()}`,
+          id: `SCR-${crypto.randomBytes(16).toString('hex')}`,
           userId: incident.userId,
           bookingId: incident.bookingId,
           delta: actualDelta,
@@ -301,7 +301,7 @@ exports.confirm = async (incidentId, ownerId, deductions = [], reason) => {
 
     await tx.notification.create({
       data: {
-        id: `NTF-${crypto.randomUUID()}`,
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
         userId: incident.userId,
         type: 'incident_confirmed',
         title: 'Incident confirmed',
@@ -313,7 +313,7 @@ exports.confirm = async (incidentId, ownerId, deductions = [], reason) => {
 
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: ownerId,
         action: 'incident_confirmed',
         target: `incident:${incidentId}`,
@@ -366,7 +366,7 @@ exports.waive = async (incidentId, ownerId, reason) => {
 
     await tx.notification.create({
       data: {
-        id: `NTF-${crypto.randomUUID()}`,
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
         userId: incident.userId,
         type: 'incident_waived',
         title: 'Incident waived',
@@ -378,7 +378,7 @@ exports.waive = async (incidentId, ownerId, reason) => {
 
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: ownerId,
         action: 'incident_waived',
         target: `incident:${incidentId}`,

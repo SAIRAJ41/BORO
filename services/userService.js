@@ -18,8 +18,10 @@ const DEMO_USERS = {
 
 const ACTIVE_BOOKING_STATUSES = ['requested', 'approved', 'checked_in', 'overdue'];
 
-function makeId(prefix) {
-  return `${prefix}-${crypto.randomBytes(16).toString('hex')}`;
+function makeId(prefix, maxLen = 36) {
+  const cleanPrefix = String(prefix || 'ID').toUpperCase();
+  const hexBytes = Math.max(1, Math.floor((maxLen - 1 - cleanPrefix.length) / 2));
+  return `${cleanPrefix}-${crypto.randomBytes(hexBytes).toString('hex')}`;
 }
 
 function getUserInitials(name) {
@@ -277,7 +279,7 @@ exports.getProfile = async (userId) => {
   return {
     user: {
       ...formatUser(user),
-      verified: Boolean(verification && verification.isVerified),
+      verified: user.role === 'owner' ? Boolean(verification && verification.isVerified) : (user.status === 'active'),
       active_bookings_count: user.bookings.filter(booking =>
         ACTIVE_BOOKING_STATUSES.includes(booking.status)
       ).length
@@ -675,6 +677,17 @@ exports.approveOwner = async (ownerId, adminId, reason) => {
         reason: normalizedReason
       }
     });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: makeId('NTF'),
+        userId: ownerId,
+        type: 'owner_verified',
+        title: 'Owner Verification Approved',
+        message: 'Your owner identity verification has been approved. You can now list and manage community spaces.',
+        actionUrl: '/owner/my-spaces'
+      }
+    });
   });
 };
 
@@ -721,6 +734,17 @@ exports.rejectOwner = async (ownerId, adminId, reason) => {
         reason: normalizedReason
       }
     });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: makeId('NTF'),
+        userId: ownerId,
+        type: 'owner_rejected',
+        title: 'Owner Verification Rejected',
+        message: `Your owner verification was not approved: ${normalizedReason}`,
+        actionUrl: '/owner/my-spaces'
+      }
+    });
   });
 };
 
@@ -752,6 +776,17 @@ exports.suspend = async (userId, adminId, reason) => {
         reason: normalizedReason
       }
     });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: makeId('NTF'),
+        userId,
+        type: 'account_suspended',
+        title: 'Account Suspended',
+        message: `Your account has been suspended: ${normalizedReason}`,
+        actionUrl: '/profile'
+      }
+    });
   });
 };
 
@@ -779,6 +814,17 @@ exports.unsuspend = async (userId, adminId, reason) => {
         action: 'USER_UNSUSPENDED',
         target: userId,
         reason: normalizedReason
+      }
+    });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: makeId('NTF'),
+        userId,
+        type: 'account_reactivated',
+        title: 'Account Reactivated',
+        message: 'Your account has been reactivated.',
+        actionUrl: '/profile'
       }
     });
   });

@@ -5,10 +5,12 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { expressEjsEngine } = require('./lib/ejsEngine');
 const sessionMiddleware = require('./lib/sessionMiddleware');
 const helpers = require('./lib/helpers');
 const mockData = require('./data/mock');
+const prisma = require('./lib/prisma');
 const { attachUser, isAuthenticated, requireRole } = require('./middleware/auth');
 const { csrfProtection } = require('./middleware/csrf');
 
@@ -40,6 +42,21 @@ app.use((req, res, next) => {
 // Body Parser Middleware
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(express.json({ limit: '100kb' }));
+
+// Serve SVG files masquerading as .jpg with correct image/svg+xml MIME type
+app.get('/images/spaces/:file', (req, res, next) => {
+  const filePath = path.join(__dirname, 'public', 'images', 'spaces', req.params.file);
+  if (fs.existsSync(filePath)) {
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      if (content.trim().startsWith('<svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+        return res.send(content);
+      }
+    } catch (_) {}
+  }
+  next();
+});
 
 // Serve Static Files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -76,19 +93,46 @@ function getActiveRoute(pathname) {
 }
 
 // Global View Context & User Hydration (No auto-setting Priya)
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   const user = req.session && req.session.user ? req.session.user : null;
 
   if (user) {
-    const fullUser = mockData.getUserById ? (mockData.getUserById(user.id) || user) : user;
+    let activeBookingsCount = user.active_bookings_count;
+    let unreadCount = 0;
+    try {
+      const [bCount, nCount] = await Promise.all([
+        prisma.booking.count({
+          where: {
+            userId: user.id,
+            status: { in: ['pending', 'approved', 'checked_in'] }
+          }
+        }).catch(() => null),
+        prisma.notification.count({
+          where: {
+            userId: user.id,
+            read: false
+          }
+        }).catch(() => null)
+      ]);
+      if (bCount !== null) activeBookingsCount = bCount;
+      if (nCount !== null) unreadCount = nCount;
+      else unreadCount = (mockData.notifications || []).filter(n => n.user_id === user.id && !n.read).length;
+    } catch (_) {
+      unreadCount = (mockData.notifications || []).filter(n => n.user_id === user.id && !n.read).length;
+    }
+
+    if (activeBookingsCount === undefined || activeBookingsCount === null) {
+      activeBookingsCount = 0;
+    }
+
     res.locals.currentUser = {
       ...user,
       initials: user.initials || helpers.getUserInitials(user.name),
-      active_bookings: fullUser.active_bookings_count !== undefined ? fullUser.active_bookings_count : 1,
-      tier: helpers.getScoreTier(fullUser.score || 100).tier,
-      score: fullUser.score || 100
+      active_bookings: activeBookingsCount,
+      tier: helpers.getScoreTier(user.score || 100).tier,
+      score: user.score || 100
     };
-    res.locals.unreadNotificationsCount = mockData.notifications.filter(n => n.user_id === user.id && !n.read).length;
+    res.locals.unreadNotificationsCount = unreadCount;
   } else {
     res.locals.currentUser = null;
     res.locals.unreadNotificationsCount = 0;

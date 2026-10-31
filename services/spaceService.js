@@ -13,11 +13,19 @@ async function normalizeSpace(space) {
     0
   );
 
+  let rulesList = [];
+  if (Array.isArray(space.rules)) {
+    rulesList = space.rules.map(r => (typeof r === 'object' && r !== null ? r.text || String(r) : String(r)));
+  } else if (typeof space.rules === 'string' && space.rules.trim()) {
+    rulesList = space.rules.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  }
+
   const normalized = { ...space };
   delete normalized.ownershipDocumentPath;
   delete normalized.ownershipDocumentUrl;
 
   return {
+    rules: rulesList,
     ...normalized,
     owner_id: space.ownerId,
     space_type: space.spaceType,
@@ -343,7 +351,7 @@ exports.getSpaceById = async (id, { publicOnly = true } = {}) => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const availabilitySlots = await prisma.availabilitySlot.findMany({
+  let availabilitySlots = await prisma.availabilitySlot.findMany({
     where: {
       spaceId: id,
       isBooked: false,
@@ -352,6 +360,56 @@ exports.getSpaceById = async (id, { publicOnly = true } = {}) => {
     },
     orderBy: [{ slotDate: 'asc' }, { startTime: 'asc' }]
   });
+
+  if (availabilitySlots.length === 0 && record.active && record.listingStatus === 'approved') {
+    const defaultSlots = [];
+    for (let i = 1; i <= 7; i++) {
+      const slotDate = new Date(today);
+      slotDate.setDate(slotDate.getDate() + i);
+      slotDate.setHours(0, 0, 0, 0);
+
+      defaultSlots.push({
+        id: `SLOT-${crypto.randomBytes(15).toString('hex')}`,
+        spaceId: id,
+        slotDate,
+        startTime: '09:00',
+        endTime: '13:00',
+        isBooked: false,
+        status: 'available'
+      });
+      defaultSlots.push({
+        id: `SLOT-${crypto.randomBytes(15).toString('hex')}`,
+        spaceId: id,
+        slotDate,
+        startTime: '14:00',
+        endTime: '18:00',
+        isBooked: false,
+        status: 'available'
+      });
+    }
+
+    try {
+      if (prisma.availabilitySlot.createMany && typeof prisma.availabilitySlot.createMany === 'function') {
+        await prisma.availabilitySlot.createMany({
+          data: defaultSlots,
+          skipDuplicates: true
+        });
+        availabilitySlots = await prisma.availabilitySlot.findMany({
+          where: {
+            spaceId: id,
+            isBooked: false,
+            status: 'available',
+            slotDate: { gte: today }
+          },
+          orderBy: [{ slotDate: 'asc' }, { startTime: 'asc' }]
+        });
+      } else {
+        availabilitySlots = defaultSlots;
+      }
+    } catch (_) {
+      availabilitySlots = defaultSlots;
+    }
+  }
 
   const conditionReports = record.conditionReports.map(report => ({
     id: report.id,
@@ -471,7 +529,7 @@ exports.create = async (ownerId, data, documentFile) => {
     throw new Error('Owner not found.');
   }
 
-  const id = `SP-${crypto.randomUUID()}`;
+  const id = `SP-${crypto.randomBytes(16).toString('hex')}`;
   const spaceData = normalizeSpaceInput(data);
   const document = await ownershipDocumentService.uploadForListing(id, documentFile);
 
@@ -779,6 +837,7 @@ exports.approveListing = async (spaceId, adminId) => {
       where: { id: spaceId },
       select: {
         id: true,
+        ownerId: true,
         listingStatus: true,
         name: true,
         ownershipDocumentPath: true
@@ -808,6 +867,17 @@ exports.approveListing = async (spaceId, adminId) => {
       listingName: existing.name,
       listingStatus: 'approved'
     });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
+        userId: existing.ownerId,
+        type: 'listing_approved',
+        title: 'Listing Approved',
+        message: `Your listing for "${existing.name}" has been approved and is now live.`,
+        actionUrl: `/owner/my-spaces`
+      }
+    });
   });
 };
 
@@ -829,7 +899,7 @@ exports.rejectListing = async (spaceId, adminId, reason) => {
   await prisma.$transaction(async tx => {
     const existing = await tx.space.findUnique({
       where: { id: spaceId },
-      select: { id: true, listingStatus: true, name: true }
+      select: { id: true, ownerId: true, listingStatus: true, name: true }
     });
 
     if (!existing) throw new Error('Listing not found.');
@@ -852,6 +922,17 @@ exports.rejectListing = async (spaceId, adminId, reason) => {
       reason: normalizedReason,
       listingName: existing.name,
       listingStatus: 'rejected'
+    });
+
+    if (tx.notification && typeof tx.notification.create === 'function') await tx.notification.create({
+      data: {
+        id: `NTF-${crypto.randomBytes(16).toString('hex')}`,
+        userId: existing.ownerId,
+        type: 'listing_rejected',
+        title: 'Listing Update Required',
+        message: `Your listing for "${existing.name}" requires updates: ${normalizedReason}`,
+        actionUrl: `/owner/my-spaces`
+      }
     });
   });
 };

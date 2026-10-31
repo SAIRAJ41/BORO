@@ -70,7 +70,9 @@ router.get('/listings/:id/document', async (req, res, next) => {
 
 router.post('/listings/:id/approve', async (req, res) => {
   try {
-    await spaceService.approveListing(req.params.id, req.session.user.id);
+    const admin = getAdminUser(req);
+    const adminId = (req.session && req.session.user && req.session.user.id) || admin.id;
+    await spaceService.approveListing(req.params.id, adminId);
     req.flash('success', 'Listing approved.');
   } catch (error) {
     req.flash('error', error.message || 'Unable to approve listing.');
@@ -82,7 +84,7 @@ router.post('/listings/:id/reject', async (req, res) => {
   try {
     await spaceService.rejectListing(
       req.params.id,
-      req.session.user.id,
+      (req.session && req.session.user && req.session.user.id) || getAdminUser(req).id,
       req.body.reason
     );
     req.flash('success', 'Listing rejected.');

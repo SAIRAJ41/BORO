@@ -61,7 +61,7 @@
                   <span class="font-mono text-xs text-ink-muted"><%= b.id %></span>
                   <%- include('../../partials/StatusBadge', { status: b.status }) %>
                   <% if (isOverdue) { %>
-                    <span class="badge badge-danger text-[10px]">Overdue by 35 mins</span>
+                    <span class="badge badge-danger text-[10px]">Overdue</span>
                   <% } %>
                 </div>
                 <h3 class="text-base font-bold text-ink"><%= b.space ? b.space.name : 'Community Space' %></h3>
@@ -98,7 +98,7 @@
             <form action="/owner/return/<%= b.id %>" method="POST" class="space-y-4">
               <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="is_late" value="<%= isOverdue ? 'true' : 'false' %>">
-              
+
               <%- include('../../partials/ConditionForm', {
                 spaceType: b.space ? b.space.space_type : 'community_hall',
                 mode: 'return',
@@ -107,7 +107,7 @@
 
               <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line">
                 <div class="flex items-center gap-2">
-                  <button type="button" 
+                  <button type="button"
                           onclick="window.location.href='/owner/incidents'"
                           class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
                     🚩 Flag Incident / Damage
@@ -170,12 +170,12 @@
               }) %>
 
               <div class="flex justify-between items-center pt-3 border-t border-line">
-                <form action="/owner/today/<%= b.id %>/no-show" method="POST">
-                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                  <button type="submit" class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
-                    Mark No-Show
-                  </button>
-                </form>
+                <button type="submit"
+                        formaction="/owner/today/<%= b.id %>/no-show"
+                        formmethod="POST"
+                        class="btn btn-ghost text-xs text-status-danger hover:bg-status-danger/10">
+                  Mark No-Show
+                </button>
 
                 <button type="submit" class="btn btn-primary text-xs font-bold">
                   Confirm Handover &amp; Check-In

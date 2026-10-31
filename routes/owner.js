@@ -18,13 +18,21 @@ function getOwnerUser(req) {
   return mockData.users.find(u => u.id === 'USR-003'); // Rajesh Kumar
 }
 
-// Compute pending request count for all owner views and sidebars
+// Compute counts for all owner views and sidebars
 router.use(async (req, res, next) => {
   const owner = getOwnerUser(req);
 
   try {
-    const requests = await bookingService.getOwnerRequests(owner.id);
+    const [requests, todayOps, incidents, verification] = await Promise.all([
+      bookingService.getOwnerRequests(owner.id).catch(() => []),
+      bookingService.getOwnerToday(owner.id).catch(() => ({ checkins: [], returns: [] })),
+      incidentService.getOwnerIncidents(owner.id).catch(() => []),
+      userService.getOwnerVerificationSummary(owner.id).catch(() => null)
+    ]);
     res.locals.pendingRequestsCount = requests.length;
+    res.locals.todayOperationsCount = (todayOps.checkins?.length || 0) + (todayOps.returns?.length || 0);
+    res.locals.openIncidentsCount = (incidents || []).filter(i => i.status === 'open' || i.status === 'reported' || !i.resolved).length;
+    res.locals.ownerVerified = Boolean(verification && verification.is_verified);
     next();
   } catch (error) {
     next(error);
@@ -76,12 +84,19 @@ router.post('/requests/:id/reject', async (req, res) => {
 });
 
 // POST /owner/requests/:id/waitlist - Move request to waitlist
-router.post('/requests/:id/waitlist', (req, res) => {
+router.post('/requests/:id/waitlist', async (req, res) => {
   const owner = getOwnerUser(req);
-  bookingService.waitlist(req.params.id, owner.id, req.body.reason)
-    .then(() => req.flash('success', 'Booking moved to the waitlist.'))
-    .catch(error => req.flash('error', error.message || 'Unable to move booking to the waitlist.'))
-    .finally(() => res.redirect('/owner/requests'));
+  try {
+    await bookingService.waitlist(req.params.id, owner.id, req.body.reason);
+    req.flash('success', 'Booking moved to the waitlist.');
+  } catch (error) {
+    req.flash('error', error.message || 'Unable to move booking to the waitlist.');
+  }
+  return res.redirect('/owner/requests');
+
+
+
+
 });
 
 // GET /owner/my-spaces - Manage owner's spaces
@@ -110,17 +125,31 @@ router.get('/my-spaces', async (req, res, next) => {
 });
 
 // GET /owner/spaces/add - Add new space form
-router.get('/spaces/add', (req, res) => {
+router.get('/spaces/add', async (req, res, next) => {
   const owner = getOwnerUser(req);
 
-  res.render('pages/owner/space-form', {
-    title: 'List a New Space - BORO Owner',
-    owner,
-    space: null,
-    isEdit: false,
-    helpers,
-    activeNav: 'owner-spaces'
-  });
+  try {
+    const verification = await userService.getOwnerVerificationSummary(owner.id);
+    if (!verification || !verification.is_verified) {
+      req.flash('error', 'Only verified space owners can list a new space. Please complete your owner accreditation first.');
+      return res.redirect('/owner/my-spaces');
+    }
+
+    res.render('pages/owner/space-form', {
+      title: 'List a New Space - BORO Owner',
+      owner: {
+        ...owner,
+        verificationStatus: verification,
+        verified: true
+      },
+      space: null,
+      isEdit: false,
+      helpers,
+      activeNav: 'owner-spaces'
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // POST /owner/spaces - Create new space
@@ -139,6 +168,17 @@ router.post('/spaces', handleDocumentUpload, async (req, res) => {
   const owner = getOwnerUser(req);
 
   try {
+    const verification = await userService.getOwnerVerificationSummary(owner.id);
+    if (!verification || !verification.is_verified) {
+      req.flash('error', 'Only verified space owners can list a new space.');
+      return res.redirect('/owner/my-spaces');
+    }
+
+    if (!req.file) {
+      req.flash('error', 'An ownership verification document is required.');
+      return res.redirect('/owner/spaces/add');
+    }
+
     await spaceService.create(owner.id, req.body, req.file);
     req.flash('success', 'Space submitted for admin review.');
   } catch (error) {

@@ -161,7 +161,7 @@ exports.update = async (data, adminId) => {
     });
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: adminId,
         action: 'PLATFORM_SETTINGS_UPDATED',
         target: 'settings:1',

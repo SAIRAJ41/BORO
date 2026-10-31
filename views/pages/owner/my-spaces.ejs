@@ -34,9 +34,11 @@
       <% spaces.forEach(space => { %>
         <div class="card bg-surface border border-line overflow-hidden shadow-sm flex flex-col justify-between">
           <div class="relative h-44 bg-surface-tint">
-            <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : '/images/spaces/community-hall-1.jpg' %>"
+            <% const defaultOwnerImg = (helpers && helpers.getDefaultSpaceImage) ? helpers.getDefaultSpaceImage(space.space_type) : '/images/spaces/community-hall-1.jpg'; %>
+            <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : defaultOwnerImg %>"
                  alt="<%= space.name %>" 
-                 class="w-full h-full object-cover">
+                 class="w-full h-full object-cover"
+                 onerror="this.onerror=null; this.src='<%= defaultOwnerImg %>'">
             <div class="absolute top-3 left-3 flex gap-1.5">
               <span class="badge badge-info text-xs"><%= helpers.formatSpaceType(space.space_type) %></span>
               <span class="badge badge-secondary text-xs capitalize"><%= space.indoor_outdoor %></span>

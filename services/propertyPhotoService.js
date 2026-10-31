@@ -102,7 +102,9 @@ exports.getPublicUrl = pathValue => {
 exports.resolvePhotos = photos => Promise.all(
   (Array.isArray(photos) ? photos : []).map(async photo => {
     if (typeof photo === 'string') return photo;
-    if (!photo || !photo.path) return null;
+    if (!photo) return null;
+    if (photo.url && !photo.path) return photo;
+    if (!photo.path) return null;
     return {
       ...photo,
       url: exports.getPublicUrl(photo.path)
@@ -144,7 +146,7 @@ exports.add = async (spaceId, ownerId, files) => {
       if (result.count !== 1) throw new Error('Listing changed; reload and retry.');
       await tx.auditLog.create({
         data: {
-          id: `AUD-${crypto.randomUUID()}`,
+          id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
           actor: ownerId,
           action: 'add_property_photos',
           target: `space:${spaceId}`,
@@ -191,7 +193,7 @@ exports.replace = async (spaceId, ownerId, photoId, file) => {
       if (result.count !== 1) throw new Error('Listing changed; reload and retry.');
       await tx.auditLog.create({
         data: {
-          id: `AUD-${crypto.randomUUID()}`,
+          id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
           actor: ownerId,
           action: 'replace_property_photo',
           target: `space:${spaceId}`,
@@ -238,7 +240,7 @@ exports.remove = async (spaceId, ownerId, photoId) => {
     if (result.count !== 1) throw new Error('Listing changed; reload and retry.');
     await tx.auditLog.create({
       data: {
-        id: `AUD-${crypto.randomUUID()}`,
+        id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
         actor: ownerId,
         action: 'delete_property_photo',
         target: `space:${spaceId}`,

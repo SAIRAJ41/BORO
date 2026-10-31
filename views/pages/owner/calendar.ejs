@@ -17,10 +17,10 @@
     </div>
 
     <% if (spaces && spaces.length > 0) { %>
-      <form action="/owner/availability" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+      <form action="/owner/availability" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
         <div>
-          <label for="availability-space" class="block text-xs font-medium text-ink mb-1">Space</label>
+          <label for="availability-space" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">Space</label>
           <select id="availability-space" name="space_id" class="input w-full text-xs" required>
             <% spaces.forEach(space => { %>
               <option value="<%= space.id %>"><%= space.name %></option>
@@ -28,18 +28,18 @@
           </select>
         </div>
         <div>
-          <label for="availability-date" class="block text-xs font-medium text-ink mb-1">Date</label>
+          <label for="availability-date" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">Date</label>
           <input id="availability-date" name="slot_date" type="date" class="input w-full text-xs" required>
         </div>
         <div>
-          <label for="availability-start" class="block text-xs font-medium text-ink mb-1">Start</label>
-          <input id="availability-start" name="start_time" type="time" class="input w-full text-xs" required>
+          <label for="availability-start" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">Start Time (HH:MM)</label>
+          <input id="availability-start" name="start_time" type="time" step="60" placeholder="09:00" class="input w-full text-xs font-mono" required>
         </div>
         <div>
-          <label for="availability-end" class="block text-xs font-medium text-ink mb-1">End</label>
-          <input id="availability-end" name="end_time" type="time" class="input w-full text-xs" required>
+          <label for="availability-end" class="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">End Time (HH:MM)</label>
+          <input id="availability-end" name="end_time" type="time" step="60" placeholder="13:00" class="input w-full text-xs font-mono" required>
         </div>
-        <button type="submit" class="btn btn-primary text-xs md:col-span-4 md:w-fit">Add Availability Slot</button>
+        <button type="submit" class="btn btn-primary text-xs font-bold md:col-span-4 md:w-fit px-5 py-2">Add Availability Slot</button>
       </form>
     <% } else { %>
       <p class="text-xs text-ink-muted">No approved active listings are available for scheduling.</p>
@@ -63,7 +63,7 @@
               <tr>
                 <td class="px-4 py-3 font-medium text-ink"><%= slot.space ? slot.space.name : slot.spaceId %></td>
                 <td class="px-4 py-3 text-ink-muted"><%= slotDate %></td>
-                <td class="px-4 py-3 text-ink-muted"><%= slot.startTime %> &ndash; <%= slot.endTime %></td>
+                <td class="px-4 py-3 text-ink-muted font-mono"><%= slot.startTime %> &ndash; <%= slot.endTime %></td>
                 <td class="px-4 py-3"><span class="badge <%= slot.isBooked || slot.status === 'booked' ? 'badge-warning' : 'badge-info' %>"><%= slot.status %></span></td>
                 <td class="px-4 py-3">
                   <% if (!slot.isBooked && slot.status !== 'booked') { %>
@@ -72,8 +72,8 @@
                       <form action="/owner/availability/<%= slot.id %>" method="POST" class="mt-2 flex flex-wrap gap-2 items-end">
                         <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input name="slot_date" type="date" value="<%= slotDate %>" class="input text-xs" required>
-                        <input name="start_time" type="time" value="<%= slot.startTime %>" class="input text-xs" required>
-                        <input name="end_time" type="time" value="<%= slot.endTime %>" class="input text-xs" required>
+                        <input name="start_time" type="time" step="60" value="<%= slot.startTime %>" class="input text-xs font-mono" required>
+                        <input name="end_time" type="time" step="60" value="<%= slot.endTime %>" class="input text-xs font-mono" required>
                         <button type="submit" class="btn btn-secondary text-xs">Save</button>
                       </form>
                       <form action="/owner/availability/<%= slot.id %>/delete" method="POST" class="mt-2">

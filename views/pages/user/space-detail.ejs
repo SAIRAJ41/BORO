@@ -13,9 +13,11 @@
       <!-- Main Photo & Gallery -->
       <div class="rounded-2xl overflow-hidden border border-line bg-surface">
         <div class="h-72 w-full bg-surface-tint overflow-hidden relative">
-          <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : '/images/spaces/community-hall-1.jpg' %>"
+          <% const defaultDetailImg = (helpers && helpers.getDefaultSpaceImage) ? helpers.getDefaultSpaceImage(space.space_type) : '/images/spaces/community-hall-1.jpg'; %>
+          <img src="<%= space.photos && space.photos.length > 0 ? (space.photos[0].url || space.photos[0]) : defaultDetailImg %>"
                alt="<%= space.name %>" 
-               class="w-full h-full object-cover">
+               class="w-full h-full object-cover"
+               onerror="this.onerror=null; this.src='<%= defaultDetailImg %>'">
           <div class="absolute top-4 left-4 flex gap-2">
             <span class="badge badge-info text-xs"><%= helpers.formatSpaceType(space.space_type) %></span>
             <span class="badge badge-secondary text-xs capitalize"><%= space.indoor_outdoor %></span>
@@ -85,7 +87,8 @@
       <div class="card p-6 bg-surface border border-line">
         <h2 class="text-base font-semibold text-ink mb-3">House & Usage Rules</h2>
         <ul class="space-y-2 text-xs text-ink-muted">
-          <% (space.rules || []).forEach(rule => { %>
+          <% const rulesList = Array.isArray(space.rules) ? space.rules : (typeof space.rules === 'string' ? space.rules.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : []); %>
+          <% rulesList.forEach(rule => { %>
             <li class="flex items-start gap-2">
               <span class="text-primary font-bold">&bull;</span>
               <span><%= rule %></span>

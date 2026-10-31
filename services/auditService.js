@@ -5,7 +5,7 @@ const crypto = require('crypto');
 exports.log = async (actor, action, target, reason = null, details = {}) => {
   await prisma.auditLog.create({
     data: {
-      id: `AUD-${crypto.randomUUID()}`,
+      id: `AUD-${crypto.randomBytes(16).toString('hex')}`,
       actor,
       action,
       target,
