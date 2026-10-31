@@ -68,9 +68,9 @@ You can switch between platform personas using the **"Demo as:"** selector in th
 
 ---
 
-## 📸 Visual Product Tour & Feature Walkthrough
+## 🏛️ Comprehensive Feature & Workflow Walkthrough
 
-The following screenshots illustrate the end-to-end user journeys, custodial inspection workflows, and civic trust mechanisms implemented in BORO (referenced from our technical evaluation document and system report).
+The following sections detail the end-to-end user journeys, custodial inspection workflows, and civic trust mechanisms implemented in BORO (referenced from our technical evaluation document and system report).
 
 ---
 
@@ -79,28 +79,20 @@ The following screenshots illustrate the end-to-end user journeys, custodial ins
 #### 1. Search & Space Discovery (`/search`)
 Multi-parameter search engine enabling community members to discover underutilized local facilities. Residents can filter spaces by category (Community Halls, Community Grounds, School Playgrounds, Small Activity Rooms, and Storerooms), indoor vs. outdoor weather-protected environments, capacity thresholds, hourly rate, and permitted community activities. Each space card surfaces verified caretaker badges, hourly fees, and refundable deposit requirements upfront.
 
-![Search and Discover Spaces](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/search_discover_halls/screen.png)
-
 ---
 
 #### 2. Space Detail & Slot Reservation (`/spaces/:id`)
 Comprehensive facility specification view presenting spatial attributes, capacity, equipment, amenities, parking availability, house rules, and recent custodial cleanliness logs. Includes an interactive date and slot picker with automated fee calculation (base rate + refundable deposit) and demo checkout options (UPI, Credit/Debit Card, Net Banking, and Pay at Venue).
-
-![Space Details and Slot Booking](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/hall_details_booking/screen.png)
 
 ---
 
 #### 3. Resident Active Bookings & Access PIN (`/my-bookings`)
 The resident's active booking control center displaying upcoming reservations, waitlist positions, and current approval statuses. For security and fraud prevention, the venue access PIN code remains masked (`••••`) until exactly 1 hour prior to the reserved time slot, ensuring keys or digital lock codes are only released when the session is imminent.
 
-![My Bookings and Keypad PIN](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/my_bookings/screen.png)
-
 ---
 
 #### 4. Notification Center & Operational Alerts (`/notifications`)
 Contextual real-time alerts keeping residents and caretakers informed throughout the booking lifecycle. Notifications trigger upon booking approvals, payment confirmations, 1-hour pre-session PIN unlocking, return reminders, and security deposit refund releases.
-
-![Notifications and System Alerts](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/notifications_alerts/screen.png)
 
 ---
 
@@ -109,14 +101,10 @@ Contextual real-time alerts keeping residents and caretakers informed throughout
 #### 5. Advisory Reliability Score & Tier Meter (`/my-score`)
 BORO's flagship accountability mechanism: a transparent 0–120 point reliability gauge that tracks civic stewardship. Residents earn points (+5) for on-time, spotless returns, while penalties apply for late handovers (-10) or confirmed damage (-30). The score determines community tier status (Tier 1: Preferred, Tier 2: Standard, Tier 3: Caution), with Tier 3 users triggering prominent advisory warnings during caretaker review. Includes a formal dispute appeal modal (`ReasonDialog`) to contest unfair penalties.
 
-![Reliability Score Dashboard](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/my_score_reliability/screen.png)
-
 ---
 
 #### 6. Five-Stage Custodial Lifecycle & Booking Timelines (`/history`)
 A complete visual audit trail tracking each reservation through five immutable operational stages: **Requested &rarr; Approved &rarr; Checked-In &rarr; Returned &rarr; Settled**. Residents can review past usage, inspect condition inspection ratings, and download or print itemized tax receipts (`/bookings/:id/receipt`) detailing room fees, cleaning charges, and settled security deposits.
-
-![Custodial Lifecycle and Booking History](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/booking_history_timelines/screen.png)
 
 ---
 
@@ -125,21 +113,15 @@ A complete visual audit trail tracking each reservation through five immutable o
 #### 7. Caretaker Booking Requests & Trust Verification (`/owner/requests`)
 The triage center for space owners and caretakers. Incoming reservation requests display applicant names, requested purpose, headcount, and applicant reliability scores. Caretakers can evaluate community fit and approve, reject, or waitlist requests with mandatory logged justification reasons.
 
-![Owner Booking Requests](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/owner_requests/screen.png)
-
 ---
 
 #### 8. Caretaker Listed Spaces Portfolio (`/owner/my-spaces`)
 Comprehensive management hub for all properties listed by a facility caretaker or society trust. Caretakers can monitor verification status, view active bookings, toggle listing availability, and add new spaces with custom facility tags, allowed usage purposes, and property photos.
 
-![Caretaker Listed Spaces](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/my_halls/screen.png)
-
 ---
 
 #### 9. Weekly Schedule Calendar & Overlap Conflict Matrix (`/owner/calendar`)
 Interactive scheduling matrix showing time slots and occupancy across all managed spaces. Highlights concurrent or conflicting requests (e.g., competing slots between community groups) with side-by-side evaluation tools to make equitable allocation decisions.
-
-![Owner Availability Calendar](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/owner_calendar/screen.png)
 
 ---
 
@@ -149,28 +131,20 @@ Daily operational hub for on-site facility caretakers. Enables caretakers to exe
 2. **Post-session checkout** with a standardized custodial checklist (cleanliness, furniture condition, lights/appliances, doors).
 Automatically flags overdue sessions (e.g., 35+ minutes late) with one-click late penalty logging.
 
-![Today's Operations and Inspections](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/today_s_operations/screen.png)
-
 ---
 
 #### 11. Incidents, Itemized Deductions & Deposit Reconciliation (`/owner/incidents`)
 Transparent incident reporting and deposit settlement workspace. In cases of property damage or excessive cleaning requirements, caretakers upload photographic proof, itemize repair deductions, and issue partial deposit refunds while remitting the balance back to the resident's account.
-
-![Incidents and Deposit Deductions](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/incidents_deductions/screen.png)
 
 ---
 
 #### 12. Caretaker Financial Ledger & Payout Metrics (`/owner/earnings`)
 Financial analytics interface displaying cumulative booking revenue, held security deposits, completed payouts, and scheduled bank transfers. Provides a clear audit log of all financial transactions to support society accounting and municipal reporting.
 
-![Owner Revenue and Payouts](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/owner_earnings/screen.png)
-
 ---
 
 #### 13. Historical Custodial Archives & Inspection Log (`/custodial-history`)
 A permanent chronological archive of all historical space handovers, pre/post inspection notes, cleanliness ratings, and custodial accountability records across all civic facilities.
-
-![Historical Custodial Inspection Archive](stitch_hall_booking_user_dashboard/stitch_hall_booking_user_dashboard/custodial_history/screen.png)
 
 ---
 
